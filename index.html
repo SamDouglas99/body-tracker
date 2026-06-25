@@ -196,6 +196,22 @@ input:focus,select:focus{border-color:var(--muted)}
 .chip-legs{background:rgba(226,226,64,.15);color:var(--legs);border:1px solid rgba(226,226,64,.4)}
 .chip-upper{background:rgba(192,132,252,.15);color:var(--upper);border:1px solid rgba(192,132,252,.4)}
 .chip-lower{background:rgba(251,146,60,.15);color:var(--lower);border:1px solid rgba(251,146,60,.4)}
+.chip-a1,.chip-a2{background:rgba(255,107,74,.15);color:var(--push);border:1px solid rgba(255,107,74,.4)}
+.chip-b1,.chip-b2{background:rgba(74,158,255,.15);color:var(--pull);border:1px solid rgba(74,158,255,.4)}
+.chip-c1{background:rgba(226,226,64,.15);color:var(--legs);border:1px solid rgba(226,226,64,.4)}
+.chip-c2{background:rgba(251,146,60,.15);color:var(--lower);border:1px solid rgba(251,146,60,.4)}
+.wo-day.a1 .wd-type,.wo-day.a2 .wd-type{color:var(--push)}
+.wo-day.b1 .wd-type,.wo-day.b2 .wd-type{color:var(--pull)}
+.wo-day.c1 .wd-type{color:var(--legs)}
+.wo-day.c2 .wd-type{color:var(--lower)}
+.wo-day.a1.active,.wo-day.a1:hover,.wo-day.a2.active,.wo-day.a2:hover{background:rgba(255,107,74,.1);border-color:var(--push)}
+.wo-day.a1.active .wd-dot,.wo-day.a2.active .wd-dot{background:var(--push)}
+.wo-day.b1.active,.wo-day.b1:hover,.wo-day.b2.active,.wo-day.b2:hover{background:rgba(74,158,255,.1);border-color:var(--pull)}
+.wo-day.b1.active .wd-dot,.wo-day.b2.active .wd-dot{background:var(--pull)}
+.wo-day.c1.active,.wo-day.c1:hover{background:rgba(226,226,64,.1);border-color:var(--legs)}
+.wo-day.c1.active .wd-dot{background:var(--legs)}
+.wo-day.c2.active,.wo-day.c2:hover{background:rgba(251,146,60,.1);border-color:var(--lower)}
+.wo-day.c2.active .wd-dot{background:var(--lower)}
 .wo-hist-ex{font-size:10px;color:var(--sub);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)}
 .wo-hist-ex:last-child{border:none}
 .wo-hist-sets{font-size:9px;color:var(--muted);margin-left:8px}
@@ -560,77 +576,65 @@ const WORKOUT_PROGRAM = {
 };
 
 // ══════════════════════════════════════
-// PROGRAMA 2 (6x A→F)
+// PROGRAMA 2 — Divisão A1·B1·C1·A2·B2·C2 (Personal)
+// Ordem fixa: A1→B1→C1→A2→B2→C2 · Descanso: Quarta
 // ══════════════════════════════════════
 const WORKOUT_PROGRAM_2 = {
-  a:{label:'TREINO A — Costas/Bíceps',day:'Segunda',color:'var(--pull)',exercises:[
-    // 6 exercícios · ~16 séries de trabalho · ~60min
-    {name:'Remada Curvada Barra',sets:[{t:'warm',l:'Aquecimento',s:2,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:2,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'6–10',rest:150}]},
-    {name:'Barra Fixa',sets:[{t:'warm',l:'Aquecimento',s:1,r:'5–8',rest:90},{t:'work',l:'Trabalho',s:4,r:'6–10',rest:150,note:'Carga extra ao chegar em 10 reps limpas'}]},
-    {name:'Remada Baixa Pgd. Aberta',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Rest pause na última'}]},
-    {name:'Pulley Frente Triângulo',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:60},{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Drop set na última'}]},
-    {name:'Meio Terra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:2,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:2,r:'6–10',rest:150,note:'Composto — posterior + lombar'}]},
-    {name:'Rosca Scott Máq/Cabo',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Rest pause na última'}]},
+  a1:{label:'A1 — Peito, Ombro e Tríceps',day:'Segunda',color:'var(--push)',exercises:[
+    {name:'Supra Polia Frente (Abdômen)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60}]},
+    {name:'Supino Reto Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Desenvolvimento Smith/Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'JM Press Smith / Paralelas c/ Sobrecarga',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120,note:'Braços colados ao tronco, barra na linha do ombro'}]},
+    {name:'Crucifixo Inclinado Halteres/Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Elevação Unilateral Polia Média',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Polia na altura do quadril'}]},
+    {name:'Extensão Tríceps Polia c/ Banco',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Alternativa: em pé de frente para polia'}]},
   ]},
-  b:{label:'TREINO B — Peito/Ombro/Tríceps',day:'Terça',color:'var(--push)',exercises:[
-    // 6 exercícios · ~16 séries de trabalho · ~60min — ombro enfatizado
-    {name:'Supino Inclinado Halteres',sets:[{t:'warm',l:'Aquecimento',s:2,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:2,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'6–10',rest:150}]},
-    {name:'Supino Reto Barra',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'6–10',rest:150,note:'Rest pause na última'}]},
-    {name:'Paralela',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Tronco p/ frente = peito. Carga extra ao dominar 12 reps'}]},
-    {name:'Desenvolvimento Militar Halteres',sets:[{t:'warm',l:'Aquecimento',s:1,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'OHP livre — deltóide anterior + medial + tríceps'}]},
-    {name:'Elevação Lateral Sentado',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'8–12',rest:60},{t:'work',l:'Trabalho',s:4,r:'10–15',rest:60,note:'4 séries — prioridade deltóide medial. Drop set na última'}]},
-    {name:'Tríceps Corda',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:90,note:'Rest pause na última série'}]},
-    // ── Protocolo adicional ──
-    {name:'🦵 Panturrilha Máq Em Pé',sets:[{t:'work',l:'Adicional 1',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 2',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 3',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 4 · Drop',s:1,r:'20–25',rest:45}]},
+  b1:{label:'B1 — Costas, Deltoide Post. e Bíceps',day:'Terça',color:'var(--pull)',exercises:[
+    {name:'Puxada Aberta Pronada no Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Tronco neutro, cotovelo para baixo'}]},
+    {name:'Remada Unilateral Neutra Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Remada Baixa Pegada Aberta',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Crucifixo Inverso Unilateral no Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Scott Bilateral Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Unilateral de Costas p/ Polia',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
   ]},
-  c:{label:'TREINO C — Pernas/Glúteos',day:'Quarta',color:'var(--legs)',exercises:[
-    // 6 exercícios · ~16 séries de trabalho · ~60min — glúteo + adutor
-    {name:'Extensor',sets:[{t:'warm',l:'Ativação',s:2,r:'15–20',rest:45,note:'Ativa quadríceps antes do Agachamento'},{t:'work',l:'Trabalho',s:2,r:'10–15',rest:60,note:'Drop set na última'}]},
-    {name:'Agachamento Livre',sets:[{t:'warm',l:'Aquecimento',s:3,r:'8–12',rest:90},{t:'adj',l:'Ajuste 1',s:2,r:'4–6',rest:120},{t:'work',l:'Trabalho',s:4,r:'6–10',rest:180,note:'Prioridade #1 — profundidade máxima, ativa glúteo'}]},
-    {name:'Leg 45°',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:150,note:'+10 reps parciais após falha'}]},
-    {name:'Flexor Deitado',sets:[{t:'warm',l:'Aquecimento',s:1,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Rest pause na última'}]},
-    {name:'Elevação de Quadril',sets:[{t:'warm',l:'Aquecimento',s:1,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Pausa 1s no topo — glúteo'}]},
-    {name:'Adutor',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'8–12',rest:60},{t:'work',l:'Trabalho',s:3,r:'12–15',rest:60,note:'Adução completa — pausa no fechamento'}]},
-    // ── Protocolo adicional ──
-    {name:'🦵 Panturrilha em Pé',sets:[{t:'work',l:'Adicional 1',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 2',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 3',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 4 · Drop',s:1,r:'20–25',rest:45}]},
+  c1:{label:'C1 — Quadríceps, Isquiotibiais e Glúteo',day:'Quinta',color:'var(--legs)',exercises:[
+    {name:'Cadeira Adutora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Cadeira Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Panturrilha Joelhos Estendidos Máq.',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60,note:'3s de pausa no alongamento de cada rep'}]},
+    {name:'Agachamento no Hack',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150,note:'Profundidade máxima, ativa glúteo'}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Extensão de Quadril Banco Romano',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Banco 1 regulagem abaixo da linha do quadril'}]},
   ]},
-  d:{label:'TREINO D — Costas/Bíceps',day:'Sexta',color:'var(--pull)',exercises:[
-    // 6 exercícios · ~15 séries de trabalho · ~60min
-    {name:'Remada Curvada Barra',sets:[{t:'warm',l:'Aquecimento',s:2,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:2,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'6–10',rest:150}]},
-    {name:'Remada Baixa Pgd. Aberta',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Rest pause na última'}]},
-    {name:'Pulley Aberto',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:90,note:'Drop set na última'}]},
-    {name:'Hiperextensão Banco Romano',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60},{t:'work',l:'Série 3',s:1,r:'12–15',rest:60}]},
-    {name:'Rosca Scott Máq/Cabo',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:90,note:'Rest pause na última'}]},
-    // ── Protocolo adicional ──
-    {name:'🔵 Pulldown Aberto',sets:[{t:'work',l:'Adicional 1',s:1,r:'10–12',rest:60},{t:'work',l:'Adicional 2',s:1,r:'10–12',rest:60},{t:'work',l:'Adicional 3 · Drop',s:1,r:'12–15',rest:60,note:'Ampliar largura de costas — foco no lat inferior'}]},
+  a2:{label:'A2 — Ombro, Peito e Tríceps',day:'Sexta',color:'var(--push)',exercises:[
+    {name:'Supra Máquina (Abdômen)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60}]},
+    {name:'Elevação Lateral Halteres/Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Deltóide medial prioridade'}]},
+    {name:'Desenvolvimento Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Supino Inclinado Smith/Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Paralelas com Sobrecarga',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Crucifixo Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Francês no Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
   ]},
-  e:{label:'TREINO E — Peito/Ombro/Tríceps',day:'Sábado',color:'var(--push)',exercises:[
-    // 6 exercícios · ~17 séries de trabalho · ~60min — ombro enfatizado
-    {name:'Supino Inclinado Halteres',sets:[{t:'warm',l:'Aquecimento',s:2,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:2,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'6–10',rest:150}]},
-    {name:'Supino Reto Barra',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'6–10',rest:150,note:'Rest pause na última'}]},
-    {name:'Paralela',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Tronco p/ frente = peito. Carga extra ao dominar 12 reps'}]},
-    {name:'Desenvolvimento Militar Barra',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:4,r:'6–10',rest:150,note:'OHP livre — 4 séries. Principal motor de ombro'}]},
-    {name:'Elevação Lateral Máq/Halteres',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'8–12',rest:60},{t:'work',l:'Trabalho',s:4,r:'10–15',rest:60,note:'4 séries — deltóide medial. Drop set na última'}]},
-    {name:'Tríceps Francês',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Rest pause na última'}]},
-    // ── Protocolo adicional ──
-    {name:'🦵 Panturrilha Máq Em Pé',sets:[{t:'work',l:'Adicional 1',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 2',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 3',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 4 · Drop',s:1,r:'20–25',rest:45}]},
+  b2:{label:'B2 — Costas, Deltoide Post. e Bíceps',day:'Sábado',color:'var(--pull)',exercises:[
+    {name:'Puxada Unilateral Supinada Máq./Polia',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Máquina supinada ou polia neutra com banco'}]},
+    {name:'Remada Máq. Peito Apoiado Aberta',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Remada Unilateral Neutra Polia Baixa',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Crucifixo Inverso Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Scott Unilateral Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Inclinado 45° Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
   ]},
-  f:{label:'TREINO F — Pernas/Glúteos',day:'Domingo',color:'var(--lower)',exercises:[
-    // 6 exercícios · ~15 séries de trabalho · ~60min — glúteo + posterior + adutor
-    {name:'Agachamento Búlgaro Halter',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Trabalho',s:4,r:'8–12',rest:120,note:'Prioridade #1 — maior ativação glúteo unilateral'}]},
-    {name:'Elevação de Quadril',sets:[{t:'warm',l:'Aquecimento',s:1,r:'10–15',rest:60},{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Pausa 1s no topo'}]},
-    {name:'Flexor Deitado',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Rest pause na última'}]},
-    {name:'Stiff',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120}]},
-    {name:'Extensor',sets:[{t:'work',l:'Trabalho',s:3,r:'10–15',rest:60,note:'Finalização isolada — drop set na última'}]},
-    {name:'Adutor',sets:[{t:'adj',l:'Ajuste 1',s:1,r:'8–12',rest:60},{t:'work',l:'Trabalho',s:3,r:'12–15',rest:60,note:'Adução completa — pausa no fechamento'}]},
-    // ── Protocolo adicional ──
-    {name:'🦵 Panturrilha Sentado',sets:[{t:'work',l:'Adicional 1',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 2',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 3',s:1,r:'15–20',rest:45},{t:'work',l:'Adicional 4 · Drop',s:1,r:'20–25',rest:45}]},
+  c2:{label:'C2 — Isquiotibiais, Glúteo e Quadríceps',day:'Domingo',color:'var(--lower)',exercises:[
+    {name:'Levantamento Terra Stiff',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150,note:'Posterior + lombar — amplitude total'}]},
+    {name:'Mesa Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Panturrilha no Leg',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60,note:'3s de pausa no alongamento de cada rep'}]},
+    {name:'Leg Press',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150}]},
+    {name:'Cadeira Extensora Unilateral',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Elevação Pélvica',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120,note:'Pausa no topo — máx contração glúteo'}]},
   ]},
 };
 
 const WEEK_SCHEDULE_2 = [
-  {day:'Seg',type:'a'},{day:'Ter',type:'b'},{day:'Qua',type:'c'},
-  {day:'Qui',type:'rest'},{day:'Sex',type:'d'},{day:'Sáb',type:'e'},{day:'Dom',type:'f'}
+  {day:'Seg',type:'a1'},{day:'Ter',type:'b1'},{day:'Qua',type:'rest'},
+  {day:'Qui',type:'c1'},{day:'Sex',type:'a2'},{day:'Sáb',type:'b2'},{day:'Dom',type:'c2'}
 ];
 
 // Programa ativo (1 = PPL, 2 = A/B/C/D/E/F)
@@ -703,34 +707,33 @@ const PROFILES = {
 };
 
 // ══════════════════════════════════════
-// NUTRITION — Plano Carla Barros (Sam)
+// NUTRITION — Plano Nutricional 2026
 // ══════════════════════════════════════
 const DIET_PLAN = [
-  {time:'04:30h',meal:'Pré-Treino',icon:'⚡',options:[
-    'Vitamina: 250ml leite + 2 bananas + 4 morangos + 1 fatia beterraba crua + 35g aveia + mel',
-    'Vitamina: 2 bananas + 250ml leite + 1 colher pasta amendoim + 35g aveia + mel',
-    'Vitamina: 250ml leite + 2 bananas + 1 maçã + 30g farinha láctea + 10g aveia + mel',
+  {time:'Intra-Treino',meal:'Intra-Treino',icon:'🏋️',options:[
+    '40g dextrose + 20g aminoácidos + 15ml glicerina bidestilada + 10g creatina + 2g sal',
   ]},
-  {time:'Pós-treino',meal:'Pós-Treino',icon:'💪',options:[
-    '2 pão francês + 2 ovos mexidos + 30g whey (3 col sopa leite em pó) + 1 fruta',
-    '2 pão francês + 5 ovos (2 inteiros + 3 claras) + 2 fatias queijo muçarela + suco de frutas',
-    'Tapioca 100g recheada de frango 100g + suco de fruta',
+  {time:'Refeição 1',meal:'Refeição 1',icon:'🍳',options:[
+    '100g tapioca + 3 ovos inteiros + 30g requeijão light + 200g abacaxi ou mamão',
   ]},
-  {time:'12:00h',meal:'Almoço',icon:'🍛',options:[
-    '100g peixe (tilápia/linguado) ou frango cozido + 200g arroz + 200g feijão + 2 col farofa + 100g legumes + salada à vontade + azeite + suco',
-    '100g patinho ou filé mignon + 200–250g macarrão + 200g feijão + 2 col farofa + 100g legumes + salada + azeite + suco',
+  {time:'Refeição 2',meal:'Pós-Treino Imediato',icon:'💪',options:[
+    '80g mucilon de arroz + 100g banana + 30g whey',
   ]},
-  {time:'16:00h',meal:'Lanche',icon:'🥪',options:[
-    '100g hipercalórico + leite em pó (2 col sopa) + 2 bananas (ou bananadas)',
-    '100g frango desfiado + 150g aipim cozido + suco de frutas',
-    '80g carne (patinho moído) + 150g arroz + 1 fruta',
+  {time:'Refeição 3',meal:'Refeição 3',icon:'🍛',options:[
+    '120g peito de frango + 300g arroz branco ou macarrão + 50g feijão preto + 100g abacaxi ou mamão + 200ml suco de uva integral',
+    '120g peixe + 300g arroz branco ou macarrão + 50g feijão preto + 100g abacaxi ou mamão + 200ml suco de uva integral',
+    '120g filé suíno + 300g arroz branco ou macarrão + 50g feijão preto + 100g abacaxi ou mamão + 200ml suco de uva integral',
   ]},
-  {time:'19–20h',meal:'Jantar',icon:'🌙',options:[
-    '100g patinho/filé + 250g arroz + 200g feijão + 2 col farofa + legumes + salada + suco',
-    '100g frango/peixe/carne bovina/lombo + 250g macarrão + 200g feijão + farofa + legumes + salada + suco',
+  {time:'Refeição 4',meal:'Refeição 4',icon:'🥗',options:[
+    '120g peito de frango + 200g arroz branco ou macarrão + 100g abacaxi ou mamão',
+    '120g peixe + 200g arroz branco ou macarrão + 100g abacaxi ou mamão',
+    '120g filé suíno + 200g arroz branco ou macarrão + 100g abacaxi ou mamão',
   ]},
-  {time:'21:00h',meal:'Ceia',icon:'😴',options:[
-    '30g whey diluído em 2 col sopa leite + 2 col aveia + 1 fruta',
+  {time:'Refeição 5',meal:'Refeição 5',icon:'🌙',options:[
+    '120g carne vermelha magra + 200g arroz branco ou macarrão + 50g feijão preto + 10ml azeite extravirgem',
+  ]},
+  {time:'Refeição 6',meal:'Refeição 6 — Ceia',icon:'😴',options:[
+    '170g iogurte natural desnatado + 100g abacate + 100g abacaxi ou mamão + 1 banana média + 30g aveia + 20g whey + 5g psyllium',
   ]},
 ];
 
@@ -970,7 +973,7 @@ function buildDashboard(){
   const doneThisWeek=thisWeekWorkouts.length;
   const todayDow=(now.getDay()+6)%7;
   const DAYS_SHORT=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-  const woColors={pull:'var(--pull)',push:'var(--push)',legs:'var(--legs)',upper:'var(--upper)',lower:'var(--lower)',a:'var(--pull)',b:'var(--push)',c:'var(--legs)',d:'var(--pull)',e:'var(--push)',f:'var(--lower)',rest:'var(--muted)'};
+  const woColors={pull:'var(--pull)',push:'var(--push)',legs:'var(--legs)',upper:'var(--upper)',lower:'var(--lower)',a1:'var(--push)',b1:'var(--pull)',c1:'var(--legs)',a2:'var(--push)',b2:'var(--pull)',c2:'var(--lower)',rest:'var(--muted)'};
   const prog=getWorkoutProgram();
 
   // ── Semana: macro acumulado ──
@@ -983,7 +986,7 @@ function buildDashboard(){
   // ── Semana: suplementos hoje ──
   const suppLog=JSON.parse(localStorage.getItem('bt_supps_'+getTodayKey())||'{}');
   const suppDone=Object.keys(suppLog).length;
-  const suppTotal=6;
+  const suppTotal=5;
 
   // ── Semana: água hoje ──
   const waterMl=parseInt(localStorage.getItem('bt_water_'+getTodayKey())||'0');
@@ -1166,7 +1169,7 @@ function buildWeekBar(){
   const today=new Date().getDay();// 0=Sun
   const map={1:'pull',2:'push',3:'legs',4:'rest',5:'upper',6:'lower',0:'rest'};
   const todayType=map[today];
-  const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower',rest:'Rest'};
+  const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower',a1:'A1',b1:'B1',c1:'C1',a2:'A2',b2:'B2',c2:'C2',rest:'Rest'};
   const days=getActiveSchedule().map((d,i)=>{
     const jsDay=[1,2,3,4,5,6,0][i];
     const isToday=jsDay===today;
@@ -1815,7 +1818,7 @@ function buildTreinos(){
 
 function buildWoLog(tabs){
   // Week schedule selector
-  const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower',rest:'Rest'};
+  const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower',a1:'A1',b1:'B1',c1:'C1',a2:'A2',b2:'B2',c2:'C2',rest:'Rest'};
   const ac=activeWorkoutType&&activeWorkoutType!=='rest'?getWorkoutProgram()[activeWorkoutType]?.color||'var(--him)':'var(--muted)';
   const days=getActiveSchedule().map(d=>`<div class="wo-day ${d.type}${activeWorkoutType===d.type?' active':''}" onclick="activeWorkoutType='${d.type}';render()"><div class="wd-label">${d.day}</div><div class="wd-type">${labels[d.type]||'—'}</div><div class="wd-dot"></div></div>`).join('');
 
@@ -2192,13 +2195,15 @@ function saveWorkoutSession(){
 function buildWoHistory(tabs){
   const sessions=getWorkouts();
   const ac=PROFILES[CP].accentHex;
-  const chipClass={pull:'chip-pull',push:'chip-push',legs:'chip-legs',upper:'chip-upper',lower:'chip-lower'};
-  const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower'};
+  const chipClass={pull:'chip-pull',push:'chip-push',legs:'chip-legs',upper:'chip-upper',lower:'chip-lower',a1:'chip-a1',b1:'chip-b1',c1:'chip-c1',a2:'chip-a2',b2:'chip-b2',c2:'chip-c2'};
+  const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower',a1:'A1',b1:'B1',c1:'C1',a2:'A2',b2:'B2',c2:'C2'};
 
   // Stats
   const totalW=sessions.length;
   const thisWeek=getThisWeekSessions();
-  const typeCount={pull:0,push:0,legs:0,upper:0,lower:0};
+  // Build typeCount dynamically from all sessions
+  const typeCount={};
+  Object.keys(labels).forEach(k=>{typeCount[k]=0;});
   sessions.forEach(s=>{if(typeCount[s.type]!==undefined)typeCount[s.type]++;});
 
   const stats=`<div class="grid4" style="margin-bottom:20px">
@@ -2268,15 +2273,16 @@ function buildWoProgress(tabs){
   }).join('');
 
   const muscleMap={
-    'Peito':     {keys:['Supino Inclinado Máq/Halter','Supino Reto Máq/Smith','Supino Reto Barra','Voador','Crucifixo Inclinado Cabo'],color:'var(--push)'},
-    'Costas':    {keys:['Remada Curvada','Remada Curvada Barra','Remada Baixa Pgd. Aberta','Serrote','Pulley Frente Triângulo','Pulley Frente Aberto','Remada Baixa Triângulo','Barra Fixa'],color:'var(--pull)'},
-    'Ombros':    {keys:['Elevação Lateral Sentado','Elev. Lateral Máq/Cabo Uni.','Elevação Frontal','Desenvolvimento Halteres','Desenvolvimento Militar Barra','Elevação Lateral Máq/Halteres'],color:'var(--upper)'},
-    'Bíceps':    {keys:['Rosca Direta Cabo','Rosca Direta Banco 45°','Rosca Scott Máq/Cabo'],color:'var(--pull)'},
-    'Tríceps':   {keys:['Tríceps Polia Alta','Tríceps Francês c/ Corda','Tríceps Corda','Tríceps Francês'],color:'var(--push)'},
-    'Quadríceps':{keys:['Agachamento Hack','Hack Machine','Leg Press 45','Leg 45°','Extensor','Agachamento Livre','Agachamento Búlgaro Halter'],color:'var(--legs)'},
-    'Posterior': {keys:['Stiff','Flexor Deitado','Flexor Sentado','Meio Terra','Hiperextensão Banco Romano'],color:'var(--lower)'},
-    'Glúteos':   {keys:['Elevação de Quadril','Agachamento Búlgaro Halter','Agachamento Livre'],color:'var(--lower)'},
-    'Panturrilha':{keys:['Panturrilha em Pé','Panturrilha Sentado','Panturrilha Máq Em Pé'],color:'var(--legs)'},
+    'Peito':       {keys:['Supino Reto Máquina','Supino Inclinado Smith/Halteres','Crucifixo Inclinado Halteres/Cabo','Crucifixo Máquina','Paralelas com Sobrecarga','JM Press Smith / Paralelas c/ Sobrecarga'],color:'var(--push)'},
+    'Costas':      {keys:['Puxada Aberta Pronada no Cabo','Remada Unilateral Neutra Máquina','Remada Baixa Pegada Aberta','Puxada Unilateral Supinada Máq./Polia','Remada Máq. Peito Apoiado Aberta','Remada Unilateral Neutra Polia Baixa'],color:'var(--pull)'},
+    'Ombros':      {keys:['Desenvolvimento Smith/Halteres','Desenvolvimento Máquina','Elevação Unilateral Polia Média','Elevação Lateral Halteres/Máquina'],color:'var(--upper)'},
+    'Bíceps':      {keys:['Rosca Scott Bilateral Máquina','Rosca Unilateral de Costas p/ Polia','Rosca Scott Unilateral Máquina','Rosca Inclinado 45° Halteres'],color:'var(--pull)'},
+    'Tríceps':     {keys:['JM Press Smith / Paralelas c/ Sobrecarga','Extensão Tríceps Polia c/ Banco','Francês no Cabo'],color:'var(--push)'},
+    'Deltoide Post':{keys:['Crucifixo Inverso Unilateral no Cabo','Crucifixo Inverso Máquina'],color:'var(--upper)'},
+    'Quadríceps':  {keys:['Agachamento no Hack','Cadeira Extensora','Cadeira Extensora Unilateral','Leg Press'],color:'var(--legs)'},
+    'Posterior':   {keys:['Levantamento Terra Stiff','Mesa Flexora','Cadeira Flexora'],color:'var(--lower)'},
+    'Glúteos':     {keys:['Extensão de Quadril Banco Romano','Elevação Pélvica','Cadeira Adutora'],color:'var(--lower)'},
+    'Panturrilha': {keys:['Panturrilha Joelhos Estendidos Máq.','Panturrilha no Leg'],color:'var(--legs)'},
   };
   const muscleVolumes=Object.entries(muscleMap).map(([muscle,cfg])=>{
     const cutoff=new Date(Date.now()-7*24*3600*1000);
@@ -3110,8 +3116,8 @@ function buildNutricao(){
     const todayLog=getMealLog(getTodayKey());
     const adherePct=stats.weekTotal>0?Math.round(stats.weekDone/stats.weekTotal*100):0;
     const todayPct=Math.round(stats.todayDone/stats.todayTotal*100);
-    const MEAL_NAMES=['Pré-Treino','Pós-Treino','Almoço','Lanche','Jantar','Ceia'];
-    const MEAL_ICONS=['⚡','💪','🍛','🥪','🌙','😴'];
+    const MEAL_NAMES=['Intra-Treino','Refeição 1','Pós-Treino','Refeição 3','Refeição 4','Refeição 5','Ceia'];
+    const MEAL_ICONS=['🏋️','🍳','💪','🍛','🥗','🌙','😴'];
     // Water goal 4L = 4000ml
     const waterPct=Math.min((stats.water/4000)*100,100);
 
@@ -3121,7 +3127,7 @@ function buildNutricao(){
       const dk=d.toISOString().slice(0,10);
       const log=getMealLog(dk);
       const done=Object.keys(log).filter(k=>k.startsWith('meal_')).length;
-      const pct=Math.round(done/6*100);
+      const pct=Math.round(done/7*100);
       const isToday=dk===getTodayKey();
       const dayLabel=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];
       const color=pct>=100?'var(--good)':pct>=60?'var(--him)':pct>0?'var(--warn)':'var(--border2)';
@@ -3185,7 +3191,7 @@ function buildNutricao(){
             <div class="bar"><div class="fill" style="width:${Math.max(waterPct,2)}%;background:var(--info)"></div></div>
             <div style="display:flex;gap:6px;margin-top:8px">
               ${[['+ 250ml',250],['+ 500ml',500],['+ 1L',1000]].map(([l,ml])=>`<button onclick="addWater(${ml})" style="flex:1;padding:6px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--info);font-family:var(--font);font-size:9px;cursor:pointer">${l}</button>`).join('')}
-              <button onclick="addWater(-localStorage.getItem('bt_water_'+getTodayKey()));localStorage.setItem('bt_water_'+getTodayKey(),'0');render()" style="padding:6px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;cursor:pointer">↺</button>
+              <button onclick="localStorage.setItem('bt_water_'+getTodayKey(),'0');render()" style="padding:6px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;cursor:pointer">↺</button>
             </div>
           </div>
         </div>
@@ -3236,12 +3242,11 @@ function buildNutricao(){
       render();
     };
     const suppList=[
-      {name:'Whey Protein',dose:'1–2 scoops',timing:'Pós-treino',icon:'🥛'},
-      {name:'Creatina',dose:'3–5g',timing:'Qualquer horário',icon:'⚡'},
-      {name:'Vitamina D3',dose:'2000–5000 UI',timing:'Com refeição',icon:'☀️'},
-      {name:'Ômega-3',dose:'2–3g',timing:'Com refeição',icon:'🐟'},
-      {name:'Cafeína',dose:'200mg',timing:'30min pré-treino',icon:'☕'},
-      {name:'ZMA',dose:'1 dose',timing:'Antes de dormir',icon:'😴'},
+      {name:'Vit. D3 5000UI + K2MK7 150MCG',dose:'1 cápsula',timing:'Pela manhã',icon:'☀️'},
+      {name:'Vitamina B12 2000mcg (Metilcobalamina)',dose:'1 cápsula',timing:'Pela manhã',icon:'💊'},
+      {name:'Anastrozol 0,2mg + Tamoxifeno 10mg',dose:'1 cápsula',timing:'Pela manhã',icon:'⚕️'},
+      {name:'Protetores (Curcumina 500mg + NAC 600mg + SAM-e 200mg + ALA 100mg)',dose:'1 cápsula',timing:'À noite',icon:'🛡️'},
+      {name:'Sono (L-Teanina 300mg + Melatonina 10mg + GABA 500mg + Zinco 30mg + B6 50mg)',dose:'1 dose',timing:'60 min antes de dormir',icon:'😴'},
     ];
     const doneCnt=Object.keys(todaySuppLog).length;
     const suppChecks=suppList.map(s=>{
@@ -3281,12 +3286,11 @@ function buildNutricao(){
       </div>`:''}
       <div class="grid2">
         ${[
-          {name:'Whey Protein',dose:'1–2 scoops/dia',timing:'Pós-treino',benefit:'Recuperação e síntese proteica',color:'var(--good)',icon:'🥛',note:'Mínimo 20–25g por porção. Concentrado ou Isolado.'},
-          {name:'Creatina Monoidratada',dose:'3–5g/dia',timing:'Qualquer horário',benefit:'Força, potência e massa',color:'var(--info)',icon:'⚡',note:'Não requer saturação. Uso contínuo. Sem ciclos.'},
-          {name:'Vitamina D3 + K2',dose:'2000–5000 UI D3',timing:'Com refeição gordurosa',benefit:'Testosterona, imunidade, ósseo',color:'var(--warn)',icon:'☀️',note:'70%+ dos brasileiros têm deficiência. Essencial.'},
-          {name:'Ômega-3',dose:'2–3g/dia',timing:'Com refeição',benefit:'Anti-inflamatório, saúde cardio',color:'var(--purple)',icon:'🐟',note:'EPA+DHA. Auxilia recuperação muscular.'},
-          {name:'Cafeína',dose:'200–400mg',timing:'30–45min pré-treino',benefit:'Performance e foco',color:'var(--bad)',icon:'☕',note:'Pausa nos fins de semana para não criar tolerância.'},
-          {name:'ZMA (Zinco+Mg+B6)',dose:'1 dose/dia',timing:'Antes de dormir',benefit:'Testosterona, qualidade do sono',color:'var(--good)',icon:'😴',note:'Importante com protocolo anabólico ativo.'},
+          {name:'D3 5000UI + K2MK7 150MCG',dose:'1 cap/manhã',timing:'Pela manhã com refeição',benefit:'Testosterona, ossos, imunidade',color:'var(--warn)',icon:'☀️',note:'D3 lipofílica — tomar com refeição gordurosa. K2MK7 direciona cálcio para os ossos.'},
+          {name:'Vitamina B12 2000mcg',dose:'1 cap/manhã',timing:'Pela manhã',benefit:'Energia, sistema nervoso, síntese proteica',color:'var(--info)',icon:'💊',note:'Metilcobalamina — forma ativa e biodisponível. Essencial com dieta de alta proteína.'},
+          {name:'Anastrozol 0,2mg + Tamoxifeno 10mg',dose:'1 cap/manhã',timing:'Pela manhã',benefit:'Controle estrogênico',color:'var(--bad)',icon:'⚕️',note:'Protocolo anabólico. Anastrozol inibe aromatase. Tamoxifeno bloqueia receptores. Siga orientação médica.'},
+          {name:'Protetores Hepáticos',dose:'1 cap/noite',timing:'À noite',benefit:'Proteção hepática e antioxidante',color:'var(--good)',icon:'🛡️',note:'Curcumina 500mg + NAC 600mg + SAM-e 200mg + ALA 100mg. Suporte ao fígado com protocolo ativo.'},
+          {name:'Sono (L-Teanina + Melatonina + GABA + Zinco + B6)',dose:'1 dose/noite',timing:'60 min antes de dormir',benefit:'Qualidade do sono, recuperação, GH noturno',color:'var(--purple)',icon:'😴',note:'L-Teanina 300mg + Melatonina 10mg + GABA 500mg + Zinco Quelado 30mg + B6 50mg. Potencializa o GH noturno.'},
         ].map(s=>`<div class="card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
             <div><span style="font-size:24px">${s.icon}</span><div style="font-size:13px;font-weight:700;margin-top:4px">${s.name}</div></div>
@@ -4346,7 +4350,7 @@ function buildSimulador(subtabs,d,ac,w){
         <div style="font-size:10px;font-weight:700;color:${ac}">+${diffKcal} kcal/dia</div>
       </div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:12px;padding:7px 10px;background:rgba(226,226,64,.06);border-radius:6px;border-left:2px solid ${ac}">
-        Porções calculadas para distribuir <strong style="color:${ac}">+${diffKcal} kcal</strong> entre as 6 refeições do seu plano.
+        Porções calculadas para distribuir <strong style="color:${ac}">+${diffKcal} kcal</strong> entre as 7 refeições do seu plano.
         ${totalSuggested>0?`Total estimado: <strong style="color:var(--good)">+${totalSuggested} kcal</strong>`:''}
       </div>
       ${mealSuggestions.filter(m=>m.active).map(m=>`
@@ -4460,37 +4464,31 @@ function buildGuia(){
 // Macros per meal per option (all 3 options estimated)
 // [kcal, prot, carb, gord, fibra]
 const ALL_MEAL_MACROS = [
-  // 0: Pré-Treino
-  [{kcal:545,prot:16,carb:112,gord:12,fibra:12},  // op1: leite+2banana+aveia+morango+mel
-   {kcal:498,prot:14,carb:98,gord:14,fibra:11},   // op2: 2banana+leite+pasta+aveia+mel
-   {kcal:470,prot:12,carb:102,gord:10,fibra:9}],  // op3: leite+2banana+maçã+farinha+aveia
-  // 1: Pós-Treino
-  [{kcal:554,prot:49,carb:61,gord:14,fibra:6},    // op1: 2pao+2ovo+whey+fruta
-   {kcal:580,prot:52,carb:58,gord:16,fibra:5},    // op2: 2pao+5ovo+queijo+suco
-   {kcal:420,prot:38,carb:42,gord:8,fibra:3}],    // op3: tapioca+frango+suco
-  // 2: Almoço
-  [{kcal:729,prot:42,carb:114,gord:16,fibra:13},  // op1: peixe+arroz+feijao+legumes
-   {kcal:810,prot:44,carb:118,gord:22,fibra:11},  // op2: patinho+macarrao+feijao
-   {kcal:729,prot:42,carb:114,gord:16,fibra:13}], // op3: (mesma base)
-  // 3: Lanche
-  [{kcal:817,prot:31,carb:133,gord:21,fibra:7},   // op1: hipercalorico+leite+2banana
-   {kcal:340,prot:32,carb:30,gord:8,fibra:3},     // op2: frango+aipim+suco
-   {kcal:350,prot:28,carb:38,gord:7,fibra:2}],    // op3: carne+arroz+fruta
-  // 4: Jantar
-  [{kcal:849,prot:49,carb:130,gord:26,fibra:14},  // op1: patinho+arroz+feijao
-   {kcal:870,prot:50,carb:128,gord:28,fibra:12},  // op2: frango/peixe+macarrao+feijao
-   {kcal:849,prot:49,carb:130,gord:26,fibra:14}], // op3: (mesma base)
-  // 5: Ceia
-  [{kcal:313,prot:26,carb:41,gord:2,fibra:6},     // op1: whey+aveia+fruta
-   {kcal:313,prot:26,carb:41,gord:2,fibra:6},     // op2: (mesma)
-   {kcal:313,prot:26,carb:41,gord:2,fibra:6}],    // op3: (mesma)
+  // 0: Intra-Treino — dextrose+aminoácidos+glicerina+creatina+sal
+  [{kcal:277,prot:20,carb:49,gord:0,fibra:0}],
+  // 1: Refeição 1 — tapioca+3ovos+requeijão light+abacaxi/mamão
+  [{kcal:691,prot:23,carb:109,gord:18,fibra:4}],
+  // 2: Refeição 2 Pós-Treino — mucilon+banana+whey
+  [{kcal:505,prot:31,carb:91,gord:3,fibra:3}],
+  // 3: Refeição 3 — proteína+arroz/macarrão+feijão+fruta+suco uva
+  [{kcal:848,prot:50,carb:142,gord:5,fibra:6},   // frango
+   {kcal:820,prot:48,carb:142,gord:5,fibra:6},   // peixe
+   {kcal:860,prot:50,carb:142,gord:7,fibra:6}],  // filé suíno
+  // 4: Refeição 4 — proteína+arroz/macarrão+fruta
+  [{kcal:505,prot:42,carb:67,gord:4,fibra:3},    // frango
+   {kcal:480,prot:40,carb:67,gord:4,fibra:3},    // peixe
+   {kcal:515,prot:42,carb:67,gord:6,fibra:3}],   // filé suíno
+  // 5: Refeição 5 — carne vermelha+arroz/macarrão+feijão+azeite
+  [{kcal:643,prot:41,carb:71,gord:20,fibra:4}],
+  // 6: Refeição 6 Ceia — iogurte+abacate+fruta+banana+aveia+whey+psyllium
+  [{kcal:579,prot:38,carb:74,gord:19,fibra:9}],
 ];
 
 function getConsumedMacros(){
   // Returns macros consumed today based on checked meals and chosen options
   const log=getMealLog(getTodayKey());
   let kcal=0,prot=0,carb=0,gord=0,fibra=0;
-  for(let i=0;i<6;i++){
+  for(let i=0;i<7;i++){
     const entry=log['meal_'+i];
     if(!entry) continue;
     const optIdx=(entry.option||1)-1;
@@ -4567,7 +4565,7 @@ function showMealOptionPicker(mealIdx){
   document.body.appendChild(overlay);
 }
 function getMealStats(){
-  const totalMeals=6; // refeições por dia no plano
+  const totalMeals=7; // refeições por dia no plano
   // Today
   const todayLog=getMealLog(getTodayKey());
   const todayDone=Object.keys(todayLog).filter(k=>k.startsWith('meal_')).length;
@@ -4834,7 +4832,7 @@ function buildEvolutionReport(period){
     const deloadNeeded=checkDeload();
     if(deloadNeeded) improvements.push(`Você treinou ${deloadNeeded} semanas seguidas — semana de deload recomendada! Vá ao Guia para mais detalhes`);
     // Desequilíbrio
-    const typeCount={pull:0,push:0,legs:0,upper:0,lower:0};
+    const typeCount={pull:0,push:0,legs:0,upper:0,lower:0,a1:0,b1:0,c1:0,a2:0,b2:0,c2:0};
     recentWo.forEach(s=>{if(typeCount[s.type]!==undefined)typeCount[s.type]++;});
     const minType=Object.entries(typeCount).sort(([,a],[,b])=>a-b)[0];
     const maxType=Object.entries(typeCount).sort(([,a],[,b])=>b-a)[0];
