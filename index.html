@@ -105,7 +105,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font2);min-he
 .tb-title{font-family:var(--font2);font-size:21px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .him-mode .tb-accent{color:var(--him)}
 .tb-sub{font-size:11px;color:var(--muted);margin-top:3px;font-weight:700}
-.tb-badge{padding:6px 14px;border-radius:20px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800}
+.tb-badge{padding:6px 14px;border-radius:20px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;white-space:nowrap}
 .him-mode .tb-badge{background:var(--himb);color:var(--him);border:1px solid var(--himl)}
 .page{padding:22px 24px;max-width:100%;box-sizing:border-box}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -197,6 +197,7 @@ input:focus,select:focus{border-color:var(--muted)}
 .set-done-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--bg5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0}
 .set-done-btn.done{background:rgba(74,222,128,.2);border-color:var(--good)}
 .set-prev{font-size:9px;color:var(--muted);text-align:center}
+.set-delta{font-size:8px;font-weight:800;text-align:center;margin-top:4px;line-height:1.15;letter-spacing:.2px;min-height:10px}
 /* Timer */
 #rest-timer{position:fixed;bottom:70px;right:20px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;z-index:150;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:180px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
@@ -282,10 +283,12 @@ input:focus,select:focus{border-color:var(--muted)}
   #main{margin-left:0}
   #mobile-nav{display:flex !important}
 
-  /* ── Topbar ── */
-  .tb-title{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw}
-  .tb-sub{font-size:10px;font-weight:700;color:var(--sub)}
-  .tb-badge{font-size:9px;padding:4px 10px;font-weight:800}
+  /* ── Topbar — menos poluído no celular ── */
+  #topbar{padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top));gap:10px}
+  .tb-evo-btn{display:none}
+  .tb-title{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58vw}
+  .tb-sub{font-size:10px;font-weight:700;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58vw}
+  .tb-badge{font-size:9px;padding:5px 11px;font-weight:800}
 
   /* ── Typography ── */
   body{font-size:14px}
@@ -296,14 +299,14 @@ input:focus,select:focus{border-color:var(--muted)}
   .trow{padding:10px 0}
 
   /* ── Page & Cards ── */
-  .page{padding:12px;max-width:100vw;overflow-x:hidden;box-sizing:border-box}
-  .card{padding:13px;border-radius:12px;overflow:hidden;word-break:break-word}
-  .card-accent{padding:13px;border-radius:12px;overflow:hidden}
+  .page{padding:16px 14px;max-width:100vw;overflow-x:hidden;box-sizing:border-box}
+  .card{padding:14px;border-radius:14px;overflow:hidden;word-break:break-word}
+  .card-accent{padding:15px;border-radius:14px;overflow:hidden}
 
-  /* ── Grids ── */
-  .grid2{grid-template-columns:1fr 1fr;gap:9px}
-  .grid3,.grid4{grid-template-columns:1fr 1fr;gap:9px}
-  .fgrid{grid-template-columns:1fr 1fr;gap:9px}
+  /* ── Grids — mais espaço entre cards ── */
+  .grid2{grid-template-columns:1fr 1fr;gap:11px}
+  .grid3,.grid4{grid-template-columns:1fr 1fr;gap:11px}
+  .fgrid{grid-template-columns:1fr 1fr;gap:11px}
 
   /* ── Inputs — prevent iOS zoom (font-size ≥16px) ── */
   input[type=number],input[type=text],input[type=email],select{
@@ -375,8 +378,8 @@ input:focus,select:focus{border-color:var(--muted)}
   .medidas-grid{grid-template-columns:1fr 1fr !important;gap:9px !important}
 
   /* ── Meal cards ── */
-  .meal-option{padding:10px 11px;font-size:11px;line-height:1.75;border-radius:7px}
-  .meal-check-btn{width:38px;height:38px;font-size:17px;border-width:2px}
+  .meal-option{padding:13px;font-size:12px;line-height:1.9;border-radius:9px}
+  .meal-check-btn{width:40px;height:40px;font-size:18px;border-width:2px}
 
   /* ── Badges ── */
   .badge,.badge-good,.badge-warn,.badge-bad,.badge-info,.badge-purple{font-size:8px;padding:2px 6px;font-weight:700}
@@ -446,7 +449,9 @@ input:focus,select:focus{border-color:var(--muted)}
 
   /* ── General overflow ── */
   *{box-sizing:border-box;-webkit-hyphens:auto;hyphens:auto;word-break:break-word;max-width:100%}
-  .big-num,.badge,.tb-badge,.wo-type-chip,.set-badge,input,select,button{word-break:normal;hyphens:none}
+  .big-num,.badge,.tb-badge,.wo-type-chip,.set-badge,.lbl,.set-label,.wd-type,.wd-label,input,select,button{word-break:normal;hyphens:none}
+  /* rótulos não quebram no meio da palavra e ocupam menos espaço */
+  .lbl{letter-spacing:1px}
   img,canvas,svg{max-width:100% !important}
 
   /* ── Inline font reductions ── */
@@ -486,7 +491,7 @@ input:focus,select:focus{border-color:var(--muted)}
 <div id="main">
   <div id="topbar">
     <div><div class="tb-title" id="tb-title"><span class="tb-accent">Dashboard</span></div><div class="tb-sub" id="tb-sub"></div></div>
-    <div style="display:flex;align-items:center;gap:8px"><button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🌙</button><button onclick="showEvolutionCard('semanal')" style="background:var(--himb);border:1px solid var(--himl);color:var(--him);border-radius:20px;padding:5px 12px;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">📈 Evolução</button><div class="tb-badge" id="tb-badge">—</div></div>
+    <div style="display:flex;align-items:center;gap:8px"><button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🌙</button><button class="tb-evo-btn" onclick="showEvolutionCard('semanal')" style="background:var(--himb);border:1px solid var(--himl);color:var(--him);border-radius:20px;padding:5px 12px;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">📈 Evolução</button><div class="tb-badge" id="tb-badge">—</div></div>
   </div>
   <div id="content"></div>
 </div>
@@ -1910,6 +1915,7 @@ function buildWoLog(tabs){
           <div class="set-badge ${typeClass}">${s.l}</div>
           <div class="set-label">${s.r} reps</div>
           ${!isWork&&hasPrev?`<div style="font-size:7px;color:var(--muted);text-align:center;margin-top:1px">${prevW?prevW+'kg':''}${prevW&&prevR?'×':''}${prevR?prevR:''}↺</div>`:''}
+          ${isWork?`<div id="delta_${exIdx}_${si}" class="set-delta"></div>`:''}
         </div>
         <div>
           <div class="set-label">Carga (kg)</div>
@@ -1924,7 +1930,7 @@ function buildWoLog(tabs){
             placeholder="${rPlaceholder}" ${rVal} inputmode="numeric"
             style="${isWork&&prevR?'border-color:rgba(226,226,64,.4);color:var(--him);font-weight:800':''}"/>
         </div>
-        <button class="set-done-btn" id="btn_${exIdx}_${si}" onclick="doneSet(${exIdx},${si},${s.rest},${exIdx})" title="Marcar como feito">✓</button>
+        <button class="set-done-btn" id="btn_${exIdx}_${si}" onclick="doneSet(${exIdx},${si},${s.rest},${exIdx},${isWork?1:0},${Number(prevW)||0},${Number(prevR)||0},${max||0})" title="Marcar como feito">✓</button>
       </div>`;
     }).join('');
 
@@ -1986,12 +1992,38 @@ function buildWoLog(tabs){
   </div>`;
 }
 
-function doneSet(exIdx,si,restSecs,exIdxOrName){
+// Feedback de progressão de UMA série vs. o último treino / recorde
+function setFeedback(w,r,prevW,prevR,maxLoad){
+  if(!w||!r) return '';
+  if(maxLoad>0 && w>maxLoad) return `<span style="color:var(--him)">🏆 PR ${w}kg</span>`;
+  if(prevW>0){
+    if(w>prevW) return `<span style="color:var(--good)">↑ +${+(w-prevW).toFixed(1)}kg</span>`;
+    if(w===prevW && r>prevR) return `<span style="color:var(--good)">↑ +${r-prevR} rep</span>`;
+    if(w===prevW && r===prevR) return `<span style="color:var(--warn)">= igualou</span>`;
+    if(w<prevW) return `<span style="color:var(--bad)">↓ -${+(prevW-w).toFixed(1)}kg</span>`;
+    if(w===prevW && r<prevR) return `<span style="color:var(--bad)">↓ -${prevR-r} rep</span>`;
+  }
+  if(maxLoad>0 && w===maxLoad) return `<span style="color:var(--him)">= recorde</span>`;
+  return `<span style="color:var(--good)">✓ feito</span>`;
+}
+function doneSet(exIdx,si,restSecs,exIdxOrName,isWork,prevW,prevR,maxLoad){
   const btn=document.getElementById(`btn_${exIdx}_${si}`);
   const row=document.getElementById(`srow_${exIdx}_${si}`);
   if(btn){btn.classList.toggle('done');btn.textContent=btn.classList.contains('done')?'✓':'○';}
   if(row){row.classList.toggle('done-row');}
-  if(btn&&btn.classList.contains('done')&&restSecs>0){
+  const isDone=btn&&btn.classList.contains('done');
+  // Selo de progressão (só séries de trabalho)
+  if(isWork){
+    const badge=document.getElementById(`delta_${exIdx}_${si}`);
+    if(badge){
+      if(isDone){
+        const w=parseFloat(document.getElementById(`w_${exIdx}_${si}`)?.value)||0;
+        const r=parseInt(document.getElementById(`r_${exIdx}_${si}`)?.value)||0;
+        badge.innerHTML=setFeedback(w,r,prevW||0,prevR||0,maxLoad||0);
+      } else { badge.innerHTML=''; }
+    }
+  }
+  if(isDone&&restSecs>0){
     // Look up exercise name safely
     let exName='';
     try{
@@ -2197,16 +2229,71 @@ function saveWorkoutSession(){
   const lastSets=lastSame?calcSessionSets(lastSame):0;
   const tonnageDiff=lastTonnage>0?parseFloat((tonnage-lastTonnage).toFixed(1)):null;
   const setsDiff=lastSets>0?totalSets-lastSets:null;
+  // ── Quanto me desafiei? Séries que superaram o último treino + novos recordes ──
+  let beatCount=0, prCount=0, workCount=0;
+  session.exercises.forEach(ex=>{
+    const histMax=getMaxLoad(ex.name); // recorde ANTES desta sessão (ainda não salva)
+    const lastEx=lastSame?.exercises?.find(e=>e.name===ex.name);
+    const lastWork=lastEx?lastEx.sets.filter(s=>s.t==='work'&&s.weight>0):[];
+    let wi=0;
+    ex.sets.filter(s=>s.t==='work').forEach(s=>{
+      if(s.weight>0&&s.reps>0){
+        workCount++;
+        if(histMax>0 && s.weight>histMax) prCount++;
+        const pv=lastWork[wi];
+        if(pv && (s.weight>pv.weight || (s.weight===pv.weight && s.reps>pv.reps))) beatCount++;
+      }
+      wi++;
+    });
+  });
   saveWorkout(session);
   stopTimer();
   woSubTab='history';
   render();
-  // Resumo de volume pós-treino
-  setTimeout(()=>{
-    const tLine=tonnage>0?`\n📦 Tonelagem: ${tonnage}kg${tonnageDiff!==null?` (${tonnageDiff>=0?'+':''}${tonnageDiff}kg vs último)`:''}`:'' ;
-    const sLine=`\n✅ Séries completadas: ${totalSets}${setsDiff!==null?` (${setsDiff>=0?'+':''}${setsDiff} vs último)`:''}`;
-    alert(`💪 Treino salvo! Continue evoluindo!${sLine}${tLine}`);
-  },100);
+  setTimeout(()=>showWorkoutSummary({tonnage,tonnageDiff,totalSets,setsDiff,beatCount,prCount,workCount,color:prog.color}),120);
+}
+function showWorkoutSummary(d){
+  const old=document.getElementById('wo-summary'); if(old) old.remove();
+  const pct=(d.tonnageDiff!==null&&d.tonnage-d.tonnageDiff>0)?Math.round(d.tonnageDiff/(d.tonnage-d.tonnageDiff)*100):null;
+  // Mensagem de acordo com o desempenho
+  let verdict, vColor, vIcon;
+  if(d.prCount>0){ verdict='NOVO RECORDE! Você quebrou seu limite.'; vColor='var(--him)'; vIcon='🏆'; }
+  else if(d.beatCount>=Math.ceil(d.workCount/2)&&d.workCount>0){ verdict='Você se superou na maioria das séries. É assim que se progride!'; vColor='var(--good)'; vIcon='🔥'; }
+  else if(d.beatCount>0){ verdict='Você avançou em algumas séries. Continue empurrando o limite.'; vColor='var(--good)'; vIcon='📈'; }
+  else if(d.tonnageDiff!==null&&d.tonnageDiff>=0){ verdict='Manteve o volume. Na próxima, tente +2,5kg ou +1 rep.'; vColor='var(--warn)'; vIcon='💪'; }
+  else { verdict='Treino abaixo do último. Descanso e alimentação contam — volte com tudo.'; vColor='var(--bad)'; vIcon='⚡'; }
+  const diffChip=(val,unit)=> val===null?'':`<span style="font-size:11px;font-weight:800;color:${val>0?'var(--good)':val<0?'var(--bad)':'var(--muted)'}">${val>0?'+':''}${val}${unit}</span>`;
+  const ov=document.createElement('div');
+  ov.id='wo-summary';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(8,8,14,.92);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))';
+  ov.innerHTML=`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:18px;padding:24px 20px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:40px;line-height:1;margin-bottom:8px">${vIcon}</div>
+      <div style="font-family:var(--font2);font-size:20px;font-weight:800;color:${d.color}">Treino salvo!</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5">${verdict}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--bg4);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:var(--good);line-height:1">${d.beatCount}<span style="font-size:13px;color:var(--muted)">/${d.workCount}</span></div>
+        <div class="lbl" style="margin-top:6px">Séries superadas</div>
+      </div>
+      <div style="background:var(--bg4);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:var(--him);line-height:1">${d.prCount}</div>
+        <div class="lbl" style="margin-top:6px">Novos recordes 🏆</div>
+      </div>
+      <div style="background:var(--bg4);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:var(--text);line-height:1">${d.tonnage}<span style="font-size:12px;color:var(--muted)">kg</span></div>
+        <div class="lbl" style="margin-top:6px">Tonelagem ${diffChip(d.tonnageDiff,'kg')}${pct!==null?` <span style="color:var(--muted)">(${pct>0?'+':''}${pct}%)</span>`:''}</div>
+      </div>
+      <div style="background:var(--bg4);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:var(--text);line-height:1">${d.totalSets}</div>
+        <div class="lbl" style="margin-top:6px">Séries feitas ${diffChip(d.setsDiff,'')}</div>
+      </div>
+    </div>
+    <button onclick="document.getElementById('wo-summary').remove()" style="width:100%;padding:13px;background:${d.color};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Continuar evoluindo →</button>
+  </div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);
 }
 
 function buildWoHistory(tabs){
