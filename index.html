@@ -198,6 +198,23 @@ input:focus,select:focus{border-color:var(--muted)}
 .set-done-btn.done{background:rgba(74,222,128,.2);border-color:var(--good)}
 .set-prev{font-size:9px;color:var(--muted);text-align:center}
 .set-delta{font-size:8px;font-weight:800;text-align:center;margin-top:4px;line-height:1.15;letter-spacing:.2px;min-height:10px}
+/* ── Editar Treinos ── */
+.edit-ex-row{padding:12px 0;border-bottom:1px solid var(--border)}
+.edit-ex-row:last-child{border-bottom:none}
+.edit-ex-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:9px}
+.edit-ex-name{font-size:13px;font-weight:700;min-width:0;line-height:1.35}
+.edit-ex-actions{display:flex;gap:6px;flex-shrink:0}
+.edit-ex-btn{width:32px;height:32px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);color:var(--info);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.edit-ex-btn.del{color:var(--bad)}
+.edit-ex-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.edit-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:700}
+.ex-stepper{display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:9px;overflow:hidden;background:var(--bg4)}
+.ex-stepper button{width:34px;height:34px;background:transparent;border:none;color:var(--text);font-size:19px;font-weight:800;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+.ex-stepper button:active{background:var(--bg5)}
+.ex-stepper button:disabled{opacity:.3;cursor:not-allowed}
+.ex-stepper .val{min-width:30px;text-align:center;font-family:var(--font2);font-weight:800;font-size:15px;color:var(--him)}
+.edit-reps{background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:12px;font-weight:700;padding:8px 10px;cursor:pointer;height:34px}
+.tag-add{font-size:8px;background:var(--himb);border:1px solid var(--himl);color:var(--him);padding:1px 6px;border-radius:5px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;white-space:nowrap}
 /* Timer */
 #rest-timer{position:fixed;bottom:70px;right:20px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;z-index:150;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:180px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
@@ -779,47 +796,39 @@ const DIET_TIPS = [
 // ══════════════════════════════════════
 const DIET_ITEMS = [
   // ── PROTEÍNAS ──
-  {name:'Frango',               cat:'🥩 Proteína',     unit:'g',   qtyDay:250,  icon:'🍗', obs:'Pós-treino, Almoço ou Jantar. ~100g/refeição.'},
-  {name:'Ovo inteiro',          cat:'🥩 Proteína',     unit:'un',  qtyDay:3,    icon:'🥚', obs:'2–5 ovos/dia conforme a opção escolhida.'},
-  {name:'Carne bovina (patinho)',cat:'🥩 Proteína',     unit:'g',   qtyDay:100,  icon:'🥩', obs:'Almoço ou Jantar opção 2.'},
-  {name:'Peixe (tilápia)',      cat:'🥩 Proteína',     unit:'g',   qtyDay:100,  icon:'🐟', obs:'Almoço opção 1. Pode substituir por linguado.'},
-  {name:'Tapioca',              cat:'🍚 Carboidrato',  unit:'g',   qtyDay:100,  icon:'🫓', obs:'Pós-treino opção 3.'},
-  // ── LATICÍNIOS ──
-  {name:'Leite',                cat:'🥛 Laticínio',    unit:'ml',  qtyDay:750,  icon:'🥛', obs:'~250ml Pré-treino + ~250ml Pós + ~250ml Ceia.'},
-  {name:'Queijo muçarela',      cat:'🥛 Laticínio',    unit:'g',   qtyDay:40,   icon:'🧀', obs:'2 fatias (~20g cada) no Pós-treino opção 2.'},
-  {name:'Leite em pó',          cat:'🥛 Laticínio',    unit:'g',   qtyDay:30,   icon:'🥛', obs:'Pré-treino opção 1 e Ceia (2 col sopa ≈ 15g cada).'},
+  {name:'Frango / Peixe / Filé suíno',cat:'🥩 Proteína', unit:'g', qtyDay:240, icon:'🍗', obs:'Refeição 3 e 4 (~120g cada, cru). Revezar entre frango, peixe (tilápia) e filé suíno.'},
+  {name:'Carne vermelha magra', cat:'🥩 Proteína',     unit:'g',   qtyDay:120,  icon:'🥩', obs:'Refeição 5 (patinho, coxão mole ou similar).'},
+  {name:'Ovo inteiro',          cat:'🥩 Proteína',     unit:'un',  qtyDay:3,    icon:'🥚', obs:'3 ovos inteiros na Refeição 1.'},
+  {name:'Iogurte natural desnatado',cat:'🥛 Laticínio',unit:'g',   qtyDay:170,  icon:'🥛', obs:'170g na Refeição 6 (ceia).'},
+  {name:'Requeijão light',      cat:'🥛 Laticínio',    unit:'g',   qtyDay:30,   icon:'🧀', obs:'30g na Refeição 1.'},
   // ── CARBOIDRATOS ──
-  {name:'Arroz',                cat:'🍚 Carboidrato',  unit:'g',   qtyDay:600,  icon:'🍚', obs:'200g Almoço + 150g Lanche + 250g Jantar (cozido).'},
-  {name:'Feijão',               cat:'🍚 Carboidrato',  unit:'g',   qtyDay:400,  icon:'🫘', obs:'200g Almoço + 200g Jantar (cozido).'},
-  {name:'Pão francês',          cat:'🍞 Grão/Cereal',  unit:'un',  qtyDay:2,    icon:'🥖', obs:'2 unidades no Pós-treino opções 1 e 2.'},
-  {name:'Macarrão',             cat:'🍚 Carboidrato',  unit:'g',   qtyDay:225,  icon:'🍝', obs:'200–250g Almoço ou Jantar (opção 2). Cru.'},
-  {name:'Aveia',                cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:45,   icon:'🌾', obs:'35g Pré-treino + 10g Ceia.'},
-  {name:'Aipim (macaxeira)',     cat:'🍚 Carboidrato',  unit:'g',   qtyDay:150,  icon:'🫚', obs:'150g cozido no Lanche opção 2.'},
-  {name:'Farofa',               cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:30,   icon:'🌽', obs:'2 col sopa (~15g) no Almoço + 2 col no Jantar.'},
-  {name:'Farinha láctea',       cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:30,   icon:'🌾', obs:'Pré-treino opção 3.'},
-  {name:'Hipercalórico',        cat:'🧴 Suplemento',   unit:'g',   qtyDay:100,  icon:'💪', obs:'100g no Lanche opção 1.'},
+  {name:'Arroz branco / Macarrão',cat:'🍚 Carboidrato',unit:'g',   qtyDay:700,  icon:'🍚', obs:'R3 300g + R4 200g + R5 200g (cozido). Revezar arroz ou macarrão.'},
+  {name:'Tapioca',              cat:'🍚 Carboidrato',  unit:'g',   qtyDay:100,  icon:'🫓', obs:'100g na Refeição 1.'},
+  {name:'Feijão preto',         cat:'🍚 Carboidrato',  unit:'g',   qtyDay:100,  icon:'🫘', obs:'R3 50g + R5 50g (cozido).'},
+  {name:'Mucilon de arroz',     cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:80,   icon:'🥣', obs:'80g no pós-treino imediato (Refeição 2).'},
+  {name:'Aveia',                cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:30,   icon:'🌾', obs:'30g na Refeição 6 (ceia).'},
   // ── FRUTAS ──
-  {name:'Banana',               cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:5,    icon:'🍌', obs:'~2 Pré-treino + 2 Lanche + 1 Ceia.'},
-  {name:'Morango',              cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:4,    icon:'🍓', obs:'4 unidades no Pré-treino opção 1.'},
-  {name:'Maçã',                 cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:1,    icon:'🍎', obs:'Pré-treino opção 3 ou como fruta do Lanche.'},
-  {name:'Frutas variadas',      cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:2,    icon:'🍑', obs:'Suco/fruta pós-treino e refeições. Variado.'},
-  {name:'Beterraba',            cat:'🥦 Vegetal/Fruta',unit:'fatia',qtyDay:1,   icon:'🫀', obs:'1 fatia crua no Pré-treino opção 1.'},
-  // ── LEGUMES / SALADA ──
-  {name:'Legumes variados',     cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:200,  icon:'🥕', obs:'100g Almoço + 100g Jantar. Cenoura, chuchu, etc.'},
-  {name:'Salada (folhas)',      cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:100,  icon:'🥗', obs:'À vontade no Almoço e Jantar.'},
+  {name:'Abacaxi ou mamão',     cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:500,  icon:'🍍', obs:'R1 200g + R3 100g + R4 100g + R6 100g.'},
+  {name:'Banana',               cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:2,    icon:'🍌', obs:'~1 no pós-treino + 1 média na ceia.'},
+  {name:'Abacate',              cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:100,  icon:'🥑', obs:'100g na Refeição 6 (ceia).'},
   // ── SUPLEMENTOS ──
-  {name:'Whey Protein',         cat:'🧴 Suplemento',   unit:'g',   qtyDay:60,   icon:'🥤', obs:'30g Pós-treino + 30g Ceia.'},
-  {name:'Creatina',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:5,    icon:'⚡', obs:'5g em qualquer horário.'},
-  {name:'Vitamina D3 + K2',     cat:'🧴 Suplemento',   unit:'caps',qtyDay:1,    icon:'☀️', obs:'1 cápsula com refeição gordurosa.'},
-  {name:'Ômega-3',              cat:'🧴 Suplemento',   unit:'caps',qtyDay:3,    icon:'🐟', obs:'2–3 cápsulas com refeição.'},
-  {name:'ZMA',                  cat:'🧴 Suplemento',   unit:'dose',qtyDay:1,    icon:'😴', obs:'1 dose antes de dormir.'},
+  {name:'Whey Protein',         cat:'🧴 Suplemento',   unit:'g',   qtyDay:50,   icon:'🥤', obs:'30g no pós-treino (R2) + 20g na ceia (R6).'},
+  {name:'Dextrose',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:40,   icon:'⚡', obs:'40g no intra-treino.'},
+  {name:'Aminoácidos (EAA/BCAA)',cat:'🧴 Suplemento',  unit:'g',   qtyDay:20,   icon:'🧬', obs:'20g no intra-treino.'},
+  {name:'Creatina',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:10,   icon:'💪', obs:'10g no intra-treino.'},
+  {name:'Glicerina bidestilada',cat:'🧴 Suplemento',   unit:'ml',  qtyDay:15,   icon:'💧', obs:'15ml no intra-treino.'},
+  {name:'Psyllium',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:5,    icon:'🌿', obs:'5g na Refeição 6 (ceia).'},
+  {name:'Vit. D3 5000UI + K2',  cat:'🧴 Suplemento',   unit:'caps',qtyDay:1,    icon:'☀️', obs:'1 cápsula pela manhã.'},
+  {name:'Vitamina B12 2000mcg', cat:'🧴 Suplemento',   unit:'caps',qtyDay:1,    icon:'💊', obs:'Metilcobalamina — 1 cápsula pela manhã.'},
+  {name:'Anastrozol + Tamoxifeno',cat:'🧴 Suplemento', unit:'caps',qtyDay:1,    icon:'⚕️', obs:'Manipulado (farmácia). 1 cápsula pela manhã.'},
+  {name:'Protetores (Curcumina/NAC/SAM-e/ALA)',cat:'🧴 Suplemento',unit:'caps',qtyDay:1,icon:'🛡️',obs:'Manipulado. 1 cápsula à noite.'},
+  {name:'Sono (L-Teanina/Melatonina/GABA/Zinco/B6)',cat:'🧴 Suplemento',unit:'dose',qtyDay:1,icon:'😴',obs:'Manipulado. 1 dose ~60min antes de dormir.'},
   // ── GORDURAS / TEMPEROS ──
-  {name:'Azeite',               cat:'🛢️ Óleo/Gordura', unit:'ml',  qtyDay:15,   icon:'🫒', obs:'1 col sopa (~15ml) no Almoço e Jantar.'},
-  {name:'Pasta de amendoim',    cat:'🛢️ Óleo/Gordura', unit:'g',   qtyDay:15,   icon:'🥜', obs:'1 col no Pré-treino opção 2.'},
-  {name:'Mel',                  cat:'🧂 Tempero/Condimento',unit:'ml',qtyDay:10, icon:'🍯', obs:'Pré-treino. Pouco — sabor e energia rápida.'},
+  {name:'Azeite extravirgem',   cat:'🛢️ Óleo/Gordura', unit:'ml',  qtyDay:10,   icon:'🫒', obs:'10ml na Refeição 5.'},
+  {name:'Sal',                  cat:'🧂 Tempero/Condimento',unit:'g',qtyDay:2,  icon:'🧂', obs:'2g no intra-treino (reposição).'},
   // ── BEBIDAS ──
-  {name:'Água',                 cat:'🥤 Bebida',       unit:'L',   qtyDay:4,    icon:'💧', obs:'Meta: 4L/dia. 1L durante o treino.'},
-  {name:'Suco de frutas natural',cat:'🥤 Bebida',      unit:'ml',  qtyDay:400,  icon:'🍹', obs:'Almoço + Jantar (~200ml cada).'},
+  {name:'Suco de uva integral', cat:'🥤 Bebida',       unit:'ml',  qtyDay:200,  icon:'🍇', obs:'200ml na Refeição 3.'},
+  {name:'Água',                 cat:'🥤 Bebida',       unit:'L',   qtyDay:4,    icon:'💧', obs:'Meta: 4L/dia.'},
 ];
 
 const UNIT_OPTIONS = ['g','kg','ml','L','un','fatia','cx','pct','saco','dose','caps','col','frasco'];
@@ -1845,14 +1854,56 @@ function buildWoLog(tabs){
   const days=getActiveSchedule().map(d=>`<div class="wo-day ${d.type}${activeWorkoutType===d.type?' active':''}" onclick="activeWorkoutType='${d.type}';render()"><div class="wd-label">${d.day}</div><div class="wd-type">${labels[d.type]||'—'}</div><div class="wd-dot"></div></div>`).join('');
 
   if(!activeWorkoutType||activeWorkoutType==='rest'){
+    // ── Recomendação inteligente de hoje ──
+    const _sched=getActiveSchedule();
+    const _todayPlan=_sched[(new Date().getDay()+6)%7]||{type:'rest'};
+    const _prog=getWorkoutProgram();
+    const _isRest=_todayPlan.type==='rest';
+    const _p=_prog[_todayPlan.type];
+    const _recColor=_isRest?'var(--muted)':(_p?.color||'var(--him)');
+    const _doneWk=getThisWeekSessions();
+    const _plannedWk=_sched.filter(s=>s.type!=='rest').length;
+    const _allW=getWorkouts();
+    const _lastW=_allW.length?_allW[_allW.length-1]:null;
+    const _daysSince=_lastW?Math.floor((Date.now()-new Date(_lastW.date))/864e5):null;
+    const _trainedToday=_allW.some(s=>localDayKey(new Date(s.date))===getTodayKey());
+    let _insight;
+    if(_isRest) _insight='Dia de descanso no seu plano. Recuperação é onde o músculo cresce.';
+    else if(_trainedToday) _insight='Você já treinou hoje. 💪 Se for de novo, mantenha a intensidade.';
+    else if(_daysSince!==null&&_daysSince>=3) _insight=`Faz ${_daysSince} dias desde o último treino — bora voltar com tudo!`;
+    else if(_plannedWk>0&&_doneWk>=_plannedWk) _insight='Meta semanal batida! Cada treino extra é bônus. 🔥';
+    else _insight=`Faltam ${Math.max(0,_plannedWk-_doneWk)} treino(s) para fechar a sua semana.`;
+    const _recTitle=_isRest?'Hoje é dia de descanso':`Treino de hoje: ${labels[_todayPlan.type]||''}`;
+    const recCard=`<div class="card-accent" style="margin-bottom:16px;border-color:${_recColor}55">
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+        <div style="font-size:26px;line-height:1">${_isRest?'😴':'🎯'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:8px;color:${_recColor};letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Recomendação de hoje</div>
+          <div style="font-size:15px;font-weight:800;color:${_recColor};line-height:1.2">${_recTitle}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg4);border-radius:10px;padding:11px;text-align:center">
+          <div style="font-size:19px;font-weight:800;color:var(--text);line-height:1">${_doneWk}<span style="font-size:11px;color:var(--muted)">/${_plannedWk}</span></div>
+          <div class="lbl" style="margin-top:5px">Treinos na semana</div>
+        </div>
+        <div style="background:var(--bg4);border-radius:10px;padding:11px;text-align:center">
+          <div style="font-size:19px;font-weight:800;color:var(--text);line-height:1">${_daysSince===null?'—':_daysSince}${_daysSince!==null?'<span style="font-size:11px;color:var(--muted)"> d</span>':''}</div>
+          <div class="lbl" style="margin-top:5px">Sem treinar</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub);line-height:1.5;margin-bottom:${_isRest?0:12}px">💡 ${_insight}</div>
+      ${!_isRest?`<button onclick="activeWorkoutType='${_todayPlan.type}';woSubTab='log';render()" style="width:100%;padding:12px;background:${_recColor};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">▶ ${_trainedToday?'Treinar de novo':'Iniciar '+(labels[_todayPlan.type]||'treino')}</button>`:''}
+    </div>`;
     return`<div class="page">
       <div class="sec-title" style="padding:0 0 14px">💪 Treinos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <button onclick="switchProgram(1)" style="padding:10px 6px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===1?'var(--him)':'var(--border2)'};background:${activeProgram===1?'var(--himb)':'var(--bg3)'};color:${activeProgram===1?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 Prog. 1<br><span style="font-size:9px;font-weight:700;opacity:.8">Push/Pull/Legs</span></button>
         <button onclick="switchProgram(2)" style="padding:10px 6px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===2?'var(--him)':'var(--border2)'};background:${activeProgram===2?'var(--himb)':'var(--bg3)'};color:${activeProgram===2?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 Prog. 2<br><span style="font-size:9px;font-weight:700;opacity:.8">A1/B1/C1/A2/B2/C2</span></button>
       </div>
+      ${recCard}
       ${tabs}
-      <div style="margin-bottom:16px"><div class="lbl">Selecione o treino de hoje</div><div class="wo-day-grid">${days}</div></div>
+      <div style="margin-bottom:16px"><div class="lbl">Ou escolha outro treino</div><div class="wo-day-grid">${days}</div></div>
       ${activeWorkoutType==='rest'?`<div class="card" style="text-align:center;padding:32px"><div style="font-size:36px;margin-bottom:8px">😴</div><div style="font-size:13px;color:var(--sub)">Dia de descanso — deixe os músculos crescerem!</div></div>`:''}
       <div class="sec-title" style="padding:16px 0 12px">📋 Divisão Semanal</div>
       <div class="card">${Object.values(getWorkoutProgram()).map(w=>`<div class="trow"><span style="font-size:12px;color:${w.color};font-weight:700">${w.label}</span><span style="font-size:10px;color:var(--sub)">${w.day} · ${w.exercises.length} exercícios</span></div>`).join('')}</div>
@@ -2598,76 +2649,64 @@ function buildWoEdit(tabs){
   const progLabel=activeProgram===1?'Programa 1 — Push/Pull/Legs':'Programa 2 — A1/B1/C1/A2/B2/C2';
   const hasOverrides=Object.keys(custom.overrides||{}).length>0;
 
+  const REPS_OPTS=['4–6','6–10','8–12','10–15','12–15'];
   const woSections=Object.entries(prog).map(([key,wo])=>{
     const exList=wo.exercises.map((ex,ei)=>{
       const workSets=ex.sets.filter(s=>s.t==='work');
       const n=workSets.length;
-      const reps=workSets[0]?.r||'6–10';
+      let reps=workSets[0]?.r||'6–10';
+      if(!REPS_OPTS.includes(reps)) reps=REPS_OPTS.find(r=>r===reps)||reps;
       const isAdditional=ex.name.startsWith('🦵')||ex.name.startsWith('🔵');
-      return`<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:${isAdditional?0:8}px">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:700;${isAdditional?'color:var(--him)':''}">${ex.name}</div>
-            <div style="font-size:9px;color:var(--muted);margin-top:2px">${n} série${n!==1?'s':''} trabalho · ${reps} reps${isAdditional?' · <span style="color:var(--him)">adicional</span>':''}</div>
-          </div>
-          <div style="display:flex;gap:5px;flex-shrink:0">
-            ${!isAdditional?`<button onclick="editExercise('${key}',${ei})" style="padding:5px 9px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--info);font-family:var(--font);font-size:9px;cursor:pointer">✏️</button>`:''}
-            <button onclick="deleteExercise('${key}',${ei})" style="padding:5px 9px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--bad);font-family:var(--font);font-size:9px;cursor:pointer">🗑️</button>
+      const repsInList=REPS_OPTS.includes(reps);
+      return`<div class="edit-ex-row">
+        <div class="edit-ex-head">
+          <div class="edit-ex-name">${ex.name}${isAdditional?' <span class="tag-add">adicional</span>':''}</div>
+          <div class="edit-ex-actions">
+            ${!isAdditional?`<button class="edit-ex-btn" onclick="editExercise('${key}',${ei})" title="Editar exercício">✏️</button>`:''}
+            <button class="edit-ex-btn del" onclick="deleteExercise('${key}',${ei})" title="Excluir">🗑️</button>
           </div>
         </div>
-        ${!isAdditional?`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Séries:</span>
-          <div style="display:flex;gap:4px">
-            ${[1,2,3,4,5].map(v=>`<button
-              onclick="inlineEditSets('${key}',${ei},${v},this)"
-              style="width:28px;height:28px;border-radius:6px;border:1px solid ${v===n?ac:'var(--border2)'};background:${v===n?`${ac}18`:'var(--bg4)'};color:${v===n?ac:'var(--muted)'};font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;transition:all .15s"
-              data-key="${key}" data-ex="${ei}" data-val="${v}">${v}</button>`).join('')}
+        ${!isAdditional?`<div class="edit-ex-controls">
+          <span class="edit-lbl">Séries</span>
+          <div class="ex-stepper">
+            <button onclick="stepSets('${key}',${ei},-1)" ${n<=1?'disabled':''} aria-label="menos série">−</button>
+            <span class="val">${n}</span>
+            <button onclick="stepSets('${key}',${ei},1)" ${n>=6?'disabled':''} aria-label="mais série">+</button>
           </div>
-          <span style="font-size:9px;color:var(--muted)">Reps:</span>
-          <select onchange="inlineEditReps('${key}',${ei},this.value)" style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--font2);font-size:10px;padding:4px 6px;cursor:pointer">
-            ${['4–6','6–10','8–12','10–15','12–15'].map(r=>`<option value="${r}" ${reps===r?'selected':''}>${r}</option>`).join('')}
+          <span class="edit-lbl">Reps</span>
+          <select class="edit-reps" onchange="setExerciseReps('${key}',${ei},this.value)">
+            ${REPS_OPTS.map(r=>`<option value="${r}" ${reps===r?'selected':''}>${r}</option>`).join('')}
+            ${!repsInList?`<option value="${reps}" selected>${reps}</option>`:''}
           </select>
-        </div>`:''}
+        </div>`:'<div class="edit-lbl" style="opacity:.7">Protocolo adicional — só pode ser removido</div>'}
       </div>`;
     }).join('');
 
     return`<div style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:${wo.color}">${wo.label}</div>
-        <button onclick="addExercise('${key}')" style="padding:5px 12px;background:var(--himb);border:1px solid var(--himl);border-radius:6px;color:var(--him);font-family:var(--font);font-size:9px;letter-spacing:1px;cursor:pointer">+ Add</button>
+        <div style="font-size:12px;font-weight:800;color:${wo.color}">${wo.label}</div>
+        <button onclick="addExercise('${key}')" style="padding:6px 13px;background:var(--himb);border:1px solid var(--himl);border-radius:8px;color:var(--him);font-family:var(--font2);font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer">+ Exercício</button>
       </div>
-      <div class="card" style="padding:4px 14px">${exList}</div>
+      <div class="card" style="padding:2px 16px">${exList}</div>
     </div>`;
   }).join('');
 
   return`<div class="page">
-    <div class="sec-title" style="padding:0 0 14px">⚙️ Editar Exercícios</div>
+    <div class="sec-title" style="padding:0 0 14px">⚙️ Editar Treinos</div>
     ${tabs}
 
-    <!-- Status bar -->
-    <div class="card-accent" style="margin-bottom:16px;border-color:${ac}30;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Editando: ${progLabel}</div>
-        <div style="font-size:10px;color:var(--sub)">${hasOverrides?'⚠️ Você tem alterações personalizadas ativas.':'Usando programa padrão — sem alterações.'}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        ${hasOverrides?`
-          <button onclick="confirmSaveProgram()" style="padding:8px 14px;background:var(--him);color:#08080e;border:none;border-radius:8px;font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">💾 Salvar</button>
-          <button onclick="resetCustomProgram()" style="padding:8px 12px;background:transparent;border:1px solid var(--bad);border-radius:8px;color:var(--bad);font-family:var(--font);font-size:9px;cursor:pointer">↩️ Restaurar</button>
-        `:``}
+    <!-- Intro / auto-save -->
+    <div class="card-accent" style="margin-bottom:16px;border-color:${ac}30">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="min-width:0">
+          <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">Personalizando: ${progLabel}</div>
+          <div style="font-size:11px;color:var(--sub);line-height:1.5">Ajuste as <strong>séries</strong> e <strong>repetições</strong> de cada exercício abaixo. ${hasOverrides?'<span style="color:var(--good)">✓ Salvo automaticamente</span> e já aplicado no seu registro de treino.':'Tudo é salvo sozinho — não precisa apertar nada.'}</div>
+        </div>
+        ${hasOverrides?`<button onclick="resetCustomProgram()" style="padding:9px 13px;background:transparent;border:1px solid var(--bad);border-radius:9px;color:var(--bad);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">↩️ Restaurar padrão</button>`:''}
       </div>
     </div>
 
     ${woSections}
-
-    <!-- Floating Save button (visible if overrides exist) -->
-    ${hasOverrides?`<div style="position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:50;pointer-events:none">
-      <div style="pointer-events:all;margin-top:16px">
-        <button onclick="confirmSaveProgram()" style="width:100%;padding:14px;background:var(--him);color:#08080e;border:none;border-radius:12px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px rgba(226,226,64,.3)">
-          💾 Salvar Alterações do Programa
-        </button>
-      </div>
-    </div>`:''}
 
     <!-- Modal edição -->
     <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(8,8,14,.96);z-index:400;align-items:center;justify-content:center;padding:20px">
@@ -2731,25 +2770,32 @@ function closeEditModal(){
 function saveEditExercise(){
   const name=document.getElementById('edit-ex-name').value.trim();
   if(!name){alert('Digite o nome do exercício');return;}
-  const sets=parseInt(document.getElementById('edit-ex-sets').value)||2;
+  const sets=Math.max(1,Math.min(6,parseInt(document.getElementById('edit-ex-sets').value)||2));
   const reps=document.getElementById('edit-ex-reps').value.trim()||'6–10';
   const rest=parseInt(document.getElementById('edit-ex-rest').value)||150;
 
-  // Build sets array
-  const newSets=[
+  const custom=getCustomProgram()||{program:activeProgram,overrides:{}};
+  if(custom.program!==activeProgram){custom.program=activeProgram;custom.overrides={};}
+  const baseProg=JSON.parse(JSON.stringify(getActiveProgram()));
+  const wk=_editCtx.woKey;
+  if(custom.overrides[wk]) baseProg[wk].exercises=custom.overrides[wk];
+
+  // Preserva aquecimento/ajuste e a nota (RP/drop) do exercício existente
+  let warmAdj=[
     {t:'warm',l:'Aquecimento',s:1,r:'10–15',rest:60},
     {t:'adj',l:'Ajuste 1',s:1,r:'4–6',rest:90},
   ];
-  for(let i=0;i<sets;i++) newSets.push({t:'work',l:`Série ${i+1}`,s:1,r:reps,rest});
-  const newEx={name,sets:newSets};
-
-  const custom=getCustomProgram()||{program:activeProgram,overrides:{}};
-  if(custom.program!==activeProgram){custom.program=activeProgram;custom.overrides={};}
-
-  const baseProg=JSON.parse(JSON.stringify(getActiveProgram()));
-  const wk=_editCtx.woKey;
-  // Apply existing overrides
-  if(custom.overrides[wk]) baseProg[wk].exercises=custom.overrides[wk];
+  let note=null;
+  if(!_editCtx.isNew){
+    const cur=baseProg[wk].exercises[_editCtx.exIdx];
+    if(cur){
+      const wa=cur.sets.filter(s=>s.t!=='work');
+      if(wa.length) warmAdj=wa;
+      note=cur.sets.find(s=>s.t==='work'&&s.note)?.note||null;
+    }
+  }
+  const work=Array.from({length:sets},(_,i)=>({t:'work',l:sets===1?'Trabalho':`Série ${i+1}`,s:1,r:reps,rest,...(i===sets-1&&note?{note}:{})}));
+  const newEx={name,sets:[...warmAdj,...work]};
 
   if(_editCtx.isNew){
     baseProg[wk].exercises.push(newEx);
@@ -2785,33 +2831,32 @@ function confirmSaveProgram(){
   render(); // re-render to update status bar
 }
 
-function inlineEditSets(woKey, exIdx, newSets, btn){
-  // Visual feedback: highlight selected button
-  const card=btn.closest('[data-key]')?.parentElement;
-  btn.closest('div').querySelectorAll('button[data-key]').forEach(b=>{
-    const isSel=parseInt(b.dataset.val)===newSets;
-    b.style.background=isSel?`var(--himb)`:'var(--bg4)';
-    b.style.borderColor=isSel?`var(--himl)`:'var(--border2)';
-    b.style.color=isSel?'var(--him)':'var(--muted)';
-  });
-  // Apply inline edit using applyQuickEditSets logic
-  const repsEl=btn.closest('div[style]')?.querySelector('select');
-  const reps=repsEl?.value||'6–10';
-  _applySetEdit(woKey, exIdx, newSets, reps);
+function rerenderKeepScroll(){
+  const y=window.scrollY;
+  render();
+  requestAnimationFrame(()=>window.scrollTo(0,y));
 }
-
-function inlineEditReps(woKey, exIdx, newReps){
+function stepSets(woKey, exIdx, delta){
+  const ex=getWorkoutProgram()[woKey]?.exercises[exIdx];
+  if(!ex) return;
+  const cur=ex.sets.filter(s=>s.t==='work').length;
+  const next=Math.max(1,Math.min(6,cur+delta));
+  if(next===cur) return;
+  const reps=ex.sets.filter(s=>s.t==='work')[0]?.r||'6–10';
+  _applySetEdit(woKey, exIdx, next, reps); // preserva aquecimento/ajuste e nota
+  rerenderKeepScroll();
+}
+function setExerciseReps(woKey, exIdx, newReps){
   const custom=getCustomProgram()||{program:activeProgram,overrides:{}};
   if(custom.program!==activeProgram){custom.program=activeProgram;custom.overrides={};}
   const baseProg=JSON.parse(JSON.stringify(getActiveProgram()));
   if(custom.overrides[woKey]) baseProg[woKey].exercises=custom.overrides[woKey];
   const ex=baseProg[woKey].exercises[exIdx];
   if(!ex) return;
-  const workSets=ex.sets.filter(s=>s.t==='work');
-  workSets.forEach(s=>{s.r=newReps;});
+  ex.sets.filter(s=>s.t==='work').forEach(s=>{s.r=newReps;});
   custom.overrides[woKey]=baseProg[woKey].exercises;
   saveCustomProgram(custom);
-  // no full render — just update UI silently
+  rerenderKeepScroll();
 }
 
 function _applySetEdit(woKey, exIdx, sets, reps){
@@ -3833,6 +3878,41 @@ function deleteEstoqueItem(id){saveEstoque(getEstoque().filter(i=>i.id!==id));re
 
 function clearEstoqueDone(){saveEstoque(getEstoque().filter(i=>!i.done));render();}
 
+// ── Inteligência de compras: memória de preços + geração automática da lista ──
+function getPriceMemory(){
+  // Último preço pago por item (histórico do mais antigo p/ o mais novo + lista atual)
+  const mem={};
+  getEstoqueHistory().slice().reverse().forEach(h=>{
+    (h.items||[]).forEach(i=>{ if(i.price>0) mem[i.name]=i.price; });
+  });
+  getEstoque().forEach(i=>{ if(i.price>0) mem[i.name]=i.price; });
+  return mem;
+}
+function dietQtyFor(di,mult){
+  const q=di.qtyDay*mult;
+  if(di.unit==='g'&&q>=1000) return {qty:+(q/1000).toFixed(1),unit:'kg'};
+  if(di.unit==='ml'&&q>=1000) return {qty:+(q/1000).toFixed(1),unit:'L'};
+  return {qty:Number.isInteger(q)?q:+q.toFixed(1),unit:di.unit};
+}
+function addAllDietItems(){
+  const period=localStorage.getItem('bt_est_period')||'semana';
+  const mult={'dia':1,'semana':7,'mes':30}[period]||7;
+  const items=getEstoque();
+  const existing=new Set(items.filter(i=>!i.done).map(i=>i.name));
+  const mem=getPriceMemory();
+  let added=0;
+  DIET_ITEMS.forEach(di=>{
+    if(existing.has(di.name)) return;
+    const {qty,unit}=dietQtyFor(di,mult);
+    items.push({id:Date.now()+Math.random(),name:di.name,qty:String(qty),unit,cat:di.cat,price:mem[di.name]||0,date:new Date().toISOString(),done:false});
+    added++;
+  });
+  if(!added){ showSyncStatus('Todos os itens do plano já estão na lista','var(--info)'); return; }
+  saveEstoque(items);
+  showSyncStatus(`✓ ${added} itens adicionados à lista`,'var(--good)');
+  render();
+}
+
 function finalizarCompra(){
   const items=getEstoque();
   const done=items.filter(i=>i.done);
@@ -3989,6 +4069,11 @@ function buildEstoque(){
     return `${parseFloat(q.toFixed(1))} ${di.unit}`;
   };
 
+  const _priceMem=getPriceMemory();
+  const _notInList=DIET_ITEMS.filter(di=>!inList.has(di.name));
+  const _estTotal=_notInList.reduce((s,di)=>s+(_priceMem[di.name]||0),0);
+  const _estKnown=_notInList.filter(di=>_priceMem[di.name]>0).length;
+  const _periodName=estPeriod==='dia'?'do dia':estPeriod==='mes'?'do mês':'da semana';
   const dietPanel=`<div class="card" style="margin-bottom:18px;border-color:${ac}20">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">📋 Itens do Plano Alimentar</div>
@@ -3996,7 +4081,12 @@ function buildEstoque(){
         ${['dia','semana','mes'].map(p=>`<button onclick="localStorage.setItem('bt_est_period','${p}');render()" style="padding:4px 10px;border-radius:20px;font-family:var(--font2);font-size:9px;font-weight:800;cursor:pointer;border:1px solid ${estPeriod===p?ac:'var(--border2)'};background:${estPeriod===p?`${ac}18`:'var(--bg4)'};color:${estPeriod===p?ac:'var(--muted)'}">${p==='dia'?'1 Dia':p==='semana'?'1 Semana':'1 Mês'}</button>`).join('')}
       </div>
     </div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:14px">Toque no item para adicionar à lista de compras com a quantidade calculada automaticamente.</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:12px">Toque num item para adicioná-lo, ou gere a lista inteira de uma vez. As quantidades são calculadas automaticamente para o período.</div>
+    ${_notInList.length>0?`<button onclick="addAllDietItems()" style="width:100%;padding:12px;margin-bottom:14px;background:${ac};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+      <span>🛒 Gerar lista ${_periodName} · ${_notInList.length} ${_notInList.length===1?'item':'itens'}</span>
+      ${_estTotal>0?`<span style="background:rgba(8,8,14,.18);border-radius:20px;padding:2px 9px;font-size:11px">≈ R$ ${_estTotal.toFixed(0)}</span>`:''}
+    </button>
+    ${_estTotal>0?`<div style="font-size:9px;color:var(--muted);margin:-6px 0 14px;text-align:center">Estimativa com base nos preços das suas últimas compras (${_estKnown}/${_notInList.length} itens com preço)</div>`:''}`:''}
     ${Object.entries(dietByCat).map(([cat,items2])=>`
       <div style="margin-bottom:14px">
         <div style="font-size:9px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${cat}</div>
@@ -4090,10 +4180,10 @@ function buildEstoque(){
       </button>
       ${templates.map(t=>`
         <div style="display:flex;align-items:center;gap:0;background:var(--bg4);border:1px solid var(--border2);border-radius:20px;overflow:hidden">
-          <button onclick="loadEstoqueTemplate('${t.name.replace(/'/g,"\\'")})" style="padding:7px 12px;background:transparent;border:none;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">
+          <button onclick="loadEstoqueTemplate('${t.name.replace(/'/g,"\\'")}')" style="padding:7px 12px;background:transparent;border:none;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">
             📋 ${t.name} <span style="color:var(--muted);font-size:9px">(${t.items.length})</span>
           </button>
-          <button onclick="deleteEstoqueTemplate('${t.name.replace(/'/g,"\\'")})" style="padding:7px 8px;background:transparent;border:none;border-left:1px solid var(--border2);color:var(--muted);font-size:12px;cursor:pointer">✕</button>
+          <button onclick="deleteEstoqueTemplate('${t.name.replace(/'/g,"\\'")}')" style="padding:7px 8px;background:transparent;border:none;border-left:1px solid var(--border2);color:var(--muted);font-size:12px;cursor:pointer">✕</button>
         </div>`).join('')}
     </div>
   </div>`;
