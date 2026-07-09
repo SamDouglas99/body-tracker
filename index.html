@@ -12,19 +12,31 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyBlw4eUTiY9tj2DVrOriGGhfabn91POR0c",authDomain:"body-tracker-6631d.firebaseapp.com",projectId:"body-tracker-6631d",storageBucket:"body-tracker-6631d.firebasestorage.app",messagingSenderId:"526453249400",appId:"1:526453249400:web:1353e6dfb5442d7f5be48d"};
 const fbApp=initializeApp(firebaseConfig);
 const db=getFirestore(fbApp);
 const storage=getStorage(fbApp);
+const auth=getAuth(fbApp);
+// Coleção de treinos por usuário (mantém 'workouts' global p/ o modo convidado 'him')
+const _woCol=(ns)=>(ns&&ns!=='him')?'workouts_'+ns:'workouts';
 window._fb={
+  auth,
+  onAuth(cb){ return onAuthStateChanged(auth, cb); },
+  currentUser(){ return auth.currentUser; },
+  async signUp(email,pass,name){ const cred=await createUserWithEmailAndPassword(auth,email,pass); if(name){ try{ await updateProfile(cred.user,{displayName:name}); }catch(e){} } return cred.user; },
+  async signIn(email,pass){ const cred=await signInWithEmailAndPassword(auth,email,pass); return cred.user; },
+  async signInGoogle(){ const cred=await signInWithPopup(auth,new GoogleAuthProvider()); return cred.user; },
+  async signOutUser(){ await signOut(auth); },
+  async sendReset(email){ await sendPasswordResetEmail(auth,email); },
   async getEntries(p){const q=query(collection(db,`entries_${p}`),orderBy("date"));const s=await getDocs(q);return s.docs.map(d=>({id:d.id,...d.data()}));},
   async saveEntry(p,e){const r=doc(collection(db,`entries_${p}`));await setDoc(r,e);},
   async getSettings(p){const s=await getDoc(doc(db,"settings",p));return s.exists()?s.data():null;},
   async saveSettings(p,d){await setDoc(doc(db,"settings",p),d);},
-  async getWorkouts(){const q=query(collection(db,"workouts"),orderBy("date"));const s=await getDocs(q);return s.docs.map(d=>({id:d.id,...d.data()}));},
-  async saveWorkout(s){await addDoc(collection(db,"workouts"),s);},
+  async getWorkouts(ns){const q=query(collection(db,_woCol(ns)),orderBy("date"));const s=await getDocs(q);return s.docs.map(d=>({id:d.id,...d.data()}));},
+  async saveWorkout(ns,s){await addDoc(collection(db,_woCol(ns)),s);},
   listenEntries(p,cb){const q=query(collection(db,`entries_${p}`),orderBy("date"));return onSnapshot(q,s=>{cb(s.docs.map(d=>({id:d.id,...d.data()})));});},
-  listenWorkouts(cb){const q=query(collection(db,"workouts"),orderBy("date"));return onSnapshot(q,s=>{cb(s.docs.map(d=>({id:d.id,...d.data()})));});},
+  listenWorkouts(ns,cb){const q=query(collection(db,_woCol(ns)),orderBy("date"));return onSnapshot(q,s=>{cb(s.docs.map(d=>({id:d.id,...d.data()})));});},
   async uploadPhoto(profile,photoId,blob){
     const r=ref(storage,`photos/${profile}/${photoId}.jpg`);
     await uploadBytes(r,blob,{contentType:'image/jpeg'});
@@ -215,6 +227,29 @@ input:focus,select:focus{border-color:var(--muted)}
 .ex-stepper .val{min-width:30px;text-align:center;font-family:var(--font2);font-weight:800;font-size:15px;color:var(--him)}
 .edit-reps{background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:12px;font-weight:700;padding:8px 10px;cursor:pointer;height:34px}
 .tag-add{font-size:8px;background:var(--himb);border:1px solid var(--himl);color:var(--him);padding:1px 6px;border-radius:5px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;white-space:nowrap}
+/* ── Tela de Login / Cadastro ── */
+#auth-screen{position:fixed;inset:0;z-index:2000;overflow-y:auto;background:radial-gradient(1200px 620px at 50% -12%, rgba(226,226,64,.16), transparent 60%), var(--bg);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 24px)}
+.auth-wrap{width:100%;max-width:400px;margin:auto}
+.auth-logo{font-family:var(--font2);font-size:30px;font-weight:800;text-align:center;letter-spacing:-.5px;margin-bottom:6px;color:var(--text)}
+.auth-logo span{color:var(--him)}
+.auth-tag{text-align:center;font-size:12px;color:var(--sub);margin-bottom:24px;font-weight:700}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.auth-tabs{display:flex;background:var(--bg4);border-radius:12px;padding:4px;margin-bottom:18px}
+.auth-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;border-radius:9px;transition:all .2s}
+.auth-tab.active{background:var(--him);color:#08080e}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-weight:700}
+.auth-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:11px;color:var(--text);font-family:var(--font2);font-size:15px;font-weight:600;padding:13px 14px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.auth-input:focus{border-color:var(--him)}
+.auth-primary{width:100%;padding:14px;background:var(--him);color:#08080e;border:none;border-radius:11px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-top:4px}
+.auth-primary:disabled{opacity:.6;cursor:default}
+.auth-google{width:100%;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:11px;color:var(--text);font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-link{background:none;border:none;color:var(--sub);font-family:var(--font2);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;padding:4px}
+.auth-err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);color:var(--bad);border-radius:9px;padding:10px 12px;font-size:11px;font-weight:700;margin-bottom:12px;line-height:1.45;display:none}
+.auth-err.show{display:block}
+.auth-guest{text-align:center;margin-top:16px}
 /* Timer */
 #rest-timer{position:fixed;bottom:70px;right:20px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;z-index:150;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:180px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
@@ -735,7 +770,7 @@ const WEEK_SCHEDULE = [
 // ══════════════════════════════════════
 // PROFILES
 // ══════════════════════════════════════
-const PROFILES = {
+const _PROFILES = {
   him:{
     id:'him',name:'Você',emoji:'👨',accentHex:'#e2e240',
     initialWeight:63,goalWeight:80,height:1.71,isLoss:false,
@@ -766,6 +801,8 @@ const PROFILES = {
     priorityKeys:['glutes','thigh_sup_l','thigh_sup_r','thigh_inf_l','thigh_inf_r','calf_l','calf_r'],
   }
 };
+// Qualquer perfil (uid de usuário logado ou 'him' convidado) usa o mesmo template de medidas
+const PROFILES = new Proxy(_PROFILES, { get(t,k){ return t[k]||t.him; } });
 
 // ══════════════════════════════════════
 // NUTRITION — Plano Nutricional 2026
@@ -873,14 +910,15 @@ function saveSettings(d){_cache.settings[CP]=d;try{localStorage.setItem('bt_sett
 const getWorkouts=()=>_cache.workouts||[];
 const getLastWorkout=(type)=>[..._cache.workouts].reverse().find(s=>s.type===type)||null;
 // ── Treinos: gravação DURÁVEL (backup local + re-sync) — evita perder treino se o Firebase falhar ──
-function getWorkoutBackup(){ try{return JSON.parse(localStorage.getItem('bt_workouts_backup')||'[]');}catch{return [];} }
-function saveWorkoutBackup(arr){ try{localStorage.setItem('bt_workouts_backup',JSON.stringify(arr));}catch(e){} }
+function _woBkKey(){ return CP==='him'?'bt_workouts_backup':'bt_workouts_backup_'+CP; }
+function getWorkoutBackup(){ try{return JSON.parse(localStorage.getItem(_woBkKey())||'[]');}catch{return [];} }
+function saveWorkoutBackup(arr){ try{localStorage.setItem(_woBkKey(),JSON.stringify(arr));}catch(e){} }
 function saveWorkout(session){
   _cache.workouts.push(session);
   // Backup local imediato — não some se a rede/Firebase falhar
   const bk=getWorkoutBackup();
   if(!bk.some(s=>s.id===session.id)){ bk.push(session); saveWorkoutBackup(bk); }
-  if(window._fb) window._fb.saveWorkout(session).catch(e=>console.error('Treino mantido no backup local (falha no Firebase):',e));
+  if(window._fb) window._fb.saveWorkout(CP,session).catch(e=>console.error('Treino mantido no backup local (falha no Firebase):',e));
 }
 // Junta os treinos do Firebase com qualquer backup local ainda não sincronizado (e reenvia os que faltam)
 function mergeWorkouts(fbList){
@@ -892,7 +930,7 @@ function mergeWorkouts(fbList){
   const bk=getWorkoutBackup();
   const missing=bk.filter(s=>s&&s.id!=null&&!(s.id in byId));
   // reenvia ao Firebase os que ficaram só no backup
-  if(window._fb) missing.forEach(s=>{ window._fb.saveWorkout(s).catch(()=>{}); });
+  if(window._fb) missing.forEach(s=>{ window._fb.saveWorkout(CP,s).catch(()=>{}); });
   // mantém no backup apenas os que ainda não estão no Firebase
   saveWorkoutBackup(missing);
   return [...ordered,...missing].sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -5238,6 +5276,15 @@ function openSettings(onboarding){
         <button onclick="exportData()" style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬇️ Exportar backup</button>
         <label style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" onchange="importData(this)" style="display:none"/></label>
       </div>
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">👤 Conta</div>
+      ${(window._fb&&window._fb.currentUser&&window._fb.currentUser())?`
+        <div style="font-size:11px;color:var(--sub);margin-bottom:10px">Conectado como <strong style="color:var(--text)">${window._fb.currentUser().email||'usuário'}</strong></div>
+        <button onclick="doSignOut()" style="width:100%;padding:11px;background:transparent;border:1px solid var(--bad);border-radius:10px;color:var(--bad);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🚪 Sair da conta</button>
+      `:`
+        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Crie uma conta para sincronizar seus dados com segurança em qualquer aparelho.</div>
+        <button onclick="closeSettings();showAuthScreen();" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🔐 Criar conta / Entrar</button>
+      `}
       ${!onboarding?`<button onclick="closeSettings()" style="width:100%;padding:12px;margin-top:16px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:11px;font-weight:700;cursor:pointer">Fechar</button>`:''}
     </div>
   </div>`;
@@ -5321,40 +5368,137 @@ function toggleTheme(){
 }
 (function(){ let saved='dark'; try{ if(localStorage.getItem('bt_theme')==='light') saved='light'; }catch(e){} applyTheme(saved); })();
 
-window._btInit = async function(){
+// ══════════════════════════════════════
+// TELA DE LOGIN / CADASTRO
+// ══════════════════════════════════════
+let _authMode='signin', _pendingName=null;
+function hideAuthScreen(){ const el=document.getElementById('auth-screen'); if(el) el.remove(); }
+function showAuthScreen(){ hideAuthScreen(); const el=document.createElement('div'); el.id='auth-screen'; el.innerHTML=renderAuth(); document.body.appendChild(el); }
+function authSwitchTab(m){ _authMode=m; const el=document.getElementById('auth-screen'); if(el) el.innerHTML=renderAuth(); }
+function renderAuth(){
+  const su=_authMode==='signup';
+  return `<div class="auth-wrap">
+    <div class="auth-logo">Body<span>Tracker</span> 💪</div>
+    <div class="auth-tag">Seu corpo, seus dados, sua evolução.</div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab ${!su?'active':''}" onclick="authSwitchTab('signin')">Entrar</button>
+        <button class="auth-tab ${su?'active':''}" onclick="authSwitchTab('signup')">Criar conta</button>
+      </div>
+      <div id="auth-err" class="auth-err"></div>
+      ${su?`<div class="auth-field"><label>Nome</label><input class="auth-input" id="auth-name" type="text" placeholder="Como quer ser chamado" autocomplete="name"/></div>`:''}
+      <div class="auth-field"><label>E-mail</label><input class="auth-input" id="auth-email" type="email" placeholder="voce@email.com" autocomplete="email" inputmode="email"/></div>
+      <div class="auth-field"><label>Senha</label><input class="auth-input" id="auth-pass" type="password" placeholder="${su?'mínimo 6 caracteres':'sua senha'}" autocomplete="${su?'new-password':'current-password'}" onkeydown="if(event.key==='Enter')authSubmit()"/></div>
+      <button class="auth-primary" id="auth-submit" onclick="authSubmit()">${su?'Criar minha conta':'Entrar'}</button>
+      ${!su?`<div style="text-align:center;margin-top:10px"><button class="auth-link" onclick="authReset()">Esqueci minha senha</button></div>`:''}
+      <div class="auth-divider">ou</div>
+      <button class="auth-google" onclick="authGoogle()"><span style="font-weight:900;color:#4285F4;font-size:15px">G</span> Continuar com Google</button>
+    </div>
+    <div class="auth-guest"><button class="auth-link" onclick="authGuest()">Continuar sem conta (modo local)</button></div>
+  </div>`;
+}
+function authError(msg){ const el=document.getElementById('auth-err'); if(el){ el.textContent=msg||''; el.classList.toggle('show',!!msg); } }
+function authBusy(b){ const el=document.getElementById('auth-submit'); if(el){ el.disabled=b; el.textContent=b?'Aguarde...':(_authMode==='signup'?'Criar minha conta':'Entrar'); } }
+function authMsg(e){
+  const c=(e&&e.code)||'';
+  if(c.includes('configuration-not-found')||c.includes('operation-not-allowed')) return 'O login ainda não foi ativado no servidor. Ative a Autenticação (Email/Senha) no Firebase — ou use "Continuar sem conta" por enquanto.';
+  if(c.includes('email-already-in-use')) return 'Este e-mail já tem conta. Toque em "Entrar".';
+  if(c.includes('invalid-email')) return 'E-mail inválido.';
+  if(c.includes('weak-password')) return 'Senha muito fraca (mínimo 6 caracteres).';
+  if(c.includes('wrong-password')||c.includes('invalid-credential')) return 'E-mail ou senha incorretos.';
+  if(c.includes('user-not-found')) return 'Não encontramos conta com esse e-mail.';
+  if(c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde um instante.';
+  if(c.includes('popup-closed')||c.includes('cancelled-popup')) return 'Login com Google cancelado.';
+  if(c.includes('network')) return 'Sem conexão. Verifique sua internet.';
+  return 'Não foi possível: '+((e&&e.message)||'erro desconhecido');
+}
+async function authSubmit(){
+  const su=_authMode==='signup';
+  const email=(document.getElementById('auth-email').value||'').trim();
+  const pass=document.getElementById('auth-pass').value||'';
+  const name=su?(((document.getElementById('auth-name')||{}).value)||'').trim():'';
+  if(!email||!pass){ authError('Preencha e-mail e senha.'); return; }
+  if(su&&pass.length<6){ authError('A senha precisa de ao menos 6 caracteres.'); return; }
+  authError(''); authBusy(true);
+  try{
+    if(su){ _pendingName=name||null; await window._fb.signUp(email,pass,name); }
+    else { await window._fb.signIn(email,pass); }
+    // onAuth cuida de carregar os dados
+  }catch(e){ _pendingName=null; authError(authMsg(e)); authBusy(false); }
+}
+async function authGoogle(){ authError(''); authBusy(true); try{ await window._fb.signInGoogle(); }catch(e){ authError(authMsg(e)); authBusy(false); } }
+async function authReset(){
+  const email=(document.getElementById('auth-email').value||'').trim();
+  if(!email){ authError('Digite seu e-mail acima para redefinir a senha.'); return; }
+  try{ await window._fb.sendReset(email); authError(''); alert('Enviamos um link de redefinição de senha para '+email); }
+  catch(e){ authError(authMsg(e)); }
+}
+function authGuest(){ try{localStorage.setItem('bt_guest','1');}catch(_){} CP='him'; _authUser=null; hideAuthScreen(); _enterApp(); loadUserData(); }
+async function doSignOut(){
+  if(!confirm('Sair da sua conta? Você poderá entrar de novo depois.')) return;
+  try{localStorage.removeItem('bt_guest');}catch(_){}
+  try{ if(window._fb) await window._fb.signOutUser(); }catch(_){}
+  location.reload();
+}
+
+// ══════════════════════════════════════
+// INIT (com autenticação)
+// ══════════════════════════════════════
+let _authUser=null,_unsubE=null,_unsubW=null;
+function _enterApp(){
   document.getElementById('shell').className='him-mode';
   document.getElementById('mobile-nav').className='him-mode';
   if(window.innerWidth<=720) document.getElementById('mobile-nav').style.display='flex';
-  // Notificações só pedidas via botão (exigência Safari)
   setTimeout(()=>{ if(Notification.permission==='granted') scheduleMealReminders(); },2000);
+}
+async function loadUserData(){
   showSyncStatus('⟳ Sincronizando...','var(--info)');
   try{
-    const [sHim,eHim,workouts]=await Promise.all([
-      window._fb.getSettings('him'),
-      window._fb.getEntries('him'),
-      window._fb.getWorkouts()
+    const [s,e,w]=await Promise.all([
+      window._fb.getSettings(CP),
+      window._fb.getEntries(CP),
+      window._fb.getWorkouts(CP)
     ]);
-    _cache.settings.him=sHim||JSON.parse(localStorage.getItem('bt_settings_him')||'null')||{weight:63,goal:80,height:1.71};
-    _cache.entries.him=mergeEntries('him',eHim);
-    _cache.workouts=mergeWorkouts(workouts);
-    if(!sHim) await window._fb.saveSettings('him',_cache.settings.him);
+    _cache.settings[CP]=s||JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null')||{weight:63,goal:80,height:1.71};
+    if(_pendingName && _authUser && !_cache.settings[CP].name){ _cache.settings[CP].name=_pendingName; }
+    _pendingName=null;
+    _cache.entries[CP]=mergeEntries(CP,e);
+    _cache.workouts=mergeWorkouts(w);
+    if(!s) await window._fb.saveSettings(CP,_cache.settings[CP]);
     showSyncStatus('✓ Sincronizado','var(--good)');
-    window._fb.listenEntries('him',data=>{_cache.entries.him=mergeEntries('him',data);render();});
-    window._fb.listenWorkouts(data=>{_cache.workouts=mergeWorkouts(data);render();});
+    if(_unsubE)try{_unsubE();}catch(_){}
+    if(_unsubW)try{_unsubW();}catch(_){}
+    _unsubE=window._fb.listenEntries(CP,data=>{_cache.entries[CP]=mergeEntries(CP,data);render();});
+    _unsubW=window._fb.listenWorkouts(CP,data=>{_cache.workouts=mergeWorkouts(data);render();});
   }catch(e){
     console.error('Firebase:',e);
     showSyncStatus('⚠ Offline','var(--warn)');
-    _cache.settings.him=JSON.parse(localStorage.getItem('bt_settings_him')||'null')||{weight:63,goal:80,height:1.71};
-    _cache.entries.him=mergeEntries('him',[]); // mostra medições do backup local mesmo offline
-    _cache.workouts=mergeWorkouts([]); // mostra treinos do backup local mesmo offline
+    _cache.settings[CP]=JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null')||{weight:63,goal:80,height:1.71};
+    _cache.entries[CP]=mergeEntries(CP,[]);
+    _cache.workouts=mergeWorkouts([]);
   }
   render();
   if(!localStorage.getItem('bt_onboarded') && getEntries().length===0){ setTimeout(()=>openSettings(true),700); }
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
+}
+window._btInit = function(){
+  if(window._btInitDone) return; window._btInitDone=true;
+  window._fb.onAuth(user=>{
+    if(user){
+      CP=user.uid; _authUser=user;
+      try{localStorage.removeItem('bt_guest');}catch(_){}
+      hideAuthScreen(); _enterApp(); loadUserData();
+    } else if(localStorage.getItem('bt_guest')==='1'){
+      CP='him'; _authUser=null;
+      hideAuthScreen(); _enterApp(); loadUserData();
+    } else {
+      showAuthScreen();
+    }
+  });
 };
 if(window._fb){window._btInit();}
-else{let t=0;const w=setInterval(()=>{t++;if(window._fb){clearInterval(w);window._btInit();}else if(t>30){clearInterval(w);_cache.settings.him={weight:63,goal:80,height:1.71};document.getElementById('shell').className='him-mode';document.getElementById('mobile-nav').className='him-mode';if(window.innerWidth<=720)document.getElementById('mobile-nav').style.display='flex';render();}},100);}
+else{let t=0;const w=setInterval(()=>{t++;if(window._fb){clearInterval(w);window._btInit();}else if(t>30){clearInterval(w);CP='him';_cache.settings.him={weight:63,goal:80,height:1.71};_enterApp();render();}},100);}
 
 // ── Service Worker + Web Push ──
 const VAPID_PUBLIC_KEY = 'opXKv5sFwStAqLCH5JQv7vvS5ODBusPCTjCkzScoEGVZXnsC9zcqOMHerq8gzeid81OIrBT2JiK_UtkNaeyjWA';
