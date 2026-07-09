@@ -1,0 +1,36 @@
+rules_version = '2';
+// Regras de segurança do Firestore — Body Tracker
+// Cada usuário autenticado só acessa os PRÓPRIOS dados.
+// Cole em: Firebase Console → Firestore Database → Regras → Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Perfil/configurações: settings/{uid}
+    match /settings/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Metadados de fotos: photo_meta/{uid}
+    match /photo_meta/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Inscrições de push: push_subs/{uid}
+    match /push_subs/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Medidas (entries_<uid>) e treinos (workouts_<uid>): a coleção carrega o uid no nome
+    match /{coll}/{doc} {
+      allow read, write: if request.auth != null && (
+        coll == 'entries_' + request.auth.uid ||
+        coll == 'workouts_' + request.auth.uid
+      );
+    }
+
+    // Qualquer outra coisa: negado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

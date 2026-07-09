@@ -61,7 +61,9 @@ window._fb={
   async getPhotoMeta(profile){
     const s=await getDoc(doc(db,'photo_meta',profile));
     return s.exists()?s.data():{photos:[]};
-  }
+  },
+  async savePushSub(uid,sub){ await setDoc(doc(db,'push_subs',uid),sub); },
+  async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} }
 };
 if(document.readyState==="complete"){if(window._btInit)window._btInit();}
 else{window.addEventListener("load",()=>{if(window._btInit)window._btInit();});}
@@ -4850,10 +4852,9 @@ function getMealLog(date){
   try{ return JSON.parse(localStorage.getItem('bt_meals_'+date)||'{}'); }catch{ return {}; }
 }
 function saveMealLog(date,log){
+  // Registro diário de refeições fica local no aparelho (privacidade por usuário)
   try{ localStorage.setItem('bt_meals_'+date, JSON.stringify(log)); }
   catch(e){ console.warn('Falha ao salvar refeição localmente:',e); }
-  // Also save to Firebase for cross-device sync
-  if(window._fb) window._fb.saveSettings('meals_'+date, log).catch(()=>{});
 }
 function toggleMealCheck(mealIdx, option){
   const today=getTodayKey();
@@ -5252,6 +5253,7 @@ function openSettings(onboarding){
   closeSettings();
   const s=getSettings()||{};
   const nameVal=(s.name&&s.name!=='Você')?s.name:'';
+  const ns=notifStatus();
   const field=(id,label,val,ph,step)=>`<div style="margin-bottom:12px"><label class="flabel">${label}</label><input type="${step?'number':'text'}" ${step?`step="${step}" inputmode="decimal"`:''} id="${id}" value="${val}" placeholder="${ph||''}"/></div>`;
   const ov=document.createElement('div');
   ov.id='settings-modal';
@@ -5276,6 +5278,10 @@ function openSettings(onboarding){
         <button onclick="exportData()" style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬇️ Exportar backup</button>
         <label style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" onchange="importData(this)" style="display:none"/></label>
       </div>
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🔔 Notificações</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Lembretes de refeição, água e treino. Status: <strong style="color:${ns.color}">${ns.label}</strong></div>
+      ${ns.on?`<div style="font-size:10px;color:var(--good);line-height:1.5">✓ Ativas. Para receber com o app fechado no iPhone, adicione o app à Tela de Início.</div>`:`<button onclick="enableNotifications()" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🔔 Ativar notificações</button>`}
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
       <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">👤 Conta</div>
       ${(window._fb&&window._fb.currentUser&&window._fb.currentUser())?`
@@ -5515,19 +5521,46 @@ let _swReg=null;
 async function subscribePush(){
   if(!_swReg) return;
   try{
-    const existing=await _swReg.pushManager.getSubscription();
-    if(existing) return existing;
-    const sub=await _swReg.pushManager.subscribe({
-      userVisibleOnly:true,
-      applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-    // Save subscription to localStorage for reference
-    localStorage.setItem('bt_push_sub',JSON.stringify(sub));
-    console.log('Push subscription:', JSON.stringify(sub));
+    let sub=await _swReg.pushManager.getSubscription();
+    if(!sub){
+      sub=await _swReg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    try{ localStorage.setItem('bt_push_sub',JSON.stringify(sub)); }catch(e){}
+    await savePushSubToCloud(sub);
     return sub;
   }catch(e){
     console.warn('Push subscribe failed:',e);
   }
+}
+// Salva a inscrição de push do usuário logado no Firestore (para o enviador usar)
+async function savePushSubToCloud(sub){
+  try{
+    const u=window._fb&&window._fb.currentUser&&window._fb.currentUser();
+    if(u&&sub&&window._fb.savePushSub){
+      const j=sub.toJSON?sub.toJSON():JSON.parse(JSON.stringify(sub));
+      await window._fb.savePushSub(u.uid,{ endpoint:j.endpoint, keys:j.keys, uid:u.uid, tzOffset:new Date().getTimezoneOffset(), updatedAt:Date.now() });
+    }
+  }catch(e){ console.warn('savePushSub falhou:',e); }
+}
+async function enableNotifications(){
+  if(!('Notification' in window)){ alert('Seu navegador não suporta notificações.'); return; }
+  if(!_swReg){ try{ _swReg=await navigator.serviceWorker.ready; }catch(e){} }
+  let perm=Notification.permission;
+  if(perm!=='granted') perm=await Notification.requestPermission();
+  if(perm!=='granted'){ alert('Permissão negada. Ative as notificações nas configurações do navegador para receber lembretes.'); return; }
+  const sub=await subscribePush();
+  scheduleMealReminders(); scheduleWaterReminders();
+  showSyncStatus(sub?'🔔 Notificações ativadas':'🔔 Permissão concedida','var(--good)');
+  const el=document.getElementById('settings-modal'); if(el){ closeSettings(); openSettings(); }
+}
+function notifStatus(){
+  if(!('Notification' in window)) return {label:'Não suportado',color:'var(--muted)',on:false};
+  if(Notification.permission==='granted') return {label:'Ativadas',color:'var(--good)',on:true};
+  if(Notification.permission==='denied') return {label:'Bloqueadas no navegador',color:'var(--bad)',on:false};
+  return {label:'Desativadas',color:'var(--muted)',on:false};
 }
 
 async function schedulePushMealReminder(meal,hour,min,icon){
