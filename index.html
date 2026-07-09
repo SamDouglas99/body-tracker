@@ -695,12 +695,34 @@ function saveCustomProgram(prog){
   localStorage.setItem('bt_custom_prog', JSON.stringify(prog));
 }
 function getWorkoutProgram(){
-  // Retorna o programa ativo com customizações aplicadas
+  // Retorna o programa ativo com customizações aplicadas + séries de trabalho normalizadas
   const base = JSON.parse(JSON.stringify(getActiveProgram())); // deep clone
   const custom = getCustomProgram();
-  if(!custom || custom.program !== activeProgram) return base;
-  Object.entries(custom.overrides||{}).forEach(([key,data])=>{
-    if(base[key]) base[key].exercises = data;
+  if(custom && custom.program === activeProgram){
+    Object.entries(custom.overrides||{}).forEach(([key,data])=>{
+      if(base[key]) base[key].exercises = data;
+    });
+  }
+  // Expande séries de trabalho com s>1 em séries individuais (nº real de séries no logger e na edição)
+  Object.values(base).forEach(wo=>{
+    if(!wo||!wo.exercises) return;
+    wo.exercises.forEach(ex=>{
+      if(!ex.sets) return;
+      const out=[];
+      ex.sets.forEach(st=>{
+        const cnt=st.t==='work'?(st.s||1):1;
+        if(st.t==='work' && cnt>1){
+          for(let i=0;i<cnt;i++){
+            const o={...st,s:1,l:`Série ${i+1}`};
+            if(i!==cnt-1) delete o.note;
+            out.push(o);
+          }
+        } else {
+          out.push(st);
+        }
+      });
+      ex.sets=out;
+    });
   });
   return base;
 }
@@ -850,12 +872,54 @@ const getSettings=()=>_cache.settings[CP];
 function saveSettings(d){_cache.settings[CP]=d;if(window._fb)window._fb.saveSettings(CP,d).catch(e=>console.error(e));}
 const getWorkouts=()=>_cache.workouts||[];
 const getLastWorkout=(type)=>[..._cache.workouts].reverse().find(s=>s.type===type)||null;
-function saveWorkout(session){_cache.workouts.push(session);if(window._fb)window._fb.saveWorkout(session).catch(e=>console.error(e));}
+// ── Treinos: gravação DURÁVEL (backup local + re-sync) — evita perder treino se o Firebase falhar ──
+function getWorkoutBackup(){ try{return JSON.parse(localStorage.getItem('bt_workouts_backup')||'[]');}catch{return [];} }
+function saveWorkoutBackup(arr){ try{localStorage.setItem('bt_workouts_backup',JSON.stringify(arr));}catch(e){} }
+function saveWorkout(session){
+  _cache.workouts.push(session);
+  // Backup local imediato — não some se a rede/Firebase falhar
+  const bk=getWorkoutBackup();
+  if(!bk.some(s=>s.id===session.id)){ bk.push(session); saveWorkoutBackup(bk); }
+  if(window._fb) window._fb.saveWorkout(session).catch(e=>console.error('Treino mantido no backup local (falha no Firebase):',e));
+}
+// Junta os treinos do Firebase com qualquer backup local ainda não sincronizado (e reenvia os que faltam)
+function mergeWorkouts(fbList){
+  const byId={}; const ordered=[];
+  (fbList||[]).forEach(s=>{
+    if(s&&s.id!=null){ if(!(s.id in byId)){ byId[s.id]=s; ordered.push(s); } }
+    else if(s){ ordered.push(s); }
+  });
+  const bk=getWorkoutBackup();
+  const missing=bk.filter(s=>s&&s.id!=null&&!(s.id in byId));
+  // reenvia ao Firebase os que ficaram só no backup
+  if(window._fb) missing.forEach(s=>{ window._fb.saveWorkout(s).catch(()=>{}); });
+  // mantém no backup apenas os que ainda não estão no Firebase
+  saveWorkoutBackup(missing);
+  return [...ordered,...missing].sort((a,b)=>new Date(a.date)-new Date(b.date));
+}
+
+// ── Medidas: gravação DURÁVEL (mesmo esquema de backup dos treinos) ──
+function getEntryBackup(profile){ try{return JSON.parse(localStorage.getItem('bt_entries_backup_'+profile)||'[]');}catch{return [];} }
+function saveEntryBackup(profile,arr){ try{localStorage.setItem('bt_entries_backup_'+profile,JSON.stringify(arr));}catch(e){} }
+function mergeEntries(profile,fbList){
+  const byId={}; const ordered=[];
+  (fbList||[]).forEach(s=>{
+    if(s&&s.id!=null){ if(!(s.id in byId)){ byId[s.id]=s; ordered.push(s); } }
+    else if(s){ ordered.push(s); }
+  });
+  const bk=getEntryBackup(profile);
+  const missing=bk.filter(s=>s&&s.id!=null&&!(s.id in byId));
+  if(window._fb) missing.forEach(s=>{ window._fb.saveEntry(profile,s).catch(()=>{}); });
+  saveEntryBackup(profile,missing);
+  return [...ordered,...missing].sort((a,b)=>new Date(a.date)-new Date(b.date));
+}
 
 // ── Profile data ──
 function getD(){
   const p=PROFILES[CP],s=getSettings(),entries=getEntries();
-  const initW=s?.weight||p.initialWeight||60;
+  // Linha de base = primeiro peso realmente registrado (mais fiel que o peso das configurações)
+  const firstEntryW=(()=>{for(const e of entries){if(e.weight!=null&&e.weight!=='')return parseFloat(e.weight);}return null;})();
+  const initW=firstEntryW!=null?firstEntryW:(s?.weight||p.initialWeight||60);
   const goalW=s?.goal||p.goalWeight||55;
   const h=s?.height||p.height||1.65;
   const latest=entries.length>0?entries[entries.length-1]:null;
@@ -1236,11 +1300,50 @@ function buildMedidas(){
       <div style="font-size:11px;color:var(--sub);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.label}</div>
       <div style="font-size:22px;font-weight:700;color:${val?ac:'var(--border2)'};line-height:1">${val||'—'}<span style="font-size:11px;color:var(--muted);font-weight:400">${val?m.unit:''}</span></div>
       ${dfmt?`<div style="margin-top:2px">${dfmt}</div>`:''}
-      ${tgt?`<div style="font-size:8px;color:var(--muted);margin-top:3px">→ ${tgt}${m.unit}</div>`:''}
+      ${tgt&&val?`<div style="font-size:8px;color:var(--muted);margin-top:3px">meta ${tgt}${m.unit} · <span style="color:${(tgt-parseFloat(val))>0?'var(--sub)':'var(--good)'}">${(()=>{const r=+(tgt-parseFloat(val)).toFixed(1);return r>0?'faltam '+r+m.unit:'✓ atingida';})()}</span></div>`:tgt?`<div style="font-size:8px;color:var(--muted);margin-top:3px">→ ${tgt}${m.unit}</div>`:''}
       ${m.target&&val?`<div class="bar sm" style="margin-top:6px"><div class="fill${m.priority?' fill-warm':''}" style="width:${Math.max(pct,2)}%"></div></div>`:''}
     </div>`;
   }).join('');
-  return`<div class="page"><div class="sec-title" style="padding:0 0 14px">📋 Todas as Medidas</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px" class="medidas-grid">${cards}</div></div>`;
+  // ── Hero: progresso do peso rumo à meta ──
+  const d=getD();
+  const rem=parseFloat(d.remaining);
+  const remLabel=rem>0?`faltam ${Math.abs(rem)}`:rem<0?`${Math.abs(rem)} acima`:'na meta';
+  const remColor=rem===0?'var(--good)':'var(--text)';
+  const heroCard=`<div class="card-accent" style="margin-bottom:16px;border-color:${ac}45">
+    <div style="font-size:8px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">🎯 Progresso rumo à meta</div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-size:34px;font-weight:800;color:${ac};line-height:1">${d.curW}</span>
+      <span style="font-size:13px;color:var(--muted)">kg</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--sub)">meta <strong style="color:var(--text)">${d.goalW}kg</strong></span>
+    </div>
+    <div class="bar" style="height:9px;margin:11px 0 6px"><div class="fill" style="width:${Math.max(2,Math.round(d.progress))}%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px">
+      <span style="color:var(--muted)">${d.initW}kg início</span>
+      <span style="color:${ac};font-weight:800">${Math.round(d.progress)}%</span>
+      <span style="color:var(--muted)">${d.goalW}kg meta</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:13px">
+      <div style="background:var(--bg4);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:15px;font-weight:800;color:${remColor};line-height:1.1">${remLabel}${rem!==0?'<span style="font-size:10px;color:var(--muted)">kg</span>':''}</div>
+        <div class="lbl" style="margin-top:5px">Para a meta</div>
+      </div>
+      <div style="background:var(--bg4);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:15px;font-weight:800;color:${d.wp===null?'var(--muted)':parseFloat(d.wp)>=0?'var(--good)':'var(--bad)'};line-height:1.1">${d.wp===null?'—':(parseFloat(d.wp)>=0?'+':'')+d.wp}${d.wp!==null?'<span style="font-size:10px;color:var(--muted)">kg</span>':''}</div>
+        <div class="lbl" style="margin-top:5px">Última variação</div>
+      </div>
+      <div style="background:var(--bg4);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:15px;font-weight:800;color:var(--text);line-height:1.1">${d.weeks>0?'~'+d.weeks:'0'}<span style="font-size:10px;color:var(--muted)">sem</span></div>
+        <div class="lbl" style="margin-top:5px">Estimativa</div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:var(--muted);margin-top:10px;line-height:1.5">💡 Estimativa baseada em ~0,3kg/semana. Atualize seu peso toda semana para acompanhar de perto.</div>
+  </div>`;
+  return`<div class="page">
+    <div class="sec-title" style="padding:0 0 14px">🎯 Medidas & Meta</div>
+    ${heroCard}
+    <div class="sec-title" style="padding:0 0 12px;font-size:12px">📋 Todas as Medidas</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px" class="medidas-grid">${cards}</div>
+  </div>`;
 }
 
 // ══════════════════════════════════════
@@ -1306,8 +1409,10 @@ function saveEntry(){
   });
 
   _cache.entries[CP].push(entry);
+  // Backup local imediato — não perde a medição se o Firebase falhar
+  const _bk=getEntryBackup(CP); if(!_bk.some(x=>x.id===entry.id)){ _bk.push(entry); saveEntryBackup(CP,_bk); }
   const done=()=>{btn.textContent='✓ Salvo!';setTimeout(()=>go('dashboard'),900);};
-  if(window._fb){window._fb.saveEntry(CP,entry).then(done).catch(e=>{console.error(e);done();});}else{done();}
+  if(window._fb){window._fb.saveEntry(CP,entry).then(done).catch(e=>{console.error('Medição mantida no backup local:',e);done();});}else{done();}
 }
 
 // ══════════════════════════════════════
@@ -5045,36 +5150,53 @@ function buildEvolutionReport(period){
 function closeEvoCard(){
   const el=document.getElementById('evo-card');
   if(el) el.remove();
+  if(_evoEscHandler){ document.removeEventListener('keydown',_evoEscHandler); _evoEscHandler=null; }
 }
 
+let _evoEscHandler=null;
 function showEvolutionCard(period){
   const report=buildEvolutionReport(period);
   if(!report)return;
-  const existing=document.getElementById('evo-card');
-  if(existing)existing.remove();
-  const card=document.createElement('div');
-  card.id='evo-card';
+  closeEvoCard();
   const labels={semanal:'📅 Semana',mensal:'📆 Mês',trimestral:'📊 Trimestre',semestral:'🗓️ Semestre'};
-  card.style.cssText='position:fixed;top:0;left:0;right:0;z-index:500;background:var(--bg2);border-bottom:2px solid var(--him);padding:14px 16px 16px;max-height:75vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.7)';
-  card.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">${labels[period]} — Relatório de Evolução</div>
-      <button onclick="closeEvoCard()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1;z-index:510;position:relative">✕</button>
+  const d=getD();
+  const towardGoal=d.totalD!==0;
+  const headline=`<div style="background:var(--bg4);border-radius:12px;padding:14px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <div><span style="font-size:26px;font-weight:800;color:var(--him)">${d.curW}</span><span style="font-size:12px;color:var(--muted)">kg atual</span></div>
+      <div style="text-align:right"><div style="font-size:13px;font-weight:800;color:var(--text)">Meta: ${d.goalW}kg</div><div style="font-size:10px;color:${parseFloat(d.remaining)===0?'var(--good)':'var(--sub)'}">${parseFloat(d.remaining)>0?`faltam ${d.remaining}kg`:parseFloat(d.remaining)<0?`${Math.abs(d.remaining)}kg acima`:'meta atingida! 🎉'}</div></div>
     </div>
-    ${report.achievements.length?`
-      <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">✅ Conquistas</div>
-      ${report.achievements.map(a=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--good);flex-shrink:0">▶</span><span style="font-size:11px;color:var(--sub);line-height:1.6">${a}</span></div>`).join('')}`:''}
-    ${report.improvements.length?`
-      <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin:12px 0 8px">⚠️ Pontos de Melhora</div>
-      ${report.improvements.map(a=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--warn);flex-shrink:0">▶</span><span style="font-size:11px;color:var(--sub);line-height:1.6">${a}</span></div>`).join('')}`:''}
-    ${!report.achievements.length&&!report.improvements.length?'<div style="font-size:11px;color:var(--muted);text-align:center;padding:12px">Registre mais dados para ver sua evolução!</div>':''}
-    <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">
-      ${['semanal','mensal','trimestral','semestral'].map(p=>`<button onclick="showEvolutionCard('${p}')" style="padding:5px 12px;border-radius:20px;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:${p===period?'var(--himb)':'var(--bg3)'};border:1px solid ${p===period?'var(--himl)':'var(--border2)'};color:${p===period?'var(--him)':'var(--muted)'}">${{semanal:'Semana',mensal:'Mês',trimestral:'Trimestre',semestral:'Semestre'}[p]}</button>`).join('')}
-    </div>`;
-  document.body.prepend(card);
-  // Notificação push
-  if(report.achievements.length)
-    sendNotif('Body Tracker 💪',report.achievements[0]);
+    ${towardGoal?`<div class="bar" style="height:8px"><div class="fill" style="width:${Math.max(2,Math.round(d.progress))}%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:5px"><span style="font-size:9px;color:var(--muted)">${Math.round(d.progress)}% da meta</span>${d.wp!==null?`<span style="font-size:9px;color:${parseFloat(d.wp)>=0?'var(--good)':'var(--bad)'}">${parseFloat(d.wp)>=0?'+':''}${d.wp}kg na última medição</span>`:''}</div>`:''}
+  </div>`;
+  const ov=document.createElement('div');
+  ov.id='evo-card';
+  ov.style.cssText='position:fixed;inset:0;z-index:600;background:rgba(8,8,14,.78);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 13px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:440px;box-shadow:0 14px 44px rgba(0,0,0,.6);overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 15px 13px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0">
+      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">${labels[period]} — Evolução</div>
+      <button onclick="closeEvoCard()" aria-label="Fechar" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    </div>
+    <div style="padding:15px">
+      ${headline}
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        ${['semanal','mensal','trimestral','semestral'].map(p=>`<button onclick="showEvolutionCard('${p}')" style="padding:6px 13px;border-radius:20px;font-family:var(--font2);font-size:9px;font-weight:800;letter-spacing:.5px;cursor:pointer;background:${p===period?'var(--himb)':'var(--bg3)'};border:1px solid ${p===period?'var(--himl)':'var(--border2)'};color:${p===period?'var(--him)':'var(--muted)'}">${{semanal:'Semana',mensal:'Mês',trimestral:'Trimestre',semestral:'Semestre'}[p]}</button>`).join('')}
+      </div>
+      ${report.achievements.length?`
+        <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">✅ Conquistas</div>
+        ${report.achievements.map(a=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--good);flex-shrink:0">▶</span><span style="font-size:11px;color:var(--sub);line-height:1.6">${a}</span></div>`).join('')}`:''}
+      ${report.improvements.length?`
+        <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">⚠️ Pontos de Melhora</div>
+        ${report.improvements.map(a=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--warn);flex-shrink:0">▶</span><span style="font-size:11px;color:var(--sub);line-height:1.6">${a}</span></div>`).join('')}`:''}
+      ${!report.achievements.length&&!report.improvements.length?'<div style="font-size:11px;color:var(--muted);text-align:center;padding:12px">Registre mais dados para ver sua evolução!</div>':''}
+      <button onclick="closeEvoCard()" style="width:100%;padding:13px;margin-top:16px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Fechar</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{ if(e.target===ov) closeEvoCard(); });
+  document.body.appendChild(ov);
+  _evoEscHandler=(e)=>{ if(e.key==='Escape') closeEvoCard(); };
+  document.addEventListener('keydown',_evoEscHandler);
+  if(report.achievements.length) sendNotif('Body Tracker 💪',report.achievements[0]);
 }
 
 function checkAndShowEvolutionReport(){
@@ -5119,16 +5241,18 @@ window._btInit = async function(){
       window._fb.getWorkouts()
     ]);
     _cache.settings.him=sHim||{weight:63,goal:80,height:1.71};
-    _cache.entries.him=eHim;
-    _cache.workouts=workouts;
+    _cache.entries.him=mergeEntries('him',eHim);
+    _cache.workouts=mergeWorkouts(workouts);
     if(!sHim) await window._fb.saveSettings('him',_cache.settings.him);
     showSyncStatus('✓ Sincronizado','var(--good)');
-    window._fb.listenEntries('him',data=>{_cache.entries.him=data;render();});
-    window._fb.listenWorkouts(data=>{_cache.workouts=data;render();});
+    window._fb.listenEntries('him',data=>{_cache.entries.him=mergeEntries('him',data);render();});
+    window._fb.listenWorkouts(data=>{_cache.workouts=mergeWorkouts(data);render();});
   }catch(e){
     console.error('Firebase:',e);
     showSyncStatus('⚠ Offline','var(--warn)');
     _cache.settings.him={weight:63,goal:80,height:1.71};
+    _cache.entries.him=mergeEntries('him',[]); // mostra medições do backup local mesmo offline
+    _cache.workouts=mergeWorkouts([]); // mostra treinos do backup local mesmo offline
   }
   render();
   setTimeout(checkAndShowEvolutionReport,3000);
