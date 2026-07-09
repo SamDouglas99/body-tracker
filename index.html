@@ -508,7 +508,7 @@ input:focus,select:focus{border-color:var(--muted)}
 <div id="main">
   <div id="topbar">
     <div><div class="tb-title" id="tb-title"><span class="tb-accent">Dashboard</span></div><div class="tb-sub" id="tb-sub"></div></div>
-    <div style="display:flex;align-items:center;gap:8px"><button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🌙</button><button class="tb-evo-btn" onclick="showEvolutionCard('semanal')" style="background:var(--himb);border:1px solid var(--himl);color:var(--him);border-radius:20px;padding:5px 12px;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">📈 Evolução</button><div class="tb-badge" id="tb-badge">—</div></div>
+    <div style="display:flex;align-items:center;gap:8px"><button onclick="openSettings()" title="Perfil e ajustes" aria-label="Ajustes" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙️</button><button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🌙</button><button class="tb-evo-btn" onclick="showEvolutionCard('semanal')" style="background:var(--himb);border:1px solid var(--himl);color:var(--him);border-radius:20px;padding:5px 12px;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">📈 Evolução</button><div class="tb-badge" id="tb-badge">—</div></div>
   </div>
   <div id="content"></div>
 </div>
@@ -869,7 +869,7 @@ let woStartTime=null, woElapsedInterval=null;
 const _cache={entries:{him:[]},settings:{him:null},workouts:[]};
 const getEntries=()=>_cache.entries[CP]||[];
 const getSettings=()=>_cache.settings[CP];
-function saveSettings(d){_cache.settings[CP]=d;if(window._fb)window._fb.saveSettings(CP,d).catch(e=>console.error(e));}
+function saveSettings(d){_cache.settings[CP]=d;try{localStorage.setItem('bt_settings_'+CP,JSON.stringify(d));}catch(e){}if(window._fb)window._fb.saveSettings(CP,d).catch(e=>console.error('Ajustes mantidos no backup local:',e));}
 const getWorkouts=()=>_cache.workouts||[];
 const getLastWorkout=(type)=>[..._cache.workouts].reverse().find(s=>s.type===type)||null;
 // ── Treinos: gravação DURÁVEL (backup local + re-sync) — evita perder treino se o Firebase falhar ──
@@ -930,9 +930,11 @@ function getD(){
   const bmi=h?(curW/(h*h)).toFixed(1):null;
   const bmiInfo=getBMI(bmi);
   const wp=entries.length>=2?((entries[entries.length-1].weight-entries[entries.length-2].weight).toFixed(1)):null;
-  const weeks=Math.abs(remaining)>0.1?Math.ceil(Math.abs(remaining)/0.3):0;
+  const pace=(s&&s.pace>0)?s.pace:0.3;
+  const weeks=Math.abs(remaining)>0.1?Math.ceil(Math.abs(remaining)/pace):0;
   const bf=estimateBF(latest,h);
-  return{p,s,entries,initW,goalW,h,latest,curW,totalD,progress,remaining,bmi,bmiInfo,wp,weeks,bf};
+  const name=(s&&s.name)?s.name:p.name;
+  return{p,s,entries,initW,goalW,h,latest,curW,totalD,progress,remaining,bmi,bmiInfo,wp,weeks,bf,pace,name};
 }
 function getBMI(b){
   if(!b)return{label:'—',color:'var(--muted)'};
@@ -1017,7 +1019,7 @@ function render(){
   const d=getD(),p=PROFILES[CP];
   const tabN={dashboard:'Dashboard',medidas:'Medidas',registrar:'Registrar',evolucao:'Evolução',treinos:'Treinos',nutricao:'Nutrição',estoque:'Estoque 🛒',guia:'Guia'};
   document.getElementById('tb-title').innerHTML=`<span class="tb-accent">${tabN[CT]||CT}</span>`;
-  document.getElementById('tb-sub').textContent=`${p.emoji} ${p.name} · ${d.curW}kg · Meta: ${d.goalW}kg`;
+  document.getElementById('tb-sub').textContent=`${p.emoji} ${d.name} · ${d.curW}kg · Meta: ${d.goalW}kg`;
   document.getElementById('tb-badge').textContent=`${d.progress.toFixed(0)}% da meta`;
   const builders={dashboard:buildDashboard,medidas:buildMedidas,registrar:buildRegistrar,evolucao:buildEvolucao,treinos:buildTreinos,nutricao:buildNutricao,estoque:buildEstoque,guia:buildGuia};
   document.getElementById('content').innerHTML=(builders[CT]||buildDashboard)();
@@ -2984,7 +2986,7 @@ function _applySetEdit(woKey, exIdx, sets, reps){
 }
 
 // ══════════════════════════════════════
-// NUTRIÇÃO — Plano Carla Barros
+// NUTRIÇÃO — Plano Alimentar
 // ══════════════════════════════════════
 // ══════════════════════════════════════
 // LISTA DO MERCADO
@@ -3564,7 +3566,7 @@ function buildNutricao(){
       <div class="sec-title" style="padding:0 0 14px">💡 Orientações Nutricionais</div>
       ${subtabs}
       <div class="card-accent" style="margin-bottom:16px;border-color:${ac}30">
-        <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">📋 Nutricionista Carla Barros — CRN 17100994</div>
+        <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">📋 Diretrizes do seu plano</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           ${DIET_TIPS.map(t=>`<div style="padding:10px;background:var(--bg4);border-radius:8px;font-size:11px;color:var(--sub);display:flex;gap:8px;align-items:flex-start"><span style="font-size:18px;flex-shrink:0">${t.icon}</span>${t.tip}</div>`).join('')}
         </div>
@@ -3628,7 +3630,7 @@ function buildNutricao(){
     if(!window._mealLog) window._mealLog={};
     const mealLog=window._mealLog;
 
-    // ── Auto-calcular pelo plano da Nutri Carla (opção 1 de cada refeição) ──
+    // ── Auto-calcular pelo plano (opção 1 de cada refeição) ──
     // Mapeamento das opções do plano para alimentos do FOOD_DB
     const PLAN_FOODS=[
       // Pré-treino opção 1: vitamina 250ml leite + 2 bananas + 35g aveia
@@ -3693,7 +3695,7 @@ function buildNutricao(){
 
       <!-- Cálculo automático pelo plano -->
       <div class="card" style="margin-bottom:14px">
-        <div style="font-size:10px;font-weight:700;color:var(--sub);margin-bottom:4px">🥗 Base: Plano Nutri Carla Barros</div>
+        <div style="font-size:10px;font-weight:700;color:var(--sub);margin-bottom:4px">🥗 Base: seu plano alimentar</div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:12px">Calculado automaticamente pelo plano completo do dia (todas as refeições, opção 1). Adicione extras abaixo se necessário.</div>
         <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:flex-end">
           <div>
@@ -3875,7 +3877,7 @@ function buildNutricao(){
   },{kcal:0,prot:0,carb:0,gord:0,fibra:0});
 
   return`<div class="page">
-    <div class="sec-title" style="padding:0 0 14px">🥗 Plano Alimentar — Nutri Carla Barros</div>
+    <div class="sec-title" style="padding:0 0 14px">🥗 Plano Alimentar</div>
     ${subtabs}
     <div class="card-accent" style="margin-bottom:14px;border-color:${ac}30">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -5199,6 +5201,98 @@ function showEvolutionCard(period){
   if(report.achievements.length) sendNotif('Body Tracker 💪',report.achievements[0]);
 }
 
+// ══════════════════════════════════════
+// PERFIL & AJUSTES + BACKUP
+// ══════════════════════════════════════
+let _settingsEscHandler=null;
+function closeSettings(){
+  const el=document.getElementById('settings-modal');
+  if(el) el.remove();
+  if(_settingsEscHandler){ document.removeEventListener('keydown',_settingsEscHandler); _settingsEscHandler=null; }
+}
+function openSettings(onboarding){
+  closeSettings();
+  const s=getSettings()||{};
+  const nameVal=(s.name&&s.name!=='Você')?s.name:'';
+  const field=(id,label,val,ph,step)=>`<div style="margin-bottom:12px"><label class="flabel">${label}</label><input type="${step?'number':'text'}" ${step?`step="${step}" inputmode="decimal"`:''} id="${id}" value="${val}" placeholder="${ph||''}"/></div>`;
+  const ov=document.createElement('div');
+  ov.id='settings-modal';
+  ov.style.cssText='position:fixed;inset:0;z-index:650;background:rgba(8,8,14,.8);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 13px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:440px;box-shadow:0 14px 44px rgba(0,0,0,.6);overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 15px 13px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0">
+      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">⚙️ Perfil & Ajustes</div>
+      <button onclick="closeSettings()" aria-label="Fechar" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    </div>
+    <div style="padding:15px">
+      ${onboarding?`<div style="background:var(--himb);border:1px solid var(--himl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--sub);line-height:1.5">👋 Bem-vindo! Preencha seu perfil para o app calcular seu progresso rumo à meta.</div>`:''}
+      ${field('set_name','Seu nome',nameVal,'Como quer ser chamado')}
+      ${field('set_height','Altura (m)',s.height||'','ex: 1.75','0.01')}
+      ${field('set_goal','Meta de peso (kg)',s.goal||'','ex: 80','0.1')}
+      ${field('set_pace','Ritmo semanal alvo (kg/semana)',s.pace||0.3,'ex: 0.3','0.05')}
+      <div style="font-size:9px;color:var(--muted);margin:-4px 0 14px;line-height:1.5">O ritmo é usado para estimar quantas semanas faltam para a meta. ~0,3kg/semana é sustentável.</div>
+      <button onclick="saveProfileSettings()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">💾 Salvar perfil</button>
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">💾 Seus dados</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Baixe um backup completo (treinos, medidas, refeições, compras) ou restaure de um arquivo.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="exportData()" style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬇️ Exportar backup</button>
+        <label style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" onchange="importData(this)" style="display:none"/></label>
+      </div>
+      ${!onboarding?`<button onclick="closeSettings()" style="width:100%;padding:12px;margin-top:16px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:11px;font-weight:700;cursor:pointer">Fechar</button>`:''}
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{ if(e.target===ov) closeSettings(); });
+  document.body.appendChild(ov);
+  _settingsEscHandler=(e)=>{ if(e.key==='Escape') closeSettings(); };
+  document.addEventListener('keydown',_settingsEscHandler);
+}
+function saveProfileSettings(){
+  const s={...(getSettings()||{})};
+  const name=(document.getElementById('set_name').value||'').trim();
+  const height=parseFloat(document.getElementById('set_height').value);
+  const goal=parseFloat(document.getElementById('set_goal').value);
+  const pace=parseFloat(document.getElementById('set_pace').value);
+  if(name) s.name=name; else delete s.name;
+  if(height>0) s.height=height;
+  if(goal>0) s.goal=goal;
+  if(pace>0) s.pace=pace;
+  saveSettings(s);
+  try{localStorage.setItem('bt_onboarded','1');}catch(e){}
+  closeSettings();
+  render();
+  showSyncStatus('✓ Perfil salvo','var(--good)');
+}
+function exportData(){
+  const data={ app:'Body Tracker', version:1, exportedAt:new Date().toISOString(), profile:CP,
+    settings:getSettings(), entries:getEntries(), workouts:getWorkouts(), storage:{} };
+  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf('bt_')===0){ try{data.storage[k]=localStorage.getItem(k);}catch(e){} } }
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`body-tracker-backup-${localDayKey()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  showSyncStatus('✓ Backup exportado','var(--good)');
+}
+function importData(input){
+  const file=input.files&&input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||(!data.storage&&!data.entries&&!data.workouts)) throw new Error('Arquivo não reconhecido');
+      if(!confirm('Restaurar este backup? Os dados do arquivo serão mesclados com os atuais.')) return;
+      if(data.storage){ Object.entries(data.storage).forEach(([k,v])=>{ try{localStorage.setItem(k,v);}catch(e){} }); }
+      if(Array.isArray(data.entries)){ const bk=getEntryBackup(CP); data.entries.forEach(e=>{ if(e&&e.id!=null&&!bk.some(x=>x.id===e.id)) bk.push(e); }); saveEntryBackup(CP,bk); }
+      if(Array.isArray(data.workouts)){ const bk=getWorkoutBackup(); data.workouts.forEach(w=>{ if(w&&w.id!=null&&!bk.some(x=>x.id===w.id)) bk.push(w); }); saveWorkoutBackup(bk); }
+      if(data.settings){ saveSettings({...(getSettings()||{}),...data.settings}); }
+      showSyncStatus('✓ Backup restaurado — recarregando...','var(--good)');
+      setTimeout(()=>location.reload(),1200);
+    }catch(e){ alert('Não foi possível importar: '+e.message); }
+  };
+  reader.readAsText(file);
+}
+
 function checkAndShowEvolutionReport(){
   const workouts=getWorkouts();
   const entries=getEntries();
@@ -5240,7 +5334,7 @@ window._btInit = async function(){
       window._fb.getEntries('him'),
       window._fb.getWorkouts()
     ]);
-    _cache.settings.him=sHim||{weight:63,goal:80,height:1.71};
+    _cache.settings.him=sHim||JSON.parse(localStorage.getItem('bt_settings_him')||'null')||{weight:63,goal:80,height:1.71};
     _cache.entries.him=mergeEntries('him',eHim);
     _cache.workouts=mergeWorkouts(workouts);
     if(!sHim) await window._fb.saveSettings('him',_cache.settings.him);
@@ -5250,11 +5344,12 @@ window._btInit = async function(){
   }catch(e){
     console.error('Firebase:',e);
     showSyncStatus('⚠ Offline','var(--warn)');
-    _cache.settings.him={weight:63,goal:80,height:1.71};
+    _cache.settings.him=JSON.parse(localStorage.getItem('bt_settings_him')||'null')||{weight:63,goal:80,height:1.71};
     _cache.entries.him=mergeEntries('him',[]); // mostra medições do backup local mesmo offline
     _cache.workouts=mergeWorkouts([]); // mostra treinos do backup local mesmo offline
   }
   render();
+  if(!localStorage.getItem('bt_onboarded') && getEntries().length===0){ setTimeout(()=>openSettings(true),700); }
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
 };
