@@ -1,0 +1,9 @@
+# Dependências do enviador de lembretes (instaladas no GitHub Actions)
+scripts/node_modules/
+scripts/package-lock.json
+
+# Segredos — NUNCA comitar
+vapid-keys.txt
+*serviceAccount*.json
+*service-account*.json
+.env
