@@ -657,52 +657,54 @@ const WORKOUT_PROGRAM = {
 // ══════════════════════════════════════
 const WORKOUT_PROGRAM_2 = {
   a1:{label:'A1 — Peito, Ombro e Tríceps',day:'Segunda',color:'var(--push)',exercises:[
-    {name:'Supino Reto com Barra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150},{t:'work',l:'Série 3',s:1,r:'6–8',rest:150,note:'Composto livre — peito/tríceps/ombro. Sobrecarga progressiva'}]},
-    {name:'Desenvolvimento Militar com Barra (em pé)',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150},{t:'work',l:'Série 3',s:1,r:'6–8',rest:150,note:'Ombro composto — core estabiliza em pé'}]},
-    {name:'Paralelas com Sobrecarga (Dips)',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–12',rest:120,note:'Tronco à frente = peito. Adicione peso ao passar de 12'}]},
-    {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Peito superior'}]},
-    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:60},{t:'work',l:'Série 2',s:1,r:'10–15',rest:60},{t:'work',l:'Série 3',s:1,r:'12–15',rest:60,note:'Deltoide medial — drop na última'}]},
-    {name:'Tríceps Testa com Barra EZ',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75,note:'Cabeça longa do tríceps'}]},
+    {name:'Supra Polia Frente (Abdômen)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60}]},
+    {name:'Supino Reto Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Desenvolvimento Smith/Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'JM Press Smith / Paralelas c/ Sobrecarga',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120,note:'Braços colados ao tronco, barra na linha do ombro'}]},
+    {name:'Crucifixo Inclinado Halteres/Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Elevação Unilateral Polia Média',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Polia na altura do quadril'}]},
+    {name:'Extensão Tríceps Polia c/ Banco',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Alternativa: em pé de frente para polia'}]},
   ]},
   b1:{label:'B1 — Costas, Deltoide Post. e Bíceps',day:'Terça',color:'var(--pull)',exercises:[
-    {name:'Barra Fixa (Pull-up) — pegada pronada',sets:[{t:'warm',l:'Aquecimento',s:1,r:'5–8',rest:60},{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'6–10',rest:120,note:'Puxada vertical — some peso ao passar de 10. Sem forças, use o graviton'}]},
-    {name:'Remada Curvada com Barra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–10',rest:120,note:'Dorsal e meio das costas — tronco firme ~45°'}]},
-    {name:'Remada Serrote com Halter',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Unilateral — amplitude total, cotovelo alto'}]},
-    {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60}]},
-    {name:'Rosca Direta com Barra',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75,note:'Bíceps — carga livre, progressão de peso'}]},
-    {name:'Rosca Martelo com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75,note:'Braquial + antebraço — espessura do braço'}]},
+    {name:'Puxada Aberta Pronada no Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Tronco neutro, cotovelo para baixo'}]},
+    {name:'Remada Unilateral Neutra Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Remada Baixa Pegada Aberta',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Crucifixo Inverso Unilateral no Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Scott Bilateral Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Unilateral de Costas p/ Polia',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
   ]},
   c1:{label:'C1 — Quadríceps, Isquiotibiais e Glúteo',day:'Quinta',color:'var(--legs)',exercises:[
-    {name:'Agachamento Livre com Barra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:90},{t:'adj',l:'Ajuste',s:1,r:'5',rest:120},{t:'work',l:'Série 1',s:1,r:'5–8',rest:180},{t:'work',l:'Série 2',s:1,r:'5–8',rest:180},{t:'work',l:'Série 3',s:1,r:'6–8',rest:180,note:'Prioridade #1 — desça abaixo do paralelo, quadril + coxa'}]},
-    {name:'Levantamento Terra Romeno (RDL) com Barra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8',rest:60},{t:'work',l:'Série 1',s:1,r:'6–10',rest:150},{t:'work',l:'Série 2',s:1,r:'6–10',rest:150},{t:'work',l:'Série 3',s:1,r:'8–10',rest:150,note:'Posterior + glúteo — alongue bem, coluna neutra'}]},
-    {name:'Leg Press 45',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Quadríceps pesado, sem carga na coluna'}]},
-    {name:'Cadeira Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:75},{t:'work',l:'Série 2',s:1,r:'10–15',rest:75,note:'Isquiotibiais — pico de contração'}]},
-    {name:'Cadeira Extensora',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60,note:'Finalização de quadríceps — drop na última'}]},
-    {name:'Panturrilha em Pé',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'12–20',rest:60,note:'Canela fina precisa de volume — pausa 2s no alongamento'}]},
+    {name:'Cadeira Adutora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Cadeira Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Panturrilha Joelhos Estendidos Máq.',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60,note:'3s de pausa no alongamento de cada rep'}]},
+    {name:'Agachamento no Hack',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150,note:'Profundidade máxima, ativa glúteo'}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Extensão de Quadril Banco Romano',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Banco 1 regulagem abaixo da linha do quadril'}]},
   ]},
   a2:{label:'A2 — Ombro, Peito e Tríceps',day:'Sexta',color:'var(--push)',exercises:[
-    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–10',rest:120,note:'Ombro — amplitude maior que a máquina'}]},
-    {name:'Supino Inclinado com Barra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150},{t:'work',l:'Série 3',s:1,r:'6–8',rest:150,note:'Peito superior pesado — livre'}]},
-    {name:'Paralelas com Sobrecarga (Dips)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Peito inferior + tríceps'}]},
-    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:60},{t:'work',l:'Série 2',s:1,r:'10–15',rest:60},{t:'work',l:'Série 3',s:1,r:'12–15',rest:60,note:'Deltoide medial — prioridade p/ ombro largo'}]},
-    {name:'Crucifixo com Halteres (inclinado)',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:75},{t:'work',l:'Série 2',s:1,r:'10–15',rest:75,note:'Alongamento do peito'}]},
-    {name:'Tríceps Francês com Halter/Corda',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60}]},
+    {name:'Supra Máquina (Abdômen)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60}]},
+    {name:'Elevação Lateral Halteres/Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Deltóide medial prioridade'}]},
+    {name:'Desenvolvimento Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Supino Inclinado Smith/Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Paralelas com Sobrecarga',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Crucifixo Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Francês no Cabo',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
   ]},
   b2:{label:'B2 — Costas, Deltoide Post. e Bíceps',day:'Sábado',color:'var(--pull)',exercises:[
-    {name:'Barra Fixa Supinada (Chin-up)',sets:[{t:'warm',l:'Aquecimento',s:1,r:'5–8',rest:60},{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'6–10',rest:120,note:'Dorsal + bíceps — some peso ao passar de 10'}]},
-    {name:'Remada Cavalinho (T-Bar) ou Barra',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8–10',rest:60},{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–10',rest:120,note:'Espessura das costas — peito apoiado se preferir'}]},
-    {name:'Remada Baixa no Cabo (pegada neutra)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Meio das costas — junte as escápulas'}]},
-    {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60}]},
-    {name:'Rosca Direta 45° com Halteres (inclinado)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75,note:'Bíceps alongado'}]},
-    {name:'Rosca Martelo / Punho (antebraço)',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:60},{t:'work',l:'Série 2',s:1,r:'10–15',rest:60,note:'Pulso fino — fortaleça o antebraço e o grip'}]},
+    {name:'Puxada Unilateral Supinada Máq./Polia',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Máquina supinada ou polia neutra com banco'}]},
+    {name:'Remada Máq. Peito Apoiado Aberta',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120}]},
+    {name:'Remada Unilateral Neutra Polia Baixa',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Crucifixo Inverso Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Scott Unilateral Máquina',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Rosca Inclinado 45° Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
   ]},
   c2:{label:'C2 — Isquiotibiais, Glúteo e Quadríceps',day:'Domingo',color:'var(--lower)',exercises:[
-    {name:'Levantamento Terra (convencional)',sets:[{t:'warm',l:'Aquecimento',s:1,r:'8',rest:90},{t:'adj',l:'Ajuste',s:1,r:'5',rest:120},{t:'work',l:'Série 1',s:1,r:'4–6',rest:180},{t:'work',l:'Série 2',s:1,r:'4–6',rest:180,note:'Cadeia posterior inteira — o composto mais forte. Coluna neutra'}]},
-    {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120},{t:'work',l:'Série 3',s:1,r:'8–12',rest:120,note:'Unilateral — quadríceps + glúteo, ótima amplitude'}]},
-    {name:'Elevação Pélvica com Barra (Hip Thrust)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Glúteo — pausa 2s no topo'}]},
-    {name:'Mesa Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:75},{t:'work',l:'Série 2',s:1,r:'10–15',rest:75,note:'Isquiotibiais'}]},
-    {name:'Cadeira Extensora',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60,note:'Finalização de quadríceps'}]},
-    {name:'Panturrilha Sentado',sets:[{t:'work',l:'Série 1',s:1,r:'12–20',rest:60},{t:'work',l:'Série 2',s:1,r:'12–20',rest:60},{t:'work',l:'Série 3',s:1,r:'12–20',rest:60,note:'Sóleo — reps altas, alongamento completo'}]},
+    {name:'Levantamento Terra Stiff',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150,note:'Posterior + lombar — amplitude total'}]},
+    {name:'Mesa Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Panturrilha no Leg',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60},{t:'work',l:'Série 3',s:1,r:'8–12',rest:60,note:'3s de pausa no alongamento de cada rep'}]},
+    {name:'Leg Press',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150}]},
+    {name:'Cadeira Extensora Unilateral',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90}]},
+    {name:'Elevação Pélvica',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:120},{t:'work',l:'Série 2',s:1,r:'5–8',rest:120,note:'Pausa no topo — máx contração glúteo'}]},
   ]},
 };
 
@@ -711,10 +713,70 @@ const WEEK_SCHEDULE_2 = [
   {day:'Qui',type:'c1'},{day:'Sex',type:'a2'},{day:'Sáb',type:'b2'},{day:'Dom',type:'c2'}
 ];
 
+// ══════════════════════════════════════
+// PROGRAMA 3 — Compostos livres (só séries de trabalho)
+// Lombar protegida: 1 único levantamento axial pesado por dia (Remada B1,
+// Agachamento C1, Terra Romeno C2), nunca empilhados. Sem terra convencional.
+// ══════════════════════════════════════
+const WORKOUT_PROGRAM_3 = {
+  a1:{label:'A1 — Peito, Ombro e Tríceps',day:'Segunda',color:'var(--push)',exercises:[
+    {name:'Supino Reto com Barra',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:150},{t:'work',l:'Série 2',s:1,r:'5–8',rest:150},{t:'work',l:'Série 3',s:1,r:'6–8',rest:150,note:'Composto principal — aqueça progressivamente antes'}]},
+    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–10',rest:120,note:'Sentado com apoio — poupa a lombar'}]},
+    {name:'Paralelas com Sobrecarga (Dips)',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Tronco à frente = peito'}]},
+    {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Peito superior'}]},
+    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:60},{t:'work',l:'Série 2',s:1,r:'10–15',rest:60},{t:'work',l:'Série 3',s:1,r:'12–15',rest:60,note:'Deltoide medial — drop na última'}]},
+    {name:'Tríceps Testa com Barra EZ',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75}]},
+  ]},
+  b1:{label:'B1 — Costas, Deltoide Post. e Bíceps',day:'Terça',color:'var(--pull)',exercises:[
+    {name:'Barra Fixa (Pull-up) — pegada pronada',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'6–10',rest:120,note:'Some peso ao passar de 10. Sem forças, use o graviton'}]},
+    {name:'Remada Curvada com Barra',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–10',rest:120,note:'Único axial do dia — tronco firme ~45°, coluna neutra'}]},
+    {name:'Remada Serrote com Halter',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Apoiado no banco — poupa a lombar'}]},
+    {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60}]},
+    {name:'Rosca Direta com Barra',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75}]},
+    {name:'Rosca Martelo com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75,note:'Braquial + antebraço'}]},
+  ]},
+  c1:{label:'C1 — Quadríceps, Isquiotibiais e Glúteo',day:'Quinta',color:'var(--legs)',exercises:[
+    {name:'Agachamento Livre com Barra',sets:[{t:'work',l:'Série 1',s:1,r:'5–8',rest:180},{t:'work',l:'Série 2',s:1,r:'5–8',rest:180},{t:'work',l:'Série 3',s:1,r:'6–8',rest:180,note:'Único axial do dia — desça abaixo do paralelo. Aqueça progressivamente'}]},
+    {name:'Leg Press 45',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Quadríceps pesado, sem carga na coluna'}]},
+    {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Unilateral — quadríceps/glúteo'}]},
+    {name:'Cadeira Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:75},{t:'work',l:'Série 2',s:1,r:'10–15',rest:75,note:'Isquiotibiais sem carga na lombar'}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60,note:'Finalização de quadríceps'}]},
+    {name:'Panturrilha em Pé',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'12–20',rest:60,note:'Canela fina — pausa 2s no alongamento'}]},
+  ]},
+  a2:{label:'A2 — Ombro, Peito e Tríceps',day:'Sexta',color:'var(--push)',exercises:[
+    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'8–10',rest:120,note:'Ombro — sentado, poupa a lombar'}]},
+    {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Peito superior'}]},
+    {name:'Paralelas com Sobrecarga (Dips)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120}]},
+    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:60},{t:'work',l:'Série 2',s:1,r:'10–15',rest:60},{t:'work',l:'Série 3',s:1,r:'12–15',rest:60,note:'Deltoide medial — ombro largo'}]},
+    {name:'Crucifixo com Halteres (inclinado)',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:75},{t:'work',l:'Série 2',s:1,r:'10–15',rest:75}]},
+    {name:'Tríceps Francês com Halter/Corda',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:60},{t:'work',l:'Série 2',s:1,r:'8–12',rest:60}]},
+  ]},
+  b2:{label:'B2 — Costas, Deltoide Post. e Bíceps',day:'Sábado',color:'var(--pull)',exercises:[
+    {name:'Barra Fixa Supinada (Chin-up)',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'6–10',rest:120},{t:'work',l:'Série 3',s:1,r:'6–10',rest:120,note:'Dorsal + bíceps — some peso ao passar de 10'}]},
+    {name:'Remada Máquina Peito Apoiado',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Peito apoiado = costas pesado SEM carga na lombar'}]},
+    {name:'Remada Baixa no Cabo (pegada neutra)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Sentado — junte as escápulas'}]},
+    {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60}]},
+    {name:'Rosca Direta 45° com Halteres (inclinado)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:75},{t:'work',l:'Série 2',s:1,r:'8–12',rest:75}]},
+    {name:'Rosca Martelo / Punho (antebraço)',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:60},{t:'work',l:'Série 2',s:1,r:'10–15',rest:60,note:'Pulso fino — fortaleça o antebraço'}]},
+  ]},
+  c2:{label:'C2 — Isquiotibiais, Glúteo e Quadríceps',day:'Domingo',color:'var(--lower)',exercises:[
+    {name:'Levantamento Terra Romeno (RDL) com Barra',sets:[{t:'work',l:'Série 1',s:1,r:'6–10',rest:150},{t:'work',l:'Série 2',s:1,r:'6–10',rest:150},{t:'work',l:'Série 3',s:1,r:'8–10',rest:150,note:'Único axial do dia — hip hinge controlado, coluna neutra'}]},
+    {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:120},{t:'work',l:'Série 2',s:1,r:'8–12',rest:120,note:'Quadríceps + glúteo'}]},
+    {name:'Elevação Pélvica com Barra (Hip Thrust)',sets:[{t:'work',l:'Série 1',s:1,r:'8–12',rest:90},{t:'work',l:'Série 2',s:1,r:'8–12',rest:90,note:'Glúteo — pausa 2s no topo'}]},
+    {name:'Mesa Flexora',sets:[{t:'work',l:'Série 1',s:1,r:'10–15',rest:75},{t:'work',l:'Série 2',s:1,r:'10–15',rest:75,note:'Isquiotibiais'}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Série 1',s:1,r:'12–15',rest:60},{t:'work',l:'Série 2',s:1,r:'12–15',rest:60}]},
+    {name:'Panturrilha Sentado',sets:[{t:'work',l:'Série 1',s:1,r:'12–20',rest:60},{t:'work',l:'Série 2',s:1,r:'12–20',rest:60,note:'Sóleo — reps altas'}]},
+  ]},
+};
+const WEEK_SCHEDULE_3 = [
+  {day:'Seg',type:'a1'},{day:'Ter',type:'b1'},{day:'Qua',type:'rest'},
+  {day:'Qui',type:'c1'},{day:'Sex',type:'a2'},{day:'Sáb',type:'b2'},{day:'Dom',type:'c2'}
+];
+
 // Programa ativo (1 = PPL, 2 = A/B/C/D/E/F)
 let activeProgram = parseInt(localStorage.getItem('bt_program')||'1');
-function getActiveProgram(){ return activeProgram===2?WORKOUT_PROGRAM_2:WORKOUT_PROGRAM; }
-function getActiveSchedule(){ return activeProgram===2?WEEK_SCHEDULE_2:WEEK_SCHEDULE; }
+function getActiveProgram(){ return activeProgram===3?WORKOUT_PROGRAM_3:activeProgram===2?WORKOUT_PROGRAM_2:WORKOUT_PROGRAM; }
+function getActiveSchedule(){ return activeProgram===3?WEEK_SCHEDULE_3:activeProgram===2?WEEK_SCHEDULE_2:WEEK_SCHEDULE; }
 function switchProgram(n){
   activeProgram=n;
   localStorage.setItem('bt_program',n);
@@ -2042,9 +2104,8 @@ function buildWoLog(tabs){
     </div>`;
     return`<div class="page">
       <div class="sec-title" style="padding:0 0 14px">💪 Treinos</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <button onclick="switchProgram(1)" style="padding:10px 6px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===1?'var(--him)':'var(--border2)'};background:${activeProgram===1?'var(--himb)':'var(--bg3)'};color:${activeProgram===1?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 Prog. 1<br><span style="font-size:9px;font-weight:700;opacity:.8">Push/Pull/Legs</span></button>
-        <button onclick="switchProgram(2)" style="padding:10px 6px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===2?'var(--him)':'var(--border2)'};background:${activeProgram===2?'var(--himb)':'var(--bg3)'};color:${activeProgram===2?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 Prog. 2<br><span style="font-size:9px;font-weight:700;opacity:.8">A1/B1/C1/A2/B2/C2</span></button>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
+        ${[[1,'Prog. 1','Push/Pull/Legs'],[2,'Prog. 2','A/B/C · máquinas'],[3,'Prog. 3','A/B/C · compostos']].map(([n,t,sub])=>`<button onclick="switchProgram(${n})" style="padding:10px 4px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===n?'var(--him)':'var(--border2)'};background:${activeProgram===n?'var(--himb)':'var(--bg3)'};color:${activeProgram===n?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 ${t}<br><span style="font-size:8px;font-weight:700;opacity:.8">${sub}</span></button>`).join('')}
       </div>
       ${recCard}
       ${tabs}
@@ -2573,16 +2634,16 @@ function buildWoProgress(tabs){
   }).join('');
 
   const muscleMap={
-    'Peito':       {keys:['Supino Reto com Barra','Supino Inclinado com Barra','Supino Inclinado com Halteres','Paralelas com Sobrecarga (Dips)','Crucifixo com Halteres (inclinado)'],color:'var(--push)'},
-    'Costas':      {keys:['Barra Fixa (Pull-up) — pegada pronada','Remada Curvada com Barra','Remada Serrote com Halter','Barra Fixa Supinada (Chin-up)','Remada Cavalinho (T-Bar) ou Barra','Remada Baixa no Cabo (pegada neutra)'],color:'var(--pull)'},
-    'Ombros':      {keys:['Desenvolvimento Militar com Barra (em pé)','Desenvolvimento com Halteres (sentado)','Elevação Lateral com Halteres'],color:'var(--upper)'},
-    'Bíceps':      {keys:['Rosca Direta com Barra','Rosca Direta 45° com Halteres (inclinado)','Rosca Martelo com Halteres','Rosca Martelo / Punho (antebraço)'],color:'var(--pull)'},
-    'Tríceps':     {keys:['Tríceps Testa com Barra EZ','Tríceps Francês com Halter/Corda'],color:'var(--push)'},
-    'Deltoide Post':{keys:['Crucifixo Inverso (Deltoide Posterior)'],color:'var(--upper)'},
-    'Quadríceps':  {keys:['Agachamento Livre com Barra','Leg Press 45','Agachamento Búlgaro com Halteres','Cadeira Extensora'],color:'var(--legs)'},
-    'Posterior':   {keys:['Levantamento Terra Romeno (RDL) com Barra','Cadeira Flexora','Levantamento Terra (convencional)','Mesa Flexora'],color:'var(--lower)'},
-    'Glúteos':     {keys:['Elevação Pélvica com Barra (Hip Thrust)','Agachamento Búlgaro com Halteres'],color:'var(--lower)'},
-    'Panturrilha': {keys:['Panturrilha em Pé','Panturrilha Sentado'],color:'var(--legs)'},
+    'Peito':       {keys:['Supino Reto com Barra','Supino Inclinado com Barra','Supino Inclinado com Halteres','Paralelas com Sobrecarga (Dips)','Crucifixo com Halteres (inclinado)','Supino Reto Máquina','Supino Inclinado Smith/Halteres','Crucifixo Inclinado Halteres/Cabo','Crucifixo Máquina','Paralelas com Sobrecarga','JM Press Smith / Paralelas c/ Sobrecarga'],color:'var(--push)'},
+    'Costas':      {keys:['Barra Fixa (Pull-up) — pegada pronada','Remada Curvada com Barra','Remada Serrote com Halter','Barra Fixa Supinada (Chin-up)','Remada Cavalinho (T-Bar) ou Barra','Remada Baixa no Cabo (pegada neutra)','Remada Máquina Peito Apoiado','Puxada Aberta Pronada no Cabo','Remada Unilateral Neutra Máquina','Remada Baixa Pegada Aberta','Puxada Unilateral Supinada Máq./Polia','Remada Máq. Peito Apoiado Aberta','Remada Unilateral Neutra Polia Baixa'],color:'var(--pull)'},
+    'Ombros':      {keys:['Desenvolvimento Militar com Barra (em pé)','Desenvolvimento com Halteres (sentado)','Elevação Lateral com Halteres','Desenvolvimento Smith/Halteres','Desenvolvimento Máquina','Elevação Unilateral Polia Média','Elevação Lateral Halteres/Máquina'],color:'var(--upper)'},
+    'Bíceps':      {keys:['Rosca Direta com Barra','Rosca Direta 45° com Halteres (inclinado)','Rosca Martelo com Halteres','Rosca Martelo / Punho (antebraço)','Rosca Scott Bilateral Máquina','Rosca Unilateral de Costas p/ Polia','Rosca Scott Unilateral Máquina','Rosca Inclinado 45° Halteres'],color:'var(--pull)'},
+    'Tríceps':     {keys:['Tríceps Testa com Barra EZ','Tríceps Francês com Halter/Corda','Extensão Tríceps Polia c/ Banco','Francês no Cabo'],color:'var(--push)'},
+    'Deltoide Post':{keys:['Crucifixo Inverso (Deltoide Posterior)','Crucifixo Inverso Unilateral no Cabo','Crucifixo Inverso Máquina'],color:'var(--upper)'},
+    'Quadríceps':  {keys:['Agachamento Livre com Barra','Leg Press 45','Agachamento Búlgaro com Halteres','Cadeira Extensora','Agachamento no Hack','Cadeira Extensora Unilateral','Leg Press'],color:'var(--legs)'},
+    'Posterior':   {keys:['Levantamento Terra Romeno (RDL) com Barra','Cadeira Flexora','Mesa Flexora','Levantamento Terra Stiff'],color:'var(--lower)'},
+    'Glúteos':     {keys:['Elevação Pélvica com Barra (Hip Thrust)','Agachamento Búlgaro com Halteres','Extensão de Quadril Banco Romano','Elevação Pélvica','Cadeira Adutora'],color:'var(--lower)'},
+    'Panturrilha': {keys:['Panturrilha em Pé','Panturrilha Sentado','Panturrilha Joelhos Estendidos Máq.','Panturrilha no Leg'],color:'var(--legs)'},
   };
   const muscleVolumes=Object.entries(muscleMap).map(([muscle,cfg])=>{
     const cutoff=new Date(Date.now()-7*24*3600*1000);
@@ -2791,7 +2852,7 @@ function buildWoEdit(tabs){
   let custom=getCustomProgram()||{program:activeProgram,overrides:{}};
   if(custom.program!==activeProgram){custom={program:activeProgram,overrides:{}};}
 
-  const progLabel=activeProgram===1?'Programa 1 — Push/Pull/Legs':'Programa 2 — A1/B1/C1/A2/B2/C2';
+  const progLabel=activeProgram===1?'Programa 1 — Push/Pull/Legs':activeProgram===3?'Programa 3 — A/B/C · Compostos livres':'Programa 2 — A/B/C · Máquinas';
   const hasOverrides=Object.keys(custom.overrides||{}).length>0;
 
   const REPS_OPTS=['4–6','6–10','8–12','10–15','12–15'];
