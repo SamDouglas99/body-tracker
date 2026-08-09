@@ -8,8 +8,11 @@ const VAPID_PUBLIC = process.env.VAPID_PUBLIC;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:samdouglas1208@gmail.com';
 
-if (!VAPID_PUBLIC || !VAPID_PRIVATE) { console.error('Faltam os secrets VAPID_PUBLIC / VAPID_PRIVATE'); process.exit(1); }
-if (!process.env.FIREBASE_SERVICE_ACCOUNT) { console.error('Falta o secret FIREBASE_SERVICE_ACCOUNT'); process.exit(1); }
+// Enquanto os secrets nao estiverem configurados, sai com SUCESSO (nao envia email de falha).
+if (!VAPID_PUBLIC || !VAPID_PRIVATE || !process.env.FIREBASE_SERVICE_ACCOUNT) {
+  console.log('Secrets ainda nao configurados (VAPID_PUBLIC/VAPID_PRIVATE/FIREBASE_SERVICE_ACCOUNT). Robo em espera — nada a enviar. Configure em Settings > Secrets para ativar os lembretes.');
+  process.exit(0);
+}
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 

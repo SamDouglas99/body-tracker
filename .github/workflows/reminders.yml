@@ -9,14 +9,30 @@ jobs:
   send:
     runs-on: ubuntu-latest
     steps:
+      - name: Verificar configuração
+        id: cfg
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          VP: ${{ secrets.VAPID_PRIVATE }}
+        run: |
+          if [ -n "$SA" ] && [ -n "$VP" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Secrets ainda nao configurados (FIREBASE_SERVICE_ACCOUNT / VAPID_PRIVATE). Robo em espera — nada a fazer."
+          fi
       - uses: actions/checkout@v4
+        if: steps.cfg.outputs.ready == 'true'
       - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.ready == 'true'
         with:
           node-version: '20'
       - name: Instalar dependências
+        if: steps.cfg.outputs.ready == 'true'
         working-directory: scripts
         run: npm install --no-audit --no-fund
       - name: Enviar lembretes
+        if: steps.cfg.outputs.ready == 'true'
         working-directory: scripts
         env:
           VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
