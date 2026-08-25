@@ -791,6 +791,53 @@ function getCustomProgram(){
 function saveCustomProgram(prog){
   localStorage.setItem('bt_custom_prog', JSON.stringify(prog));
 }
+// ── Mapa músculo → exercícios (cobre todos os programas) ──
+const MUSCLE_MAP={
+  'Peito':       {keys:['Supino Reto com Barra','Supino Inclinado com Barra','Supino Inclinado com Halteres','Paralelas com Sobrecarga (Dips)','Crucifixo com Halteres (inclinado)','Supino Reto Máquina','Supino Inclinado Smith/Halteres','Crucifixo Inclinado Halteres/Cabo','Crucifixo Máquina','Paralelas com Sobrecarga','JM Press Smith / Paralelas c/ Sobrecarga'],color:'var(--push)'},
+  'Costas':      {keys:['Barra Fixa (Pull-up) — pegada pronada','Remada Curvada com Barra','Remada Serrote com Halter','Barra Fixa Supinada (Chin-up)','Remada Cavalinho (T-Bar) ou Barra','Remada Baixa no Cabo (pegada neutra)','Remada Máquina Peito Apoiado','Puxada Aberta Pronada no Cabo','Remada Unilateral Neutra Máquina','Remada Baixa Pegada Aberta','Puxada Unilateral Supinada Máq./Polia','Remada Máq. Peito Apoiado Aberta','Remada Unilateral Neutra Polia Baixa'],color:'var(--pull)'},
+  'Ombros':      {keys:['Desenvolvimento Militar com Barra (em pé)','Desenvolvimento com Halteres (sentado)','Elevação Lateral com Halteres','Desenvolvimento Smith/Halteres','Desenvolvimento Máquina','Elevação Unilateral Polia Média','Elevação Lateral Halteres/Máquina'],color:'var(--upper)'},
+  'Bíceps':      {keys:['Rosca Direta com Barra','Rosca Direta 45° com Halteres (inclinado)','Rosca Martelo com Halteres','Rosca Martelo / Punho (antebraço)','Rosca Scott Bilateral Máquina','Rosca Unilateral de Costas p/ Polia','Rosca Scott Unilateral Máquina','Rosca Inclinado 45° Halteres'],color:'var(--pull)'},
+  'Tríceps':     {keys:['Tríceps Testa com Barra EZ','Tríceps Francês com Halter/Corda','Extensão Tríceps Polia c/ Banco','Francês no Cabo'],color:'var(--push)'},
+  'Deltoide Post':{keys:['Crucifixo Inverso (Deltoide Posterior)','Crucifixo Inverso Unilateral no Cabo','Crucifixo Inverso Máquina'],color:'var(--upper)'},
+  'Quadríceps':  {keys:['Agachamento Livre com Barra','Leg Press 45','Agachamento Búlgaro com Halteres','Cadeira Extensora','Agachamento no Hack','Cadeira Extensora Unilateral','Leg Press'],color:'var(--legs)'},
+  'Posterior':   {keys:['Levantamento Terra Romeno (RDL) com Barra','Cadeira Flexora','Mesa Flexora','Levantamento Terra Stiff'],color:'var(--lower)'},
+  'Glúteos':     {keys:['Elevação Pélvica com Barra (Hip Thrust)','Agachamento Búlgaro com Halteres','Extensão de Quadril Banco Romano','Elevação Pélvica','Cadeira Adutora'],color:'var(--lower)'},
+  'Panturrilha': {keys:['Panturrilha em Pé','Panturrilha Sentado','Panturrilha Joelhos Estendidos Máq.','Panturrilha no Leg'],color:'var(--legs)'},
+};
+
+// Avaliador de ênfase: % de ganho de carga por grupo (do 1º ao último registro) + volume da semana
+function getMuscleEmphasis(){
+  const cutoff=new Date(Date.now()-7*24*3600*1000);
+  const wos=getWorkouts();
+  return Object.entries(MUSCLE_MAP).map(([muscle,cfg])=>{
+    const gains=[];
+    cfg.keys.forEach(n=>{
+      const hist=getVolumeHistory(n).filter(h=>h.maxW>0);
+      if(hist.length>=2){ const first=hist[0].maxW,last=hist[hist.length-1].maxW; if(first>0) gains.push((last-first)/first*100); }
+    });
+    const weekSets=wos.filter(s=>new Date(s.date)>=cutoff).reduce((sum,s)=>{
+      cfg.keys.forEach(n=>{const ex=s.exercises?.find(e=>e.name===n);if(ex)sum+=ex.sets.filter(st=>st.t==='work').length;});return sum;},0);
+    const gain=gains.length?parseFloat((gains.reduce((a,b)=>a+b,0)/gains.length).toFixed(1)):null;
+    return {muscle,color:cfg.color,gain,n:gains.length,weekSets};
+  });
+}
+
+// Detecta treinos previstos na semana atual que ainda NÃO foram registrados (dias já passados)
+function getMissedWorkouts(){
+  const sched=getActiveSchedule();
+  const now=new Date();
+  const monday=new Date(now); monday.setDate(now.getDate()-((now.getDay()+6)%7)); monday.setHours(0,0,0,0);
+  const todayIdx=(now.getDay()+6)%7; // 0 = segunda
+  const wos=getWorkouts();
+  const missed=[];
+  sched.forEach((d,i)=>{
+    if(d.type==='rest'||i>=todayIdx) return; // pula descanso, hoje e dias futuros
+    const done=wos.some(s=>s.type===d.type && new Date(s.date)>=monday);
+    if(!done){ const dt=new Date(monday); dt.setDate(monday.getDate()+i); missed.push({day:d.day,type:d.type,date:dt}); }
+  });
+  return missed;
+}
+
 function getWorkoutProgram(){
   // Retorna o programa ativo com customizações aplicadas + séries de trabalho normalizadas
   const base = JSON.parse(JSON.stringify(getActiveProgram())); // deep clone
@@ -800,24 +847,23 @@ function getWorkoutProgram(){
       if(base[key]) base[key].exercises = data;
     });
   }
-  // Expande séries de trabalho com s>1 em séries individuais (nº real de séries no logger e na edição)
+  // PADRONIZA todos os treinos: só séries de trabalho (remove aquecimento/ajuste),
+  // expande s>1 em séries individuais e renumera (Série 1, 2, 3...).
   Object.values(base).forEach(wo=>{
     if(!wo||!wo.exercises) return;
     wo.exercises.forEach(ex=>{
       if(!ex.sets) return;
       const out=[];
       ex.sets.forEach(st=>{
-        const cnt=st.t==='work'?(st.s||1):1;
-        if(st.t==='work' && cnt>1){
-          for(let i=0;i<cnt;i++){
-            const o={...st,s:1,l:`Série ${i+1}`};
-            if(i!==cnt-1) delete o.note;
-            out.push(o);
-          }
-        } else {
-          out.push(st);
+        if(st.t!=='work') return; // descarta aquecimento/ajuste
+        const cnt=st.s||1;
+        for(let i=0;i<cnt;i++){
+          const o={...st,s:1};
+          if(cnt>1 && i!==cnt-1) delete o.note;
+          out.push(o);
         }
       });
+      out.forEach((s,i)=>{ s.l = out.length>1 ? `Série ${i+1}` : 'Trabalho'; });
       ex.sets=out;
     });
   });
@@ -2102,12 +2148,21 @@ function buildWoLog(tabs){
       <div style="font-size:10px;color:var(--sub);line-height:1.5;margin-bottom:${_isRest?0:12}px">💡 ${_insight}</div>
       ${!_isRest?`<button onclick="activeWorkoutType='${_todayPlan.type}';woSubTab='log';render()" style="width:100%;padding:12px;background:${_recColor};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">▶ ${_trainedToday?'Treinar de novo':'Iniciar '+(labels[_todayPlan.type]||'treino')}</button>`:''}
     </div>`;
+    // ── Feedback: treinos previstos que ainda não foram registrados ──
+    const _missed=getMissedWorkouts();
+    const missedCard=_missed.length?`<div class="card" style="margin-bottom:16px;border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.06)">
+      <div style="display:flex;align-items:flex-start;gap:9px;margin-bottom:11px"><span style="font-size:20px;line-height:1">📌</span><div style="min-width:0"><div style="font-size:9px;color:var(--lower);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Treino previsto sem registro</div><div style="font-size:11px;color:var(--sub);line-height:1.45">Faltou registrar ${_missed.length} treino(s) desta semana. Treinou? Registre agora pra não perder seu histórico e progressão.</div></div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${_missed.map(m=>`<button onclick="activeWorkoutType='${m.type}';woSubTab='log';render()" style="padding:8px 12px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">📝 ${labels[m.type]||m.type} <span style="color:var(--muted);font-weight:400">(${m.day})</span></button>`).join('')}
+      </div>
+    </div>`:'';
     return`<div class="page">
       <div class="sec-title" style="padding:0 0 14px">💪 Treinos</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
         ${[[1,'Prog. 1','Push/Pull/Legs'],[2,'Prog. 2','A/B/C · máquinas'],[3,'Prog. 3','A/B/C · compostos']].map(([n,t,sub])=>`<button onclick="switchProgram(${n})" style="padding:10px 4px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===n?'var(--him)':'var(--border2)'};background:${activeProgram===n?'var(--himb)':'var(--bg3)'};color:${activeProgram===n?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 ${t}<br><span style="font-size:8px;font-weight:700;opacity:.8">${sub}</span></button>`).join('')}
       </div>
       ${recCard}
+      ${missedCard}
       ${tabs}
       <div style="margin-bottom:16px"><div class="lbl">Ou escolha outro treino</div><div class="wo-day-grid">${days}</div></div>
       ${activeWorkoutType==='rest'?`<div class="card" style="text-align:center;padding:32px"><div style="font-size:36px;margin-bottom:8px">😴</div><div style="font-size:13px;color:var(--sub)">Dia de descanso — deixe os músculos crescerem!</div></div>`:''}
@@ -2633,18 +2688,7 @@ function buildWoProgress(tabs){
     </div>`;
   }).join('');
 
-  const muscleMap={
-    'Peito':       {keys:['Supino Reto com Barra','Supino Inclinado com Barra','Supino Inclinado com Halteres','Paralelas com Sobrecarga (Dips)','Crucifixo com Halteres (inclinado)','Supino Reto Máquina','Supino Inclinado Smith/Halteres','Crucifixo Inclinado Halteres/Cabo','Crucifixo Máquina','Paralelas com Sobrecarga','JM Press Smith / Paralelas c/ Sobrecarga'],color:'var(--push)'},
-    'Costas':      {keys:['Barra Fixa (Pull-up) — pegada pronada','Remada Curvada com Barra','Remada Serrote com Halter','Barra Fixa Supinada (Chin-up)','Remada Cavalinho (T-Bar) ou Barra','Remada Baixa no Cabo (pegada neutra)','Remada Máquina Peito Apoiado','Puxada Aberta Pronada no Cabo','Remada Unilateral Neutra Máquina','Remada Baixa Pegada Aberta','Puxada Unilateral Supinada Máq./Polia','Remada Máq. Peito Apoiado Aberta','Remada Unilateral Neutra Polia Baixa'],color:'var(--pull)'},
-    'Ombros':      {keys:['Desenvolvimento Militar com Barra (em pé)','Desenvolvimento com Halteres (sentado)','Elevação Lateral com Halteres','Desenvolvimento Smith/Halteres','Desenvolvimento Máquina','Elevação Unilateral Polia Média','Elevação Lateral Halteres/Máquina'],color:'var(--upper)'},
-    'Bíceps':      {keys:['Rosca Direta com Barra','Rosca Direta 45° com Halteres (inclinado)','Rosca Martelo com Halteres','Rosca Martelo / Punho (antebraço)','Rosca Scott Bilateral Máquina','Rosca Unilateral de Costas p/ Polia','Rosca Scott Unilateral Máquina','Rosca Inclinado 45° Halteres'],color:'var(--pull)'},
-    'Tríceps':     {keys:['Tríceps Testa com Barra EZ','Tríceps Francês com Halter/Corda','Extensão Tríceps Polia c/ Banco','Francês no Cabo'],color:'var(--push)'},
-    'Deltoide Post':{keys:['Crucifixo Inverso (Deltoide Posterior)','Crucifixo Inverso Unilateral no Cabo','Crucifixo Inverso Máquina'],color:'var(--upper)'},
-    'Quadríceps':  {keys:['Agachamento Livre com Barra','Leg Press 45','Agachamento Búlgaro com Halteres','Cadeira Extensora','Agachamento no Hack','Cadeira Extensora Unilateral','Leg Press'],color:'var(--legs)'},
-    'Posterior':   {keys:['Levantamento Terra Romeno (RDL) com Barra','Cadeira Flexora','Mesa Flexora','Levantamento Terra Stiff'],color:'var(--lower)'},
-    'Glúteos':     {keys:['Elevação Pélvica com Barra (Hip Thrust)','Agachamento Búlgaro com Halteres','Extensão de Quadril Banco Romano','Elevação Pélvica','Cadeira Adutora'],color:'var(--lower)'},
-    'Panturrilha': {keys:['Panturrilha em Pé','Panturrilha Sentado','Panturrilha Joelhos Estendidos Máq.','Panturrilha no Leg'],color:'var(--legs)'},
-  };
+  const muscleMap=MUSCLE_MAP;
   const muscleVolumes=Object.entries(muscleMap).map(([muscle,cfg])=>{
     const cutoff=new Date(Date.now()-7*24*3600*1000);
     const weekSets=workouts.filter(s=>new Date(s.date)>=cutoff).reduce((sum,s)=>{
@@ -2672,7 +2716,30 @@ function buildWoProgress(tabs){
   window._radarData=muscleVolumes.map(m=>m.weekSets);
   window._radarLabels=muscleVolumes.map(m=>m.muscle);
 
+  // ── Avaliador de ênfase (o que priorizar pela evolução de carga) ──
+  const emph=getMuscleEmphasis();
+  const emphData=emph.filter(m=>m.gain!==null).sort((a,b)=>a.gain-b.gain);
+  const focar=emphData.slice(0,3);
+  const indoBem=emphData.slice(-3).reverse();
+  const emphRow=(m)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:8px;height:8px;border-radius:50%;background:${m.color};flex-shrink:0"></span><span style="font-size:12px;font-weight:700">${m.muscle}</span></div>
+    <div style="text-align:right;flex-shrink:0"><span style="font-size:13px;font-weight:800;color:${m.gain>0?'var(--good)':m.gain<0?'var(--bad)':'var(--muted)'}">${m.gain>0?'+':''}${m.gain}%</span><span style="font-size:9px;color:var(--muted)"> · ${m.weekSets} sér/sem</span></div>
+  </div>`;
+  const emphasisSection=`
+    <div class="sec-title" style="padding:0 0 12px">🎯 Onde dar mais ênfase</div>
+    <div class="card-accent" style="margin-bottom:16px;border-color:${ac}30">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.5">Comparo o ganho de carga do 1º ao último registro de cada grupo. Quem evoluiu MENOS pede mais estímulo (volume/intensidade); quem evoluiu bem, mantenha.</div>
+      ${emphData.length===0?`<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px">Registre o mesmo exercício em pelo menos 2 treinos para o avaliador funcionar. Continue registrando! 💪</div>`:`
+        ${focar[0]?`<div style="background:var(--bg4);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:11px"><span style="font-size:24px">🔥</span><div><div style="font-size:9px;color:var(--warn);letter-spacing:1px;text-transform:uppercase">Prioridade agora</div><div style="font-size:14px;font-weight:800;color:var(--text)">${focar[0].muscle} — evoluiu ${focar[0].gain>0?'só +':''}${focar[0].gain}%</div></div></div>`:''}
+        <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">🔺 Dar mais ênfase</div>
+        ${focar.map(emphRow).join('')}
+        <div style="height:14px"></div>
+        <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">✅ Evoluindo bem</div>
+        ${indoBem.map(emphRow).join('')}
+      `}
+    </div>`;
   const balanceSection=`
+    ${emphasisSection}
     <div class="sec-title" style="padding:0 0 14px">⚖️ Equilíbrio Muscular</div>
     <div class="card" style="margin-bottom:14px">
       <div style="font-size:10px;font-weight:700;margin-bottom:12px;color:var(--sub)">🕸️ Radar — Volume Semanal</div>
