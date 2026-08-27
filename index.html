@@ -915,45 +915,42 @@ const PROFILES = new Proxy(_PROFILES, { get(t,k){ return t[k]||t.him; } });
 // ══════════════════════════════════════
 // NUTRITION — Plano Nutricional 2026
 // ══════════════════════════════════════
-const DIET_PLAN = [
-  {time:'Intra-Treino',meal:'Intra-Treino',icon:'🏋️',options:[
-    '40g dextrose + 20g aminoácidos + 15ml glicerina bidestilada + 10g creatina + 2g sal',
-  ]},
-  {time:'Refeição 1',meal:'Refeição 1',icon:'🍳',options:[
-    '100g tapioca + 3 ovos inteiros + 30g requeijão light + 200g abacaxi ou mamão',
-  ]},
-  {time:'Refeição 2',meal:'Pós-Treino Imediato',icon:'💪',options:[
-    '80g mucilon de arroz + 100g banana + 30g whey',
-  ]},
-  {time:'Refeição 3',meal:'Refeição 3',icon:'🍛',options:[
-    '120g peito de frango + 300g arroz branco ou macarrão + 50g feijão preto + 100g abacaxi ou mamão + 200ml suco de uva integral',
-    '120g peixe + 300g arroz branco ou macarrão + 50g feijão preto + 100g abacaxi ou mamão + 200ml suco de uva integral',
-    '120g filé suíno + 300g arroz branco ou macarrão + 50g feijão preto + 100g abacaxi ou mamão + 200ml suco de uva integral',
-  ]},
-  {time:'Refeição 4',meal:'Refeição 4',icon:'🥗',options:[
-    '120g peito de frango + 200g arroz branco ou macarrão + 100g abacaxi ou mamão',
-    '120g peixe + 200g arroz branco ou macarrão + 100g abacaxi ou mamão',
-    '120g filé suíno + 200g arroz branco ou macarrão + 100g abacaxi ou mamão',
-  ]},
-  {time:'Refeição 5',meal:'Refeição 5',icon:'🌙',options:[
-    '120g carne vermelha magra + 200g arroz branco ou macarrão + 50g feijão preto + 10ml azeite extravirgem',
-  ]},
-  {time:'Refeição 6',meal:'Refeição 6 — Ceia',icon:'😴',options:[
-    '170g iogurte natural desnatado + 100g abacate + 100g abacaxi ou mamão + 1 banana média + 30g aveia + 20g whey + 5g psyllium',
-  ]},
+// Plano padrão GENÉRICO (cada usuário edita o seu — nada pessoal aqui)
+const DEFAULT_MEALS = [
+  {time:'Refeição 1',meal:'Café da manhã',icon:'🍳',options:['3 ovos + 2 fatias de pão integral + 1 fruta','Omelete de 4 claras + 40g aveia + 1 banana'],macros:{kcal:450,prot:32,carb:48,gord:14,fibra:6}},
+  {time:'Refeição 2',meal:'Lanche da manhã',icon:'🥪',options:['Iogurte natural + granola + fruta','Sanduíche de frango + suco natural'],macros:{kcal:300,prot:22,carb:38,gord:7,fibra:5}},
+  {time:'Pré-Treino',meal:'Pré-treino',icon:'⚡',options:['1 banana + café + 1 scoop de whey','Pão + mel + 1 fruta'],macros:{kcal:250,prot:20,carb:38,gord:3,fibra:3}},
+  {time:'Pós-Treino',meal:'Pós-treino',icon:'💪',options:['Whey + fruta + mel','Vitamina de banana com whey'],macros:{kcal:300,prot:28,carb:40,gord:3,fibra:2}},
+  {time:'Refeição 5',meal:'Almoço',icon:'🍛',options:['Arroz + feijão + 150g frango + salada + legumes','Batata + 150g carne magra + legumes'],macros:{kcal:650,prot:45,carb:75,gord:15,fibra:9}},
+  {time:'Refeição 6',meal:'Lanche da tarde',icon:'🥗',options:['Tapioca + ovos + fruta','Iogurte + aveia + castanhas'],macros:{kcal:400,prot:28,carb:45,gord:12,fibra:5}},
+  {time:'Refeição 7',meal:'Jantar',icon:'🌙',options:['Arroz + 150g carne/peixe + legumes','Omelete + salada + batata-doce'],macros:{kcal:600,prot:42,carb:58,gord:16,fibra:8}},
 ];
+const DEFAULT_SUPPS = [
+  {name:'Whey Protein',dose:'30g',timing:'Pós-treino',icon:'🥤'},
+  {name:'Creatina',dose:'5g',timing:'Qualquer horário',icon:'⚡'},
+  {name:'Multivitamínico',dose:'1 cápsula',timing:'Pela manhã',icon:'💊'},
+  {name:'Ômega-3',dose:'2 cápsulas',timing:'Com refeição',icon:'🐟'},
+  {name:'Vitamina D3',dose:'1 cápsula',timing:'Pela manhã',icon:'☀️'},
+];
+// Dieta por usuário (fica em settings.diet; cai no padrão genérico se não houver)
+function getDietData(){ const s=getSettings(); const d=s&&s.diet; return {
+  meals:(d&&Array.isArray(d.meals)&&d.meals.length)?d.meals:DEFAULT_MEALS,
+  supps:(d&&Array.isArray(d.supps))?d.supps:DEFAULT_SUPPS }; }
+function getMeals(){ return getDietData().meals; }
+function getSupps(){ return getDietData().supps; }
+function saveDiet(meals,supps){ const s={...(getSettings()||{})}; s.diet={meals,supps}; saveSettings(s); }
 
 const DIET_TIPS = [
-  {icon:'💧',tip:'4L de água/dia — 1L durante o treino. Hidratação impacta síntese proteica diretamente.'},
-  {icon:'🥩',tip:'2,4g de proteína/kg por dia: frango, ovos, peixe, carne vermelha e fígado bovino em todas as refeições.'},
-  {icon:'🍚',tip:'Ectomorfo precisa de carboidratos altos: arroz, batata-doce, aveia, macarrão. Não corte carb — ele é seu combustível.'},
-  {icon:'🍽️',tip:'Pesar as refeições e priorizar comida própria (marmitas). Estimativa "a olho" sempre subestima a ingestão real.'},
-  {icon:'⚡',tip:'Pré-treino calórico obrigatório: vitamina com aveia + banana + leite 45min antes. Treino em jejum desperdiça o estímulo.'},
-  {icon:'💪',tip:'Pós-treino: proteína + carbo em até 60min. A janela anabólica é real e mais importante com suporte hormonal ativo.'},
-  {icon:'🚫',tip:'Evitar ultra-processados: salsicha, linguiça, presunto, empanados, suco industrializado. Inflamação = menos recuperação.'},
-  {icon:'🎉',tip:'Refeição livre 1x por semana: não precisa ser perfeito. Consistência em 90% do tempo já basta para progressão sólida.'},
-  {icon:'😴',tip:'Sono 7–9h é parte do protocolo. GH e IGF-1 são liberados no sono profundo. Sem ele, nenhuma dieta ou treino chega ao máximo.'},
-  {icon:'🧪',tip:'Com enantato ativo: necessidade calórica é maior (+400–600 acima da manutenção), proteína 2,4g/kg e recuperação acelerada.'},
+  {icon:'💧',tip:'Beba bastante água ao longo do dia, inclusive durante o treino. Hidratação impacta desempenho e recuperação.'},
+  {icon:'🥩',tip:'Proteína 1,8–2,2g/kg por dia: ovos, frango, peixe, carne e laticínios distribuídos entre as refeições.'},
+  {icon:'🍚',tip:'Carboidratos são combustível: arroz, batata-doce, aveia, frutas. Ajuste a quantidade ao seu gasto e objetivo.'},
+  {icon:'🍽️',tip:'Priorize comida de verdade e, se possível, pese as porções. Estimativa "a olho" costuma errar bastante.'},
+  {icon:'⚡',tip:'Uma refeição com carbo + proteína antes do treino melhora o rendimento. Evite treinar em jejum prolongado.'},
+  {icon:'💪',tip:'Pós-treino: proteína + carboidrato ajudam na recuperação e na construção de massa.'},
+  {icon:'🚫',tip:'Reduza ultraprocessados (embutidos, frituras, refrigerantes). Menos inflamação = melhor recuperação.'},
+  {icon:'🎉',tip:'Refeição livre 1x por semana está ok. Consistência em ~90% do tempo já traz ótimos resultados.'},
+  {icon:'😴',tip:'Durma 7–9h. O corpo se recupera e cresce no sono — é tão importante quanto o treino e a dieta.'},
+  {icon:'📈',tip:'Para ganhar massa: superávit calórico moderado (+300–500 kcal) e paciência. O músculo cresce com o tempo.'},
 ];
 
 
@@ -961,41 +958,35 @@ const DIET_TIPS = [
 // ITENS DA DIETA — base para Estoque
 // qty = quantidade consumida por dia (unidade padrão)
 // ══════════════════════════════════════
+// Lista de compras GENÉRICA (itens comuns; cada um adiciona/ajusta o que precisar)
 const DIET_ITEMS = [
   // ── PROTEÍNAS ──
-  {name:'Frango / Peixe / Filé suíno',cat:'🥩 Proteína', unit:'g', qtyDay:240, icon:'🍗', obs:'Refeição 3 e 4 (~120g cada, cru). Revezar entre frango, peixe (tilápia) e filé suíno.'},
-  {name:'Carne vermelha magra', cat:'🥩 Proteína',     unit:'g',   qtyDay:120,  icon:'🥩', obs:'Refeição 5 (patinho, coxão mole ou similar).'},
-  {name:'Ovo inteiro',          cat:'🥩 Proteína',     unit:'un',  qtyDay:3,    icon:'🥚', obs:'3 ovos inteiros na Refeição 1.'},
-  {name:'Iogurte natural desnatado',cat:'🥛 Laticínio',unit:'g',   qtyDay:170,  icon:'🥛', obs:'170g na Refeição 6 (ceia).'},
-  {name:'Requeijão light',      cat:'🥛 Laticínio',    unit:'g',   qtyDay:30,   icon:'🧀', obs:'30g na Refeição 1.'},
+  {name:'Peito de frango',      cat:'🥩 Proteína',     unit:'g',   qtyDay:200,  icon:'🍗', obs:'Fonte de proteína magra.'},
+  {name:'Carne vermelha magra', cat:'🥩 Proteína',     unit:'g',   qtyDay:120,  icon:'🥩', obs:'Patinho, coxão mole ou similar.'},
+  {name:'Peixe (tilápia)',      cat:'🥩 Proteína',     unit:'g',   qtyDay:120,  icon:'🐟', obs:'Alternativa magra de proteína.'},
+  {name:'Ovos',                 cat:'🥩 Proteína',     unit:'un',  qtyDay:3,    icon:'🥚', obs:'Proteína completa e barata.'},
+  {name:'Iogurte natural',      cat:'🥛 Laticínio',    unit:'g',   qtyDay:170,  icon:'🥛', obs:'Bom para lanches e ceia.'},
   // ── CARBOIDRATOS ──
-  {name:'Arroz branco / Macarrão',cat:'🍚 Carboidrato',unit:'g',   qtyDay:700,  icon:'🍚', obs:'R3 300g + R4 200g + R5 200g (cozido). Revezar arroz ou macarrão.'},
-  {name:'Tapioca',              cat:'🍚 Carboidrato',  unit:'g',   qtyDay:100,  icon:'🫓', obs:'100g na Refeição 1.'},
-  {name:'Feijão preto',         cat:'🍚 Carboidrato',  unit:'g',   qtyDay:100,  icon:'🫘', obs:'R3 50g + R5 50g (cozido).'},
-  {name:'Mucilon de arroz',     cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:80,   icon:'🥣', obs:'80g no pós-treino imediato (Refeição 2).'},
-  {name:'Aveia',                cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:30,   icon:'🌾', obs:'30g na Refeição 6 (ceia).'},
-  // ── FRUTAS ──
-  {name:'Abacaxi ou mamão',     cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:500,  icon:'🍍', obs:'R1 200g + R3 100g + R4 100g + R6 100g.'},
-  {name:'Banana',               cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:2,    icon:'🍌', obs:'~1 no pós-treino + 1 média na ceia.'},
-  {name:'Abacate',              cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:100,  icon:'🥑', obs:'100g na Refeição 6 (ceia).'},
+  {name:'Arroz',                cat:'🍚 Carboidrato',  unit:'g',   qtyDay:300,  icon:'🍚', obs:'Cozido, base de energia.'},
+  {name:'Feijão',               cat:'🍚 Carboidrato',  unit:'g',   qtyDay:100,  icon:'🫘', obs:'Carbo + fibra + proteína.'},
+  {name:'Batata-doce',          cat:'🍚 Carboidrato',  unit:'g',   qtyDay:200,  icon:'🍠', obs:'Ótima fonte de energia.'},
+  {name:'Macarrão',             cat:'🍚 Carboidrato',  unit:'g',   qtyDay:120,  icon:'🍝', obs:'Alternativa de carbo.'},
+  {name:'Aveia',                cat:'🍞 Grão/Cereal',  unit:'g',   qtyDay:40,   icon:'🌾', obs:'Café da manhã / pré-treino.'},
+  {name:'Pão integral',         cat:'🍞 Grão/Cereal',  unit:'un',  qtyDay:2,    icon:'🍞', obs:'Prático para refeições.'},
+  // ── FRUTAS / VEGETAIS ──
+  {name:'Banana',               cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:2,    icon:'🍌', obs:'Energia rápida.'},
+  {name:'Frutas variadas',      cat:'🥦 Vegetal/Fruta',unit:'un',  qtyDay:2,    icon:'🍎', obs:'Vitaminas e fibras.'},
+  {name:'Legumes e salada',     cat:'🥦 Vegetal/Fruta',unit:'g',   qtyDay:200,  icon:'🥗', obs:'Fibras, vitaminas e saciedade.'},
   // ── SUPLEMENTOS ──
-  {name:'Whey Protein',         cat:'🧴 Suplemento',   unit:'g',   qtyDay:50,   icon:'🥤', obs:'30g no pós-treino (R2) + 20g na ceia (R6).'},
-  {name:'Dextrose',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:40,   icon:'⚡', obs:'40g no intra-treino.'},
-  {name:'Aminoácidos (EAA/BCAA)',cat:'🧴 Suplemento',  unit:'g',   qtyDay:20,   icon:'🧬', obs:'20g no intra-treino.'},
-  {name:'Creatina',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:10,   icon:'💪', obs:'10g no intra-treino.'},
-  {name:'Glicerina bidestilada',cat:'🧴 Suplemento',   unit:'ml',  qtyDay:15,   icon:'💧', obs:'15ml no intra-treino.'},
-  {name:'Psyllium',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:5,    icon:'🌿', obs:'5g na Refeição 6 (ceia).'},
-  {name:'Vit. D3 5000UI + K2',  cat:'🧴 Suplemento',   unit:'caps',qtyDay:1,    icon:'☀️', obs:'1 cápsula pela manhã.'},
-  {name:'Vitamina B12 2000mcg', cat:'🧴 Suplemento',   unit:'caps',qtyDay:1,    icon:'💊', obs:'Metilcobalamina — 1 cápsula pela manhã.'},
-  {name:'Anastrozol + Tamoxifeno',cat:'🧴 Suplemento', unit:'caps',qtyDay:1,    icon:'⚕️', obs:'Manipulado (farmácia). 1 cápsula pela manhã.'},
-  {name:'Protetores (Curcumina/NAC/SAM-e/ALA)',cat:'🧴 Suplemento',unit:'caps',qtyDay:1,icon:'🛡️',obs:'Manipulado. 1 cápsula à noite.'},
-  {name:'Sono (L-Teanina/Melatonina/GABA/Zinco/B6)',cat:'🧴 Suplemento',unit:'dose',qtyDay:1,icon:'😴',obs:'Manipulado. 1 dose ~60min antes de dormir.'},
-  // ── GORDURAS / TEMPEROS ──
-  {name:'Azeite extravirgem',   cat:'🛢️ Óleo/Gordura', unit:'ml',  qtyDay:10,   icon:'🫒', obs:'10ml na Refeição 5.'},
-  {name:'Sal',                  cat:'🧂 Tempero/Condimento',unit:'g',qtyDay:2,  icon:'🧂', obs:'2g no intra-treino (reposição).'},
+  {name:'Whey Protein',         cat:'🧴 Suplemento',   unit:'g',   qtyDay:30,   icon:'🥤', obs:'Praticidade para bater a proteína.'},
+  {name:'Creatina',             cat:'🧴 Suplemento',   unit:'g',   qtyDay:5,    icon:'⚡', obs:'5g/dia, qualquer horário.'},
+  {name:'Multivitamínico',      cat:'🧴 Suplemento',   unit:'caps',qtyDay:1,    icon:'💊', obs:'Cobre micronutrientes.'},
+  {name:'Ômega-3',              cat:'🧴 Suplemento',   unit:'caps',qtyDay:2,    icon:'🐟', obs:'Com refeição.'},
+  // ── GORDURAS ──
+  {name:'Azeite extravirgem',   cat:'🛢️ Óleo/Gordura', unit:'ml',  qtyDay:15,   icon:'🫒', obs:'Gordura boa para saladas.'},
+  {name:'Pasta de amendoim',    cat:'🛢️ Óleo/Gordura', unit:'g',   qtyDay:20,   icon:'🥜', obs:'Calórica e prática.'},
   // ── BEBIDAS ──
-  {name:'Suco de uva integral', cat:'🥤 Bebida',       unit:'ml',  qtyDay:200,  icon:'🍇', obs:'200ml na Refeição 3.'},
-  {name:'Água',                 cat:'🥤 Bebida',       unit:'L',   qtyDay:4,    icon:'💧', obs:'Meta: 4L/dia.'},
+  {name:'Água',                 cat:'🥤 Bebida',       unit:'L',   qtyDay:3,    icon:'💧', obs:'Hidratação ao longo do dia.'},
 ];
 
 const UNIT_OPTIONS = ['g','kg','ml','L','un','fatia','cx','pct','saco','dose','caps','col','frasco'];
@@ -3538,8 +3529,10 @@ function buildNutricao(){
     const todayLog=getMealLog(getTodayKey());
     const adherePct=stats.weekTotal>0?Math.round(stats.weekDone/stats.weekTotal*100):0;
     const todayPct=Math.round(stats.todayDone/stats.todayTotal*100);
-    const MEAL_NAMES=['Intra-Treino','Refeição 1','Pós-Treino','Refeição 3','Refeição 4','Refeição 5','Ceia'];
-    const MEAL_ICONS=['🏋️','🍳','💪','🍛','🥗','🌙','😴'];
+    const _mealsD=getMeals();
+    const MEAL_NAMES=_mealsD.map(m=>m.meal);
+    const MEAL_ICONS=_mealsD.map(m=>m.icon);
+    const _nMeals=Math.max(1,_mealsD.length);
     // Water goal 4L = 4000ml
     const waterPct=Math.min((stats.water/4000)*100,100);
 
@@ -3549,7 +3542,7 @@ function buildNutricao(){
       const dk=localDayKey(d);
       const log=getMealLog(dk);
       const done=Object.keys(log).filter(k=>k.startsWith('meal_')).length;
-      const pct=Math.round(done/7*100);
+      const pct=Math.round(done/_nMeals*100);
       const isToday=dk===getTodayKey();
       const dayLabel=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];
       const color=pct>=100?'var(--good)':pct>=60?'var(--him)':pct>0?'var(--warn)':'var(--border2)';
@@ -3663,13 +3656,7 @@ function buildNutricao(){
       localStorage.setItem('bt_supps_'+getTodayKey(),JSON.stringify(log));
       render();
     };
-    const suppList=[
-      {name:'Vit. D3 5000UI + K2MK7 150MCG',dose:'1 cápsula',timing:'Pela manhã',icon:'☀️'},
-      {name:'Vitamina B12 2000mcg (Metilcobalamina)',dose:'1 cápsula',timing:'Pela manhã',icon:'💊'},
-      {name:'Anastrozol 0,2mg + Tamoxifeno 10mg',dose:'1 cápsula',timing:'Pela manhã',icon:'⚕️'},
-      {name:'Protetores (Curcumina 500mg + NAC 600mg + SAM-e 200mg + ALA 100mg)',dose:'1 cápsula',timing:'À noite',icon:'🛡️'},
-      {name:'Sono (L-Teanina 300mg + Melatonina 10mg + GABA 500mg + Zinco 30mg + B6 50mg)',dose:'1 dose',timing:'60 min antes de dormir',icon:'😴'},
-    ];
+    const suppList=getSupps();
     const doneCnt=Object.keys(todaySuppLog).length;
     const suppChecks=suppList.map(s=>{
       const done=!!todaySuppLog[s.name];
@@ -3692,36 +3679,13 @@ function buildNutricao(){
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">✅ Check de Hoje</div>
-          <div style="font-size:14px;font-weight:800;color:${doneCnt===suppList.length?'var(--good)':ac}">${doneCnt}/${suppList.length}</div>
+          <div style="font-size:14px;font-weight:800;color:${suppList.length&&doneCnt===suppList.length?'var(--good)':ac}">${doneCnt}/${suppList.length}</div>
         </div>
-        <div class="bar" style="margin-bottom:12px"><div class="fill" style="width:${Math.max(Math.round(doneCnt/suppList.length*100),2)}%"></div></div>
-        ${suppChecks}
+        <div class="bar" style="margin-bottom:12px"><div class="fill" style="width:${Math.max(Math.round(doneCnt/Math.max(1,suppList.length)*100),2)}%"></div></div>
+        ${suppList.length?suppChecks:'<div style="font-size:11px;color:var(--muted);text-align:center;padding:12px">Nenhum suplemento no seu plano. Toque em "Editar" para adicionar os seus.</div>'}
       </div>
-      ${CP==='him'?`<div class="card-accent" style="border-color:rgba(226,226,64,.3);margin-bottom:16px">
-        <div style="font-size:9px;color:var(--him);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">⚠️ Protocolo Atual</div>
-        <div style="font-size:11px;color:var(--sub);line-height:1.8">
-          <div class="trow"><span style="color:var(--text);font-weight:700">Enantato de Testosterona</span><span class="badge-warn badge">1ml/semana</span></div>
-          <div style="font-size:11px;color:var(--warn);margin-top:8px;padding:8px;background:rgba(251,191,36,.07);border-radius:6px;border-left:2px solid var(--warn)">
-            Com suporte anabólico ativo, suas necessidades nutricionais são maiores. Proteína: 2,2–2,5g/kg · Calorias: +400–600 acima da manutenção · Recuperação acelerada permite maior volume. Siga sempre orientação médica.
-          </div>
-        </div>
-      </div>`:''}
-      <div class="grid2">
-        ${[
-          {name:'D3 5000UI + K2MK7 150MCG',dose:'1 cap/manhã',timing:'Pela manhã com refeição',benefit:'Testosterona, ossos, imunidade',color:'var(--warn)',icon:'☀️',note:'D3 lipofílica — tomar com refeição gordurosa. K2MK7 direciona cálcio para os ossos.'},
-          {name:'Vitamina B12 2000mcg',dose:'1 cap/manhã',timing:'Pela manhã',benefit:'Energia, sistema nervoso, síntese proteica',color:'var(--info)',icon:'💊',note:'Metilcobalamina — forma ativa e biodisponível. Essencial com dieta de alta proteína.'},
-          {name:'Anastrozol 0,2mg + Tamoxifeno 10mg',dose:'1 cap/manhã',timing:'Pela manhã',benefit:'Controle estrogênico',color:'var(--bad)',icon:'⚕️',note:'Protocolo anabólico. Anastrozol inibe aromatase. Tamoxifeno bloqueia receptores. Siga orientação médica.'},
-          {name:'Protetores Hepáticos',dose:'1 cap/noite',timing:'À noite',benefit:'Proteção hepática e antioxidante',color:'var(--good)',icon:'🛡️',note:'Curcumina 500mg + NAC 600mg + SAM-e 200mg + ALA 100mg. Suporte ao fígado com protocolo ativo.'},
-          {name:'Sono (L-Teanina + Melatonina + GABA + Zinco + B6)',dose:'1 dose/noite',timing:'60 min antes de dormir',benefit:'Qualidade do sono, recuperação, GH noturno',color:'var(--purple)',icon:'😴',note:'L-Teanina 300mg + Melatonina 10mg + GABA 500mg + Zinco Quelado 30mg + B6 50mg. Potencializa o GH noturno.'},
-        ].map(s=>`<div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <div><span style="font-size:24px">${s.icon}</span><div style="font-size:13px;font-weight:700;margin-top:4px">${s.name}</div></div>
-            <div style="text-align:right"><div style="font-size:11px;font-weight:700;color:${s.color}">${s.dose}</div><div style="font-size:9px;color:var(--muted)">${s.timing}</div></div>
-          </div>
-          <div style="font-size:10px;color:var(--good);margin-bottom:4px">${s.benefit}</div>
-          <div style="font-size:10px;color:var(--sub)">${s.note}</div>
-        </div>`).join('')}
-      </div>
+      <button onclick="openSuppEditor()" style="width:100%;padding:12px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">✏️ Editar meus suplementos</button>
+      <div style="font-size:9px;color:var(--muted);margin-top:8px;line-height:1.5">⚠️ Suplementos e medicamentos são individuais. Consulte um profissional de saúde antes de usar.</div>
     </div>`;
   }
 
@@ -3983,12 +3947,12 @@ function buildNutricao(){
   const todayMealLog=getMealLog(getTodayKey());
 
   // Initialize default option selection for plano view
-  DIET_PLAN.forEach((_,mi)=>{ if(nuMealOpt[mi]===undefined) nuMealOpt[mi]=0; });
+  getMeals().forEach((_,mi)=>{ if(nuMealOpt[mi]===undefined) nuMealOpt[mi]=0; });
 
-  const mealCards=DIET_PLAN.map((meal,mi)=>{
+  const mealCards=getMeals().map((meal,mi)=>{
     // Get macros for selected option
     const selOpt = nuMealOpt[mi]||0;
-    const mm = ALL_MEAL_MACROS[mi]?.[selOpt] || ALL_MEAL_MACROS[mi]?.[0] || {kcal:0,prot:0,carb:0,gord:0,fibra:0};
+    const mm = meal.macros || {kcal:0,prot:0,carb:0,gord:0,fibra:0};
     const mealDone=!!todayMealLog['meal_'+mi];
     const macroBar=(v,tot,color)=>{
       const pct=tot>0?Math.round(v/tot*100):0;
@@ -4037,8 +4001,8 @@ function buildNutricao(){
   }).join('');
 
   // Totais do dia com opções selecionadas
-  const dayTotals=DIET_PLAN.reduce((t,_,mi)=>{
-    const m=ALL_MEAL_MACROS[mi]?.[nuMealOpt[mi]||0]||{kcal:0,prot:0,carb:0,gord:0,fibra:0};
+  const dayTotals=getMeals().reduce((t,meal)=>{
+    const m=meal.macros||{kcal:0,prot:0,carb:0,gord:0,fibra:0};
     return{kcal:t.kcal+m.kcal,prot:t.prot+m.prot,carb:t.carb+m.carb,gord:t.gord+m.gord,fibra:t.fibra+m.fibra};
   },{kcal:0,prot:0,carb:0,gord:0,fibra:0});
 
@@ -4064,13 +4028,14 @@ function buildNutricao(){
         </button>
       </div>
       <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--sub);margin-bottom:12px">
-        <span>💧 4L água/dia</span><span>🏋️ 4–6x/semana</span><span>🎉 1 refeição livre/sem</span><span>😴 Sono = tratamento</span>
+        <span>💧 Hidrate-se bem</span><span>🏋️ 4–6x/semana</span><span>🎉 1 refeição livre/sem</span><span>😴 Sono 7–9h</span>
       </div>
       <div style="font-size:9px;color:var(--sub);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">Total do dia (opções selecionadas)</div>
       <div class="nutri-total-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;text-align:center">
         ${[['⚡',Math.round(dayTotals.kcal),'kcal','var(--him)'],['🥩',Math.round(dayTotals.prot)+'g','prot','var(--good)'],['🍚',Math.round(dayTotals.carb)+'g','carb','var(--info)'],['🥑',Math.round(dayTotals.gord)+'g','gord','var(--warn)'],['🌾',Math.round(dayTotals.fibra)+'g','fibra','var(--purple)']].map(([icon,val,lab,col])=>`<div style="background:var(--bg4);border-radius:8px;padding:8px 4px"><div style="font-size:14px">${icon}</div><div style="font-size:13px;font-weight:700;color:${col}">${val}</div><div style="font-size:8px;color:var(--muted)">${lab}</div></div>`).join('')}
       </div>
     </div>
+    <button onclick="openDietEditor()" style="width:100%;padding:12px;margin-bottom:12px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">✏️ Editar meu plano alimentar</button>
     <div style="display:flex;flex-direction:column;gap:12px">${mealCards}</div>
   </div>`;
 }
@@ -4928,38 +4893,15 @@ function buildGuia(){
 // INIT
 // ══════════════════════════════════════
 // ── Meal tracking helpers ──
-// Macros per meal per option (all 3 options estimated)
-// [kcal, prot, carb, gord, fibra]
-const ALL_MEAL_MACROS = [
-  // 0: Intra-Treino — dextrose+aminoácidos+glicerina+creatina+sal
-  [{kcal:277,prot:20,carb:49,gord:0,fibra:0}],
-  // 1: Refeição 1 — tapioca+3ovos+requeijão light+abacaxi/mamão
-  [{kcal:691,prot:23,carb:109,gord:18,fibra:4}],
-  // 2: Refeição 2 Pós-Treino — mucilon+banana+whey
-  [{kcal:505,prot:31,carb:91,gord:3,fibra:3}],
-  // 3: Refeição 3 — proteína+arroz/macarrão+feijão+fruta+suco uva
-  [{kcal:848,prot:50,carb:142,gord:5,fibra:6},   // frango
-   {kcal:820,prot:48,carb:142,gord:5,fibra:6},   // peixe
-   {kcal:860,prot:50,carb:142,gord:7,fibra:6}],  // filé suíno
-  // 4: Refeição 4 — proteína+arroz/macarrão+fruta
-  [{kcal:505,prot:42,carb:67,gord:4,fibra:3},    // frango
-   {kcal:480,prot:40,carb:67,gord:4,fibra:3},    // peixe
-   {kcal:515,prot:42,carb:67,gord:6,fibra:3}],   // filé suíno
-  // 5: Refeição 5 — carne vermelha+arroz/macarrão+feijão+azeite
-  [{kcal:643,prot:41,carb:71,gord:20,fibra:4}],
-  // 6: Refeição 6 Ceia — iogurte+abacate+fruta+banana+aveia+whey+psyllium
-  [{kcal:579,prot:38,carb:74,gord:19,fibra:9}],
-];
-
 function getConsumedMacros(){
-  // Returns macros consumed today based on checked meals and chosen options
+  // Macros consumidos hoje = soma dos macros das refeições marcadas
   const log=getMealLog(getTodayKey());
+  const meals=getMeals();
   let kcal=0,prot=0,carb=0,gord=0,fibra=0;
-  for(let i=0;i<7;i++){
+  for(let i=0;i<meals.length;i++){
     const entry=log['meal_'+i];
     if(!entry) continue;
-    const optIdx=(entry.option||1)-1;
-    const macros=ALL_MEAL_MACROS[i]?.[optIdx]||ALL_MEAL_MACROS[i]?.[0]||{kcal:0,prot:0,carb:0,gord:0,fibra:0};
+    const macros=(meals[i]&&meals[i].macros)||{kcal:0,prot:0,carb:0,gord:0,fibra:0};
     kcal+=macros.kcal; prot+=macros.prot; carb+=macros.carb;
     gord+=macros.gord; fibra+=macros.fibra;
   }
@@ -5001,11 +4943,10 @@ function toggleMealCheck(mealIdx, option){
   showMealOptionPicker(mealIdx);
 }
 function showMealOptionPicker(mealIdx){
-  const MEAL_NAMES=['Pré-Treino','Pós-Treino','Almoço','Lanche','Jantar','Ceia'];
   const today=getTodayKey();
   const log=getMealLog(today);
   const current=log['meal_'+mealIdx];
-  const numOptions=DIET_PLAN[mealIdx]?.options?.length||1;
+  const numOptions=getMeals()[mealIdx]?.options?.length||1;
   // Remove existing picker
   const existing=document.getElementById('meal-picker');
   if(existing)existing.remove();
@@ -5013,11 +4954,11 @@ function showMealOptionPicker(mealIdx){
   overlay.id='meal-picker';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(8,8,14,.92);z-index:500;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom)';
   overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};
-  const meal=DIET_PLAN[mealIdx];
+  const meal=getMeals()[mealIdx];
   overlay.innerHTML=`
     <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:24px 20px;width:100%;max-width:500px">
       <div style="text-align:center;margin-bottom:6px;width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:4px">${meal?.icon||'🍽️'} ${MEAL_NAMES[mealIdx]}</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">${meal?.icon||'🍽️'} ${meal?.meal||'Refeição'}</div>
       <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">Qual opção você fez?</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${Array.from({length:numOptions},(_,i)=>`
@@ -5036,7 +4977,7 @@ function showMealOptionPicker(mealIdx){
   document.body.appendChild(overlay);
 }
 function getMealStats(){
-  const totalMeals=7; // refeições por dia no plano
+  const totalMeals=getMeals().length; // refeições por dia no plano do usuário
   // Today
   const todayLog=getMealLog(getTodayKey());
   const todayDone=Object.keys(todayLog).filter(k=>k.startsWith('meal_')).length;
@@ -5471,6 +5412,100 @@ function importData(input){
   };
   reader.readAsText(file);
 }
+
+// ══════════════════════════════════════
+// EDITOR DE DIETA E SUPLEMENTOS (por usuário)
+// ══════════════════════════════════════
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let _dietEdit=null;
+function closeDietEditor(){ const el=document.getElementById('diet-editor'); if(el) el.remove(); }
+function openDietEditor(){ _dietEdit=getMeals().map(m=>({meal:m.meal||'',icon:m.icon||'🍽️',options:(m.options||[]).slice(),macros:{...(m.macros||{kcal:0,prot:0,carb:0,gord:0,fibra:0})}})); _renderDietEditor(); }
+function _readDietEditor(){
+  const out=[];
+  for(let i=0; document.getElementById('dm_name_'+i); i++){
+    const g=(id)=>document.getElementById(id+'_'+i);
+    out.push({ meal:(g('dm_name').value||'').trim()||('Refeição '+(i+1)), icon:(g('dm_icon').value||'🍽️').trim()||'🍽️',
+      options:(g('dm_opts').value||'').split('\n').map(s=>s.trim()).filter(Boolean),
+      macros:{ kcal:+g('dm_kcal').value||0, prot:+g('dm_prot').value||0, carb:+g('dm_carb').value||0, gord:+g('dm_gord').value||0, fibra:+g('dm_fibra').value||0 } });
+  }
+  return out;
+}
+function _renderDietEditor(){
+  closeDietEditor();
+  const ov=document.createElement('div'); ov.id='diet-editor';
+  ov.style.cssText='position:fixed;inset:0;z-index:660;background:rgba(8,8,14,.85);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
+  const card=(m,i)=>`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px;margin-bottom:10px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input id="dm_icon_${i}" value="${_esc(m.icon)}" style="width:48px;text-align:center"/>
+      <input id="dm_name_${i}" value="${_esc(m.meal)}" placeholder="Nome da refeição" style="flex:1"/>
+      <button onclick="_dietRemove(${i})" style="width:40px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer">🗑️</button>
+    </div>
+    <label class="flabel">Alimentos (uma opção por linha)</label>
+    <textarea id="dm_opts_${i}" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--font2);font-size:13px;padding:8px;margin-bottom:8px">${_esc((m.options||[]).join('\n'))}</textarea>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+      ${[['kcal','kcal'],['prot','Prot'],['carb','Carb'],['gord','Gord'],['fibra','Fib']].map(([k,lbl])=>`<div><label class="flabel" style="font-size:8px;letter-spacing:.5px">${lbl}</label><input id="dm_${k}_${i}" type="number" inputmode="numeric" value="${m.macros&&m.macros[k]!=null?m.macros[k]:0}" style="width:100%;padding:6px;text-align:center"/></div>`).join('')}
+    </div>
+  </div>`;
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 28px)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">✏️ Meu plano alimentar</div>
+      <button onclick="closeDietEditor()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
+    </div>
+    <div style="padding:14px;overflow-y:auto;flex:1">
+      ${_dietEdit.map(card).join('')}
+      <button onclick="_dietAdd()" style="width:100%;padding:11px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar refeição</button>
+    </div>
+    <div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <button onclick="_dietRestore()" style="padding:12px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-weight:700;cursor:pointer">Padrão</button>
+      <button onclick="saveDietEditor()" style="flex:1;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">💾 Salvar plano</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{ if(e.target===ov) closeDietEditor(); });
+  document.body.appendChild(ov);
+}
+function _dietAdd(){ _dietEdit=_readDietEditor(); _dietEdit.push({meal:'Nova refeição',icon:'🍽️',options:[''],macros:{kcal:0,prot:0,carb:0,gord:0,fibra:0}}); _renderDietEditor(); }
+function _dietRemove(i){ _dietEdit=_readDietEditor(); _dietEdit.splice(i,1); _renderDietEditor(); }
+function _dietRestore(){ if(!confirm('Restaurar o plano padrão? Suas edições serão perdidas.'))return; _dietEdit=DEFAULT_MEALS.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
+function saveDietEditor(){ const meals=_readDietEditor(); if(!meals.length){ alert('Adicione ao menos uma refeição.'); return; } saveDiet(meals,getSupps()); closeDietEditor(); render(); showSyncStatus('✓ Plano salvo','var(--good)'); }
+
+let _suppEdit=null;
+function closeSuppEditor(){ const el=document.getElementById('supp-editor'); if(el) el.remove(); }
+function openSuppEditor(){ _suppEdit=getSupps().map(s=>({name:s.name||'',dose:s.dose||'',timing:s.timing||'',icon:s.icon||'💊'})); _renderSuppEditor(); }
+function _readSuppEditor(){ const out=[]; for(let i=0; document.getElementById('sp_name_'+i); i++){ const g=(id)=>document.getElementById(id+'_'+i); out.push({name:(g('sp_name').value||'').trim(),dose:(g('sp_dose').value||'').trim(),timing:(g('sp_timing').value||'').trim(),icon:(g('sp_icon').value||'💊').trim()||'💊'}); } return out; }
+function _renderSuppEditor(){
+  closeSuppEditor();
+  const ov=document.createElement('div'); ov.id='supp-editor';
+  ov.style.cssText='position:fixed;inset:0;z-index:660;background:rgba(8,8,14,.85);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
+  const row=(s,i)=>`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px;margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <input id="sp_icon_${i}" value="${_esc(s.icon)}" style="width:48px;text-align:center"/>
+      <input id="sp_name_${i}" value="${_esc(s.name)}" placeholder="Nome do suplemento" style="flex:1"/>
+      <button onclick="_suppRemove(${i})" style="width:40px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer">🗑️</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input id="sp_dose_${i}" value="${_esc(s.dose)}" placeholder="Dose (ex: 30g)"/>
+      <input id="sp_timing_${i}" value="${_esc(s.timing)}" placeholder="Quando (ex: Manhã)"/>
+    </div>
+  </div>`;
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 28px)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">✏️ Meus suplementos</div>
+      <button onclick="closeSuppEditor()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
+    </div>
+    <div style="padding:14px;overflow-y:auto;flex:1">
+      ${_suppEdit.map(row).join('')}
+      <button onclick="_suppAdd()" style="width:100%;padding:11px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar suplemento</button>
+    </div>
+    <div style="padding:12px 14px;border-top:1px solid var(--border)">
+      <button onclick="saveSuppEditor()" style="width:100%;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">💾 Salvar suplementos</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{ if(e.target===ov) closeSuppEditor(); });
+  document.body.appendChild(ov);
+}
+function _suppAdd(){ _suppEdit=_readSuppEditor(); _suppEdit.push({name:'',dose:'',timing:'',icon:'💊'}); _renderSuppEditor(); }
+function _suppRemove(i){ _suppEdit=_readSuppEditor(); _suppEdit.splice(i,1); _renderSuppEditor(); }
+function saveSuppEditor(){ const supps=_readSuppEditor().filter(s=>s.name); saveDiet(getMeals(),supps); closeSuppEditor(); render(); showSyncStatus('✓ Suplementos salvos','var(--good)'); }
 
 function checkAndShowEvolutionReport(){
   const workouts=getWorkouts();
