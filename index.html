@@ -773,10 +773,56 @@ const WEEK_SCHEDULE_3 = [
   {day:'Qui',type:'c1'},{day:'Sex',type:'a2'},{day:'Sáb',type:'b2'},{day:'Dom',type:'c2'}
 ];
 
-// Programa ativo (1 = PPL, 2 = A/B/C/D/E/F)
+// ══════════════════════════════════════
+// PROGRAMA 4 — Upper/Lower · Força + Lombar protegida (4 dias)
+// Terra CONVENCIONAL (força, Seg) e Terra ROMENO (posterior, Qui) separados por 72h.
+// Nunca terra + agachamento pesado no mesmo dia. Quadríceps via leg press/búlgaro
+// (sem carga axial). Core de estabilização 2x/sem. Sessões curtas — ideal p/ treino
+// cedo (05–06h) e em jejum.
+// ══════════════════════════════════════
+const WORKOUT_PROGRAM_4 = {
+  lowerA:{label:'INFERIOR A — Força (Terra)',day:'Segunda',color:'var(--legs)',exercises:[
+    {name:'Levantamento Terra Convencional',sets:[{t:'work',l:'Trabalho',s:4,r:'4–6',rest:180,note:'Levantamento de força do dia — aqueça progressivamente (2–3 séries leves antes). Coluna neutra e core travado: respira, prende o ar e contrai o abdômen ANTES de puxar. Suba só 2,5–5 kg por semana'}]},
+    {name:'Leg Press 45',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Quadríceps pesado, sem carga na coluna'}]},
+    {name:'Cadeira Flexora',sets:[{t:'work',l:'Trabalho',s:3,r:'10–15',rest:75,note:'Isquiotibiais sem carga na lombar'}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:3,r:'12–15',rest:60,note:'Finalização de quadríceps'}]},
+    {name:'Panturrilha em Pé',sets:[{t:'work',l:'Trabalho',s:4,r:'12–15',rest:45}]},
+    {name:'🔵 Prancha / Dead Bug',sets:[{t:'work',l:'Adicional 1',s:1,r:'30–45s',rest:45},{t:'work',l:'Adicional 2',s:1,r:'30–45s',rest:45},{t:'work',l:'Adicional 3',s:1,r:'30–45s',rest:45,note:'Core anti-extensão — lombar forte aguenta mais carga no terra'}]},
+  ]},
+  upperA:{label:'SUPERIOR A — Força',day:'Terça',color:'var(--push)',exercises:[
+    {name:'Supino Reto com Barra',sets:[{t:'work',l:'Trabalho',s:4,r:'4–6',rest:150,note:'Força — aqueça progressivamente'}]},
+    {name:'Remada Curvada com Barra',sets:[{t:'work',l:'Trabalho',s:4,r:'6–10',rest:150,note:'Único puxar axial da semana — tronco firme ~45°, coluna neutra'}]},
+    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Trabalho',s:3,r:'6–10',rest:120,note:'Sentado com apoio — poupa a lombar'}]},
+    {name:'Barra Fixa (Pull-up) — pegada pronada',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Some peso ao passar de 12. Sem forças, use o graviton'}]},
+    {name:'Rosca Direta com Barra',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:75}]},
+    {name:'Tríceps Testa com Barra EZ',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:75}]},
+  ]},
+  lowerB:{label:'INFERIOR B — Posterior (Romeno)',day:'Quinta',color:'var(--lower)',exercises:[
+    {name:'Levantamento Terra Romeno (RDL) com Barra',sets:[{t:'work',l:'Trabalho',s:4,r:'8–12',rest:150,note:'Foco em isquiotibiais/glúteo, NÃO peso máximo. Hip hinge controlado, joelhos levemente flexionados, barra colada na perna, coluna neutra'}]},
+    {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:120,note:'Unilateral — quadríceps/glúteo sem carga axial'}]},
+    {name:'Mesa Flexora',sets:[{t:'work',l:'Trabalho',s:3,r:'10–15',rest:75,note:'Isquiotibiais'}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:3,r:'12–15',rest:60}]},
+    {name:'Panturrilha Sentado',sets:[{t:'work',l:'Trabalho',s:4,r:'12–20',rest:45,note:'Sóleo — reps altas'}]},
+    {name:'🔵 Hiperextensão Leve / Bird-Dog',sets:[{t:'work',l:'Adicional 1',s:1,r:'12–15',rest:45},{t:'work',l:'Adicional 2',s:1,r:'12–15',rest:45},{t:'work',l:'Adicional 3',s:1,r:'12–15',rest:45,note:'Extensão lombar SEM carga (ou leve) — reforça a lombar, não fadiga'}]},
+  ]},
+  upperB:{label:'SUPERIOR B — Hipertrofia',day:'Sexta',color:'var(--upper)',exercises:[
+    {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Trabalho',s:4,r:'8–12',rest:90,note:'Peito superior'}]},
+    {name:'Puxada Aberta Pronada no Cabo',sets:[{t:'work',l:'Trabalho',s:4,r:'10–15',rest:90}]},
+    {name:'Remada Baixa no Cabo (pegada neutra)',sets:[{t:'work',l:'Trabalho',s:3,r:'10–15',rest:90,note:'Sentado — junte as escápulas, sem carga na lombar'}]},
+    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Trabalho',s:4,r:'12–15',rest:60,note:'Deltoide medial — drop na última'}]},
+    {name:'Rosca Martelo com Halteres',sets:[{t:'work',l:'Trabalho',s:3,r:'12–15',rest:60}]},
+    {name:'Tríceps Francês com Halter/Corda',sets:[{t:'work',l:'Trabalho',s:3,r:'12–15',rest:60}]},
+  ]},
+};
+const WEEK_SCHEDULE_4 = [
+  {day:'Seg',type:'lowerA'},{day:'Ter',type:'upperA'},{day:'Qua',type:'rest'},
+  {day:'Qui',type:'lowerB'},{day:'Sex',type:'upperB'},{day:'Sáb',type:'rest'},{day:'Dom',type:'rest'}
+];
+
+// Programa ativo (1 = PPL, 2 = A/B/C máquinas, 3 = A/B/C compostos, 4 = Upper/Lower força)
 let activeProgram = parseInt(localStorage.getItem('bt_program')||'1');
-function getActiveProgram(){ return activeProgram===3?WORKOUT_PROGRAM_3:activeProgram===2?WORKOUT_PROGRAM_2:WORKOUT_PROGRAM; }
-function getActiveSchedule(){ return activeProgram===3?WEEK_SCHEDULE_3:activeProgram===2?WEEK_SCHEDULE_2:WEEK_SCHEDULE; }
+function getActiveProgram(){ return activeProgram===4?WORKOUT_PROGRAM_4:activeProgram===3?WORKOUT_PROGRAM_3:activeProgram===2?WORKOUT_PROGRAM_2:WORKOUT_PROGRAM; }
+function getActiveSchedule(){ return activeProgram===4?WEEK_SCHEDULE_4:activeProgram===3?WEEK_SCHEDULE_3:activeProgram===2?WEEK_SCHEDULE_2:WEEK_SCHEDULE; }
 function switchProgram(n){
   activeProgram=n;
   localStorage.setItem('bt_program',n);
@@ -800,7 +846,7 @@ const MUSCLE_MAP={
   'Tríceps':     {keys:['Tríceps Testa com Barra EZ','Tríceps Francês com Halter/Corda','Extensão Tríceps Polia c/ Banco','Francês no Cabo'],color:'var(--push)'},
   'Deltoide Post':{keys:['Crucifixo Inverso (Deltoide Posterior)','Crucifixo Inverso Unilateral no Cabo','Crucifixo Inverso Máquina'],color:'var(--upper)'},
   'Quadríceps':  {keys:['Agachamento Livre com Barra','Leg Press 45','Agachamento Búlgaro com Halteres','Cadeira Extensora','Agachamento no Hack','Cadeira Extensora Unilateral','Leg Press'],color:'var(--legs)'},
-  'Posterior':   {keys:['Levantamento Terra Romeno (RDL) com Barra','Cadeira Flexora','Mesa Flexora','Levantamento Terra Stiff'],color:'var(--lower)'},
+  'Posterior':   {keys:['Levantamento Terra Convencional','Levantamento Terra Romeno (RDL) com Barra','Cadeira Flexora','Mesa Flexora','Levantamento Terra Stiff'],color:'var(--lower)'},
   'Glúteos':     {keys:['Elevação Pélvica com Barra (Hip Thrust)','Agachamento Búlgaro com Halteres','Extensão de Quadril Banco Romano','Elevação Pélvica','Cadeira Adutora'],color:'var(--lower)'},
   'Panturrilha': {keys:['Panturrilha em Pé','Panturrilha Sentado','Panturrilha Joelhos Estendidos Máq.','Panturrilha no Leg'],color:'var(--legs)'},
 };
@@ -932,6 +978,28 @@ const DEFAULT_SUPPS = [
   {name:'Ômega-3',dose:'2 cápsulas',timing:'Com refeição',icon:'🐟'},
   {name:'Vitamina D3',dose:'1 cápsula',timing:'Pela manhã',icon:'☀️'},
 ];
+// ── Presets de dieta por objetivo (carregáveis no editor; ninguém é aplicado por padrão) ──
+// Focados em comida barata e prática. O de ganho já assume treino em jejum cedo (05–06h):
+// pré-treino é jejum e a 1ª refeição forte vem no pós-treino.
+const DIET_PRESETS = {
+  gain:{ label:'Ganho de peso (econômico)', meals:[
+    {meal:'Pré-treino (jejum)',icon:'⚡',options:['Treino em jejum — só água + café preto','Opcional: 5g de creatina com água'],macros:{kcal:5,prot:0,carb:0,gord:0,fibra:0}},
+    {meal:'Pós-treino (quebra o jejum)',icon:'💪',options:['400ml leite integral + 50g aveia + 1 banana + 1 scoop whey','4 ovos mexidos + 4 fatias de pão + 1 banana'],macros:{kcal:650,prot:44,carb:78,gord:18,fibra:6}},
+    {meal:'Lanche da manhã',icon:'🥪',options:['2 ovos + 2 fatias de pão + 1 banana','Iogurte natural + 40g aveia + 20g amendoim'],macros:{kcal:450,prot:24,carb:52,gord:15,fibra:5}},
+    {meal:'Almoço',icon:'🍛',options:['6 col. arroz + concha de feijão + 200g frango + 1 ovo + salada + fio de óleo','Arroz + feijão + 150g carne moída + batata + legumes'],macros:{kcal:750,prot:50,carb:85,gord:20,fibra:10}},
+    {meal:'Lanche da tarde',icon:'🥗',options:['2 fatias de pão + pasta de amendoim + banana + 300ml leite','Arroz + 2 ovos + 1 lata de sardinha'],macros:{kcal:480,prot:22,carb:56,gord:18,fibra:5}},
+    {meal:'Jantar',icon:'🌙',options:['Arroz + feijão + 200g frango (ou ovos) + batata-doce + legumes','Macarrão + molho + 150g carne + legumes'],macros:{kcal:650,prot:44,carb:72,gord:16,fibra:9}},
+    {meal:'Ceia',icon:'🌛',options:['Vitamada: 300ml leite + 40g aveia + 1 banana + amendoim','Iogurte + aveia + mel'],macros:{kcal:320,prot:16,carb:44,gord:9,fibra:4}},
+  ]},
+  cut:{ label:'Definição (econômico)', meals:[
+    {meal:'Café da manhã',icon:'🍳',options:['3 ovos + 2 fatias de pão integral','Omelete de 4 claras + 30g aveia + 1 fruta'],macros:{kcal:380,prot:26,carb:30,gord:15,fibra:4}},
+    {meal:'Lanche da manhã',icon:'🥪',options:['Iogurte natural + 1 fruta','1 scoop whey + 1 fruta'],macros:{kcal:220,prot:20,carb:24,gord:4,fibra:3}},
+    {meal:'Almoço',icon:'🍛',options:['3 col. arroz + feijão + 200g frango + salada grande','Batata-doce + 200g patinho + legumes'],macros:{kcal:560,prot:50,carb:50,gord:12,fibra:10}},
+    {meal:'Lanche da tarde',icon:'⚡',options:['1 scoop whey + 1 fruta','2 ovos + 1 fatia de pão'],macros:{kcal:240,prot:26,carb:22,gord:4,fibra:2}},
+    {meal:'Jantar',icon:'🌙',options:['200g frango/peixe + legumes + pouco arroz','Omelete de 3 ovos + salada + batata pequena'],macros:{kcal:480,prot:46,carb:38,gord:14,fibra:8}},
+    {meal:'Ceia',icon:'🌛',options:['Iogurte natural + castanhas','2 ovos cozidos ou 1 fatia de queijo'],macros:{kcal:220,prot:20,carb:8,gord:12,fibra:1}},
+  ]},
+};
 // Dieta por usuário (fica em settings.diet; cai no padrão genérico se não houver)
 function getDietData(){ const s=getSettings(); const d=s&&s.diet; return {
   meals:(d&&Array.isArray(d.meals)&&d.meals.length)?d.meals:DEFAULT_MEALS,
@@ -2149,8 +2217,8 @@ function buildWoLog(tabs){
     </div>`:'';
     return`<div class="page">
       <div class="sec-title" style="padding:0 0 14px">💪 Treinos</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
-        ${[[1,'Prog. 1','Push/Pull/Legs'],[2,'Prog. 2','A/B/C · máquinas'],[3,'Prog. 3','A/B/C · compostos']].map(([n,t,sub])=>`<button onclick="switchProgram(${n})" style="padding:10px 4px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===n?'var(--him)':'var(--border2)'};background:${activeProgram===n?'var(--himb)':'var(--bg3)'};color:${activeProgram===n?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 ${t}<br><span style="font-size:8px;font-weight:700;opacity:.8">${sub}</span></button>`).join('')}
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px">
+        ${[[1,'Prog. 1','Push/Pull/Legs'],[2,'Prog. 2','A/B/C · máquinas'],[3,'Prog. 3','A/B/C · compostos'],[4,'Prog. 4','Upper/Lower · força']].map(([n,t,sub])=>`<button onclick="switchProgram(${n})" style="padding:10px 4px;border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;border:2px solid ${activeProgram===n?'var(--him)':'var(--border2)'};background:${activeProgram===n?'var(--himb)':'var(--bg3)'};color:${activeProgram===n?'var(--him)':'var(--muted)'};text-align:center;width:100%">📋 ${t}<br><span style="font-size:8px;font-weight:700;opacity:.8">${sub}</span></button>`).join('')}
       </div>
       ${recCard}
       ${missedCard}
@@ -2910,7 +2978,7 @@ function buildWoEdit(tabs){
   let custom=getCustomProgram()||{program:activeProgram,overrides:{}};
   if(custom.program!==activeProgram){custom={program:activeProgram,overrides:{}};}
 
-  const progLabel=activeProgram===1?'Programa 1 — Push/Pull/Legs':activeProgram===3?'Programa 3 — A/B/C · Compostos livres':'Programa 2 — A/B/C · Máquinas';
+  const progLabel=activeProgram===1?'Programa 1 — Push/Pull/Legs':activeProgram===4?'Programa 4 — Upper/Lower · Força (lombar protegida)':activeProgram===3?'Programa 3 — A/B/C · Compostos livres':'Programa 2 — A/B/C · Máquinas';
   const hasOverrides=Object.keys(custom.overrides||{}).length>0;
 
   const REPS_OPTS=['4–6','6–10','8–12','10–15','12–15'];
@@ -3976,7 +4044,7 @@ function buildNutricao(){
           <div><span style="font-size:20px">${meal.icon}</span><span style="font-size:13px;font-weight:700;margin-left:8px">${meal.meal}</span></div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:9px;color:${ac};letter-spacing:1px">${meal.time}</div>
+          <div style="font-size:9px;color:${ac};letter-spacing:1px">${meal.time||''}</div>
           ${mealDone?`<div style="font-size:8px;color:var(--good)">✓ Op.${todayMealLog['meal_'+mi]?.option||''} às ${todayMealLog['meal_'+mi]?.time||''}</div>`:''}
         </div>
       </div>
@@ -5452,6 +5520,11 @@ function _renderDietEditor(){
       <button onclick="closeDietEditor()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
     </div>
     <div style="padding:14px;overflow-y:auto;flex:1">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;width:100%">⚡ Carregar preset por objetivo</span>
+        <button onclick="_dietLoadPreset('gain')" style="flex:1;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">💪 Ganho econômico</button>
+        <button onclick="_dietLoadPreset('cut')" style="flex:1;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">🔥 Definição</button>
+      </div>
       ${_dietEdit.map(card).join('')}
       <button onclick="_dietAdd()" style="width:100%;padding:11px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar refeição</button>
     </div>
@@ -5466,6 +5539,7 @@ function _renderDietEditor(){
 function _dietAdd(){ _dietEdit=_readDietEditor(); _dietEdit.push({meal:'Nova refeição',icon:'🍽️',options:[''],macros:{kcal:0,prot:0,carb:0,gord:0,fibra:0}}); _renderDietEditor(); }
 function _dietRemove(i){ _dietEdit=_readDietEditor(); _dietEdit.splice(i,1); _renderDietEditor(); }
 function _dietRestore(){ if(!confirm('Restaurar o plano padrão? Suas edições serão perdidas.'))return; _dietEdit=DEFAULT_MEALS.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
+function _dietLoadPreset(key){ const p=DIET_PRESETS[key]; if(!p)return; if(!confirm('Carregar o preset "'+p.label+'"? As refeições atuais no editor serão substituídas (salve para confirmar).'))return; _dietEdit=p.meals.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
 function saveDietEditor(){ const meals=_readDietEditor(); if(!meals.length){ alert('Adicione ao menos uma refeição.'); return; } saveDiet(meals,getSupps()); closeDietEditor(); render(); showSyncStatus('✓ Plano salvo','var(--good)'); }
 
 let _suppEdit=null;
