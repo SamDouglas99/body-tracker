@@ -6,7 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>Body Tracker Pro 💪</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -76,7 +78,7 @@ else{window.addEventListener("load",()=>{if(window._btInit)window._btInit();});}
   --border:#242436;--border2:#2e2e48;--muted:#606084;--text:#eeeeff;--sub:#a0a0c8;
   --him:#e2e240;--him2:#a0e240;--him3:#ffaa00;--himb:rgba(226,226,64,.1);--himl:rgba(226,226,64,.4);
   --good:#4ade80;--bad:#f87171;--warn:#fbbf24;--info:#60a5fa;--purple:#a78bfa;
-  --r:12px;--font:'Space Mono',monospace;--font2:'Syne',sans-serif;
+  --r:12px;--font:'Nunito',-apple-system,system-ui,sans-serif;--font2:'Nunito',-apple-system,system-ui,sans-serif;
   --pull:#4a9eff;--push:#ff6b4a;--legs:#e2e240;--upper:#c084fc;--lower:#fb923c;
 }
 /* ── LIGHT THEME (dark/light toggle) ── */
@@ -5581,7 +5583,7 @@ function _renderDietEditor(){
       ${[['kcal','kcal'],['prot','Prot'],['carb','Carb'],['gord','Gord'],['fibra','Fib']].map(([k,lbl])=>`<div><label class="flabel" style="font-size:8px;letter-spacing:.5px">${lbl}</label><input id="dm_${k}_${i}" type="number" inputmode="numeric" value="${m.macros&&m.macros[k]!=null?m.macros[k]:0}" style="width:100%;padding:6px;text-align:center"/></div>`).join('')}
     </div>
   </div>`;
-  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 28px)">
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 40px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px)">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
       <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">✏️ Meu plano alimentar</div>
       <button onclick="closeDietEditor()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
@@ -5628,7 +5630,7 @@ function _renderSuppEditor(){
       <input id="sp_timing_${i}" value="${_esc(s.timing)}" placeholder="Quando (ex: Manhã)"/>
     </div>
   </div>`;
-  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 28px)">
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 40px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px)">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
       <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">✏️ Meus suplementos</div>
       <button onclick="closeSuppEditor()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
