@@ -822,57 +822,59 @@ const WEEK_SCHEDULE_4 = [
 ];
 
 // ══════════════════════════════════════
-// PROGRAMA 5 — A/B/C 2x na semana · Força (ênfases diferentes por rodada)
-// Modelo: 2 séries VÁLIDAS e pesadas por exercício. 1 único axial pesado por dia —
-// Terra CONVENCIONAL (força, C1/Qui) e Terra ROMENO (posterior, C2/Dom) separados
-// por 72h. Búlgaro no C1. Antebraço nos dias de puxar (B1 rosca inversa, B2 punho)
-// para sustentar a pegada. Rows apoiadas p/ poupar a lombar.
+// PROGRAMA 5 — A/B/C 2x na semana · Força (referências do Programa 2 do treinador)
+// Mesma divisão A/B/C 2x com ênfases diferentes, adaptada p/ compostos livres e força:
+// 2 séries VÁLIDAS e pesadas por exercício. 1 único axial pesado por dia — Terra
+// CONVENCIONAL no dia de COSTAS (B1/Ter, casa com costas e fortalece a lombar),
+// AGACHAMENTO livre na perna (C1/Qui) e Terra ROMENO no posterior (C2/Dom). Búlgaro
+// no C1. Antebraço nos dias de puxar (B1 rosca inversa, B2 punho) p/ sustentar a
+// pegada. No dia do terra as remadas são apoiadas/máquina p/ poupar a lombar.
 // ══════════════════════════════════════
 const WORKOUT_PROGRAM_5 = {
-  a1:{label:'A1 — Peito, Ombro e Tríceps (ênfase Peito)',day:'Segunda',color:'var(--push)',exercises:[
-    {name:'Supino Reto com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150,note:'Força — aqueça progressivamente antes das 2 válidas'}]},
+  a1:{label:'A1 — Peito, Ombro e Tríceps',day:'Segunda',color:'var(--push)',exercises:[
+    {name:'Supino Reto com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150,note:'Ênfase peito — força. Aqueça progressivamente antes das 2 válidas'}]},
     {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito superior'}]},
     {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Ombro — sentado, poupa a lombar'}]},
     {name:'Crucifixo com Halteres (inclinado)',sets:[{t:'work',l:'Trabalho',s:2,r:'10–12',rest:75,note:'Isolador de peito'}]},
     {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60,note:'Deltoide medial'}]},
     {name:'Tríceps Testa com Barra EZ',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75}]},
   ]},
-  b1:{label:'B1 — Costas, Post. e Bíceps (ênfase Espessura)',day:'Terça',color:'var(--pull)',exercises:[
-    {name:'Remada Curvada com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:150,note:'Único axial do dia — tronco firme ~45°, coluna neutra. Espessura de costas'}]},
-    {name:'Barra Fixa (Pull-up) — pegada pronada',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Some peso ao passar de 10'}]},
-    {name:'Remada Serrote com Halter',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Apoiado no banco — poupa a lombar'}]},
+  b1:{label:'B1 — Costas, Deltoide Post. e Bíceps',day:'Terça',color:'var(--pull)',exercises:[
+    {name:'Levantamento Terra Convencional',sets:[{t:'work',l:'Trabalho',s:2,r:'4–6',rest:180,note:'Levantamento de força do dia — casa com costas e fortalece a lombar. Único axial pesado. Aqueça progressivo, core travado, coluna neutra. Suba 2,5–5 kg/semana'}]},
+    {name:'Barra Fixa (Pull-up) — pegada pronada',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Largura — some peso ao passar de 10'}]},
+    {name:'Remada Máquina Peito Apoiado',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Espessura — peito apoiado poupa a lombar já cansada do terra'}]},
     {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
     {name:'Rosca Direta com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75}]},
     {name:'Rosca Inversa com Barra (antebraço)',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:60,note:'Extensores do antebraço — pegada pronada mais forte'}]},
   ]},
-  c1:{label:'C1 — Quadríceps + Terra (Força)',day:'Quinta',color:'var(--legs)',exercises:[
-    {name:'Levantamento Terra Convencional',sets:[{t:'work',l:'Trabalho',s:2,r:'4–6',rest:180,note:'Levantamento de força do dia — único axial pesado. Aqueça progressivo, core travado, coluna neutra. Suba 2,5–5 kg/semana'}]},
+  c1:{label:'C1 — Quadríceps, Isquiotibiais e Glúteo',day:'Quinta',color:'var(--legs)',exercises:[
+    {name:'Agachamento Livre com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:180,note:'Força de perna do dia — único axial pesado. Desça abaixo do paralelo, core travado, coluna neutra. Aqueça progressivamente'}]},
     {name:'Leg Press 45',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120,note:'Quadríceps pesado, sem carga na coluna'}]},
     {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Unilateral — quadríceps/glúteo'}]},
     {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
-    {name:'Mesa Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'Isquiotibiais sem carga na lombar'}]},
+    {name:'Cadeira Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'Isquiotibiais sem carga na lombar'}]},
     {name:'Panturrilha em Pé',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:45}]},
   ]},
-  a2:{label:'A2 — Ombro, Peito e Tríceps (ênfase Ombro)',day:'Sexta',color:'var(--push)',exercises:[
-    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150,note:'Força de ombro — sentado, poupa a lombar'}]},
+  a2:{label:'A2 — Ombro, Peito e Tríceps',day:'Sexta',color:'var(--push)',exercises:[
+    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150,note:'Ênfase ombro — força. Sentado, poupa a lombar'}]},
+    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60,note:'Deltoide medial — prioridade no dia de ombro'}]},
     {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito superior'}]},
     {name:'Paralelas com Sobrecarga (Dips)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito/tríceps — tronco à frente = peito'}]},
-    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60,note:'Deltoide medial — prioridade no dia de ombro'}]},
     {name:'Crucifixo Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'10–12',rest:75,note:'Isolador de peito'}]},
     {name:'Tríceps Francês com Halter/Corda',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75}]},
   ]},
-  b2:{label:'B2 — Costas, Post. e Bíceps (ênfase Largura)',day:'Sábado',color:'var(--pull)',exercises:[
-    {name:'Barra Fixa Supinada (Chin-up)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:150,note:'Força — dorsal + bíceps. Largura de costas'}]},
-    {name:'Remada Máquina Peito Apoiado',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito apoiado = costas pesado SEM carga na lombar'}]},
+  b2:{label:'B2 — Costas, Deltoide Post. e Bíceps',day:'Sábado',color:'var(--pull)',exercises:[
+    {name:'Barra Fixa Supinada (Chin-up)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:150,note:'Largura — dorsal + bíceps. Some peso ao passar de 10'}]},
+    {name:'Remada Máquina Peito Apoiado',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Espessura — peito apoiado, sem carga na lombar'}]},
     {name:'Remada Baixa no Cabo (pegada neutra)',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Sentado — junte as escápulas'}]},
     {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
     {name:'Rosca Martelo com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75,note:'Braquial + braquiorradial'}]},
     {name:'Rosca de Punho (Wrist Curl)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:45,note:'Flexores do antebraço — pegada mais forte para os terras'}]},
   ]},
-  c2:{label:'C2 — Posterior, Glúteo e Quadríceps (Romeno)',day:'Domingo',color:'var(--lower)',exercises:[
+  c2:{label:'C2 — Isquiotibiais, Glúteo e Quadríceps',day:'Domingo',color:'var(--lower)',exercises:[
     {name:'Levantamento Terra Romeno (RDL) com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:150,note:'Único axial do dia — posterior/glúteo. Hip hinge controlado, coluna neutra, NÃO peso máximo'}]},
     {name:'Elevação Pélvica com Barra (Hip Thrust)',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Glúteo — pausa 2s no topo'}]},
-    {name:'Cadeira Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'Isquiotibiais'}]},
+    {name:'Mesa Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'Isquiotibiais'}]},
     {name:'Leg Press 45',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120,note:'Quadríceps'}]},
     {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
     {name:'Panturrilha Sentado',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:45,note:'Sóleo'}]},
@@ -2407,16 +2409,16 @@ function buildWoLog(tabs){
     <div class="sec-title" style="padding:0 0 14px">💪 Treinos</div>
     ${tabs}
     <div style="margin-bottom:14px"><div class="wo-day-grid">${days}</div></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div>
-        <div style="font-size:18px;font-weight:700;color:${prog.color}">${prog.label}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:8px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:16px">
+      <div style="min-width:0;flex:1">
+        <div style="font-size:15px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;color:${prog.color}">${prog.label}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span>${prog.exercises.length} exercícios · ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
           <span style="background:rgba(226,226,64,.12);border:1px solid rgba(226,226,64,.3);border-radius:20px;padding:2px 9px;font-size:9px;letter-spacing:1px;color:var(--him);font-weight:700">⏱ <span id="wo-elapsed">${fmtElapsed(woStartTime?Date.now()-woStartTime:0)}</span></span>
         </div>
         ${(()=>{const last=getWorkouts().slice().reverse().find(s=>s.type===activeWorkoutType);return last?`<div style="font-size:9px;color:var(--info);margin-top:3px">Último: ${calcSessionSets(last)||'?'} séries · ${last.tonnage||calcSessionVolume(last)||'?'}kg ton.</div>`:'';})()}
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
           <button onclick="saveWorkoutSession()" style="padding:10px 18px;background:${prog.color};color:#08080e;border:none;border-radius:8px;font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">✅ Salvar</button>
           <button onclick="activeWorkoutType=null;resetWoStopwatch();render()" style="padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;font-family:var(--font2);font-size:9px;font-weight:700;color:var(--muted);cursor:pointer">✕ Sair</button>
         </div>
@@ -2807,7 +2809,7 @@ function buildWoProgress(tabs){
       </div>`;
     }).join('');
     return`<div style="margin-bottom:20px">
-      <div class="sec-title" style="padding:0 0 10px"><span style="color:${prog.color}">${prog.label}</span><span style="font-size:9px;color:var(--muted);margin-left:8px">${prog.day}</span></div>
+      <div class="sec-title" style="padding:0 0 10px;overflow:visible;flex-wrap:wrap;align-items:baseline"><span style="color:${prog.color};min-width:0;overflow-wrap:anywhere">${prog.label}</span><span style="font-size:9px;color:var(--muted);margin-left:8px">${prog.day}</span></div>
       <div class="grid3">${cards}</div>
     </div>`;
   }).join('');
