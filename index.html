@@ -824,62 +824,67 @@ const WEEK_SCHEDULE_4 = [
 ];
 
 // ══════════════════════════════════════
-// PROGRAMA 5 — A/B/C 2x na semana · Força (referências do Programa 2 do treinador)
-// Mesma divisão A/B/C 2x com ênfases diferentes, adaptada p/ compostos livres e força:
-// 2 séries VÁLIDAS e pesadas por exercício. 1 único axial pesado por dia — Terra
-// CONVENCIONAL no dia de COSTAS (B1/Ter, casa com costas e fortalece a lombar),
-// AGACHAMENTO livre na perna (C1/Qui) e Terra ROMENO no posterior (C2/Dom). Búlgaro
-// no C1. Antebraço nos dias de puxar (B1 rosca inversa, B2 punho) p/ sustentar a
-// pegada. No dia do terra as remadas são apoiadas/máquina p/ poupar a lombar.
+// PROGRAMA 5 — A/B/C 2x (PDF do treinador + exercícios do Sam, substituídos)
+// Base = "Treino Sam Douglas 2026" (o mesmo do Prog. 2, feito pelo treinador). Mantém
+// a seleção do treinador e SÓ substitui p/ encaixar os exercícios pedidos, marcados ⭐:
+//   B1: Remada baixa aberta → TERRA CONVENCIONAL (força, no dia de costas p/ lombar);
+//       2ª rosca → ROSCA INVERSA (antebraço)
+//   C1: Agach. Hack → AGACHAMENTO LIVRE; Cadeira adutora → BÚLGARO
+//   C2: Terra Stiff → TERRA ROMENO (RDL)
+//   B2: Rosca Scott unilat. → ROSCA DE PUNHO (antebraço)
+// Método do treinador: 2 séries de trabalho até a falha (parar 4-5 antes no aquecimento),
+// 2min descanso, progredir do fundo ao teto das reps e então +2,5–5%.
 // ══════════════════════════════════════
 const WORKOUT_PROGRAM_5 = {
   a1:{label:'A1 — Peito, Ombro e Tríceps',day:'Segunda',color:'var(--push)',exercises:[
-    {name:'Supino Reto com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150,note:'Ênfase peito — força. Aqueça progressivamente antes das 2 válidas'}]},
-    {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito superior'}]},
-    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Ombro — sentado, poupa a lombar'}]},
-    {name:'Crucifixo com Halteres (inclinado)',sets:[{t:'work',l:'Trabalho',s:2,r:'10–12',rest:75,note:'Isolador de peito'}]},
-    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60,note:'Deltoide medial'}]},
-    {name:'Tríceps Testa com Barra EZ',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75}]},
+    {name:'Supra Polia Frente (Abdômen)',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:60}]},
+    {name:'Supino Reto Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120}]},
+    {name:'Desenvolvimento Smith/Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120}]},
+    {name:'JM Press Smith / Paralelas c/ Sobrecarga',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120,note:'Braços colados ao tronco, barra na linha do ombro'}]},
+    {name:'Crucifixo Inclinado Halteres/Cabo',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Elevação Unilateral Polia Média',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Polia na altura do quadril'}]},
+    {name:'Extensão Tríceps Polia c/ Banco',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
   ]},
   b1:{label:'B1 — Costas, Deltoide Post. e Bíceps',day:'Terça',color:'var(--pull)',exercises:[
-    {name:'Levantamento Terra Convencional',sets:[{t:'work',l:'Trabalho',s:2,r:'4–6',rest:180,note:'Levantamento de força do dia — casa com costas e fortalece a lombar. Único axial pesado. Aqueça progressivo, core travado, coluna neutra. Suba 2,5–5 kg/semana'}]},
-    {name:'Barra Fixa (Pull-up) — pegada pronada',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Largura — some peso ao passar de 10'}]},
-    {name:'Remada Máquina Peito Apoiado',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Espessura — peito apoiado poupa a lombar já cansada do terra'}]},
-    {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
-    {name:'Rosca Direta com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75}]},
-    {name:'Rosca Inversa com Barra (antebraço)',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:60,note:'Extensores do antebraço — pegada pronada mais forte'}]},
+    {name:'Levantamento Terra Convencional',sets:[{t:'work',l:'Trabalho',s:2,r:'4–6',rest:180,note:'⭐ Incluído (no lugar da Remada baixa aberta) — força no dia de costas, fortalece a lombar. Único axial pesado; core travado, coluna neutra, aqueça progressivo'}]},
+    {name:'Puxada Aberta Pronada no Cabo',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120,note:'Tronco neutro, direcione o cotovelo para baixo'}]},
+    {name:'Remada Unilateral Neutra Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Crucifixo Inverso Unilateral no Cabo',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Rosca Scott Bilateral Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Rosca Inversa com Barra (antebraço)',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'⭐ Substitui a 2ª rosca — antebraço p/ sustentar a pegada'}]},
   ]},
   c1:{label:'C1 — Quadríceps, Isquiotibiais e Glúteo',day:'Quinta',color:'var(--legs)',exercises:[
-    {name:'Agachamento Livre com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:180,note:'Força de perna do dia — único axial pesado. Desça abaixo do paralelo, core travado, coluna neutra. Aqueça progressivamente'}]},
-    {name:'Leg Press 45',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120,note:'Quadríceps pesado, sem carga na coluna'}]},
-    {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Unilateral — quadríceps/glúteo'}]},
-    {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
-    {name:'Cadeira Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'Isquiotibiais sem carga na lombar'}]},
-    {name:'Panturrilha em Pé',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:45}]},
+    {name:'Agachamento Livre com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:180,note:'⭐ Substitui o Hack — composto de força do dia. Desça abaixo do paralelo, core travado, coluna neutra'}]},
+    {name:'Agachamento Búlgaro com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'⭐ Incluído (no lugar da Cadeira adutora) — unilateral quadríceps/glúteo'}]},
+    {name:'Cadeira Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Extensão de Quadril Banco Romano',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Banco 1 regulagem abaixo da linha do quadril'}]},
+    {name:'Panturrilha Joelhos Estendidos Máq.',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:60,note:'3s de pausa no alongamento de cada rep'}]},
   ]},
   a2:{label:'A2 — Ombro, Peito e Tríceps',day:'Sexta',color:'var(--push)',exercises:[
-    {name:'Desenvolvimento com Halteres (sentado)',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150,note:'Ênfase ombro — força. Sentado, poupa a lombar'}]},
-    {name:'Elevação Lateral com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60,note:'Deltoide medial — prioridade no dia de ombro'}]},
-    {name:'Supino Inclinado com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito superior'}]},
-    {name:'Paralelas com Sobrecarga (Dips)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Peito/tríceps — tronco à frente = peito'}]},
-    {name:'Crucifixo Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'10–12',rest:75,note:'Isolador de peito'}]},
-    {name:'Tríceps Francês com Halter/Corda',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75}]},
+    {name:'Supra Máquina (Abdômen)',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:60}]},
+    {name:'Elevação Lateral Halteres/Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Deltóide medial prioridade'}]},
+    {name:'Desenvolvimento Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120}]},
+    {name:'Supino Inclinado Smith/Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120}]},
+    {name:'Paralelas com Sobrecarga',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120}]},
+    {name:'Crucifixo Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Francês no Cabo',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
   ]},
   b2:{label:'B2 — Costas, Deltoide Post. e Bíceps',day:'Sábado',color:'var(--pull)',exercises:[
-    {name:'Barra Fixa Supinada (Chin-up)',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:150,note:'Largura — dorsal + bíceps. Some peso ao passar de 10'}]},
-    {name:'Remada Máquina Peito Apoiado',sets:[{t:'work',l:'Trabalho',s:2,r:'6–10',rest:120,note:'Espessura — peito apoiado, sem carga na lombar'}]},
-    {name:'Remada Baixa no Cabo (pegada neutra)',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Sentado — junte as escápulas'}]},
-    {name:'Crucifixo Inverso (Deltoide Posterior)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
-    {name:'Rosca Martelo com Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:75,note:'Braquial + braquiorradial'}]},
-    {name:'Rosca de Punho (Wrist Curl)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:45,note:'Flexores do antebraço — pegada mais forte para os terras'}]},
+    {name:'Puxada Unilateral Supinada Máq./Polia',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120,note:'Máquina supinada ou polia neutra com banco'}]},
+    {name:'Remada Máq. Peito Apoiado Aberta',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120}]},
+    {name:'Remada Unilateral Neutra Polia Baixa',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Crucifixo Inverso Máquina',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Rosca Inclinado 45° Halteres',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Rosca de Punho (Wrist Curl)',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:60,note:'⭐ Substitui a Rosca Scott unilateral — flexores do antebraço/pegada'}]},
   ]},
   c2:{label:'C2 — Isquiotibiais, Glúteo e Quadríceps',day:'Domingo',color:'var(--lower)',exercises:[
-    {name:'Levantamento Terra Romeno (RDL) com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:150,note:'Único axial do dia — posterior/glúteo. Hip hinge controlado, coluna neutra, NÃO peso máximo'}]},
-    {name:'Elevação Pélvica com Barra (Hip Thrust)',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90,note:'Glúteo — pausa 2s no topo'}]},
-    {name:'Mesa Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'10–15',rest:75,note:'Isquiotibiais'}]},
-    {name:'Leg Press 45',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:120,note:'Quadríceps'}]},
-    {name:'Cadeira Extensora',sets:[{t:'work',l:'Trabalho',s:2,r:'12–15',rest:60}]},
-    {name:'Panturrilha Sentado',sets:[{t:'work',l:'Trabalho',s:2,r:'12–20',rest:45,note:'Sóleo'}]},
+    {name:'Levantamento Terra Romeno (RDL) com Barra',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:150,note:'⭐ Substitui o Terra Stiff — posterior/glúteo. Hip hinge controlado, coluna neutra, único axial do dia'}]},
+    {name:'Mesa Flexora',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Leg Press',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:150}]},
+    {name:'Cadeira Extensora Unilateral',sets:[{t:'work',l:'Trabalho',s:2,r:'8–12',rest:90}]},
+    {name:'Elevação Pélvica',sets:[{t:'work',l:'Trabalho',s:2,r:'5–8',rest:120,note:'Pausa no topo — máx contração glúteo'}]},
+    {name:'Panturrilha no Leg',sets:[{t:'work',l:'Trabalho',s:3,r:'8–12',rest:60,note:'3s de pausa no alongamento de cada rep'}]},
   ]},
 };
 const WEEK_SCHEDULE_5 = [
