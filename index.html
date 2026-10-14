@@ -1932,12 +1932,18 @@ function getCustomTargets(){
   try{ return JSON.parse(localStorage.getItem('bt_custom_targets')||'{}'); }catch{ return {}; }
 }
 function saveCustomTarget(key, val){
+  if(key==='weight'){ // meta de peso é fonte ÚNICA (settings.goal) — sincroniza dashboard/topbar/indicadores
+    const g=parseFloat(val);
+    if(g>0){ const s={...(getSettings()||{})}; s.goal=g; saveSettings(s); }
+    return;
+  }
   const t=getCustomTargets();
   if(val===''||isNaN(parseFloat(val))) delete t[key];
   else t[key]=parseFloat(val);
   localStorage.setItem('bt_custom_targets',JSON.stringify(t));
 }
 function getTarget(measurement){
+  if(measurement.key==='weight'){ const s=getSettings(); return (s&&s.goal)?s.goal:measurement.target; }
   const custom=getCustomTargets();
   return custom[measurement.key]!==undefined ? custom[measurement.key] : measurement.target;
 }
