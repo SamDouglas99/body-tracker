@@ -2,6 +2,10 @@
 scripts/node_modules/
 scripts/package-lock.json
 
+# Node / Vercel
+node_modules/
+.vercel
+
 # Segredos — NUNCA comitar
 vapid-keys.txt
 *serviceAccount*.json

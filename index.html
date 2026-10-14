@@ -5257,17 +5257,26 @@ function openReceiptScan(){
 function _handleReceiptFile(file){
   const r=new FileReader();
   r.onload=()=>{ _scanState={img:r.result,items:null,busy:true,store:''}; _renderScanModal();
-    scanReceipt(r.result).then(res=>{ _scanState.items=res.items; _scanState.store=res.store||''; _scanState.busy=false; _renderScanModal(); })
+    scanReceipt(r.result).then(res=>{ _scanState.items=res.items; _scanState.store=res.store||''; _scanState.demo=!!res.demo; _scanState.busy=false; _renderScanModal(); })
       .catch(err=>{ _scanState.busy=false; _scanState.error=(err&&err.message)||'falha'; _renderScanModal(); });
   };
   r.readAsDataURL(file);
 }
-// ⚠️ PROTÓTIPO: extração simulada. Para produção, trocar por chamada ao backend (Vercel)
-// que envia a imagem p/ a API da Claude (visão) e devolve {store, items:[{name,qty,price,category}]}.
-// Ex.: return fetch('/api/scan-receipt',{method:'POST',body:JSON.stringify({image:dataUrl})}).then(r=>r.json());
+// Lê a nota: tenta o backend REAL (função serverless /api/scan-receipt na Vercel, que usa
+// a IA de visão). Se não existir (ex.: GitHub Pages) ou falhar, cai no modo DEMONSTRAÇÃO.
 async function scanReceipt(dataUrl){
-  await new Promise(r=>setTimeout(r,1400)); // simula o processamento da IA
-  return { store:'Supermercado (demo)', items:[
+  try{
+    const img = await _downscaleImage(dataUrl, 1300, 0.7); // reduz p/ caber no limite e ir rápido
+    const r = await fetch('/api/scan-receipt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:img})});
+    if(r.ok){
+      const j = await r.json();
+      if(j && Array.isArray(j.items) && j.items.length){ return { store:j.store||'', items:j.items, demo:false }; }
+      if(j && j.error) throw new Error(j.error);
+    } else { throw new Error('HTTP '+r.status); }
+  }catch(e){ console.warn('scanReceipt: backend indisponível — usando demonstração ('+(e&&e.message)+')'); }
+  // Fallback demonstração (sem backend configurado)
+  await new Promise(r=>setTimeout(r,900));
+  return { store:'Supermercado (demo)', demo:true, items:[
     {name:'Arroz tipo 1 5kg',       qty:1,   price:27.90, category:'Mercado'},
     {name:'Feijão carioca 1kg',     qty:2,   price:8.49,  category:'Mercado'},
     {name:'Peito de frango (kg)',   qty:1.2, price:18.90, category:'Mercado'},
@@ -5276,6 +5285,22 @@ async function scanReceipt(dataUrl){
     {name:'Aveia em flocos 500g',   qty:1,   price:9.49,  category:'Mercado'},
     {name:'Whey protein 900g',      qty:1,   price:129.90,category:'Suplementos'},
   ]};
+}
+// Reduz a imagem no navegador antes de enviar (menos dados, mais rápido, dentro do limite).
+function _downscaleImage(dataUrl,maxPx,quality){
+  return new Promise(resolve=>{
+    try{
+      const img=new Image();
+      img.onload=()=>{ try{
+        let w=img.width,h=img.height; const scale=Math.min(1,maxPx/Math.max(w,h));
+        w=Math.round(w*scale); h=Math.round(h*scale);
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',quality));
+      }catch(e){ resolve(dataUrl); } };
+      img.onerror=()=>resolve(dataUrl); img.src=dataUrl;
+    }catch(e){ resolve(dataUrl); }
+  });
 }
 function _scanClose(){ const el=document.getElementById('scan-modal'); if(el) el.remove(); _scanState=null; }
 function _scanReadInputs(){
@@ -5309,7 +5334,7 @@ function _renderScanModal(){
       <img src="${_scanState.img}" style="max-height:180px;border-radius:10px;margin-bottom:14px;opacity:.85"/>
       <div style="font-size:30px;margin-bottom:8px">🔎</div>
       <div style="font-size:13px;font-weight:700">Lendo a nota...</div>
-      <div style="font-size:10px;color:var(--warn);margin-top:6px">⚠️ Protótipo — extração de demonstração (sem backend de IA ainda)</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">Extraindo os itens da nota</div>
     </div>`;
   } else if(_scanState.error){
     body=`<div style="padding:30px 16px;text-align:center"><div style="font-size:28px">⚠️</div><div style="font-size:12px;color:var(--bad);margin-top:8px">Não consegui ler: ${_scanState.error}</div></div>`;
@@ -5323,7 +5348,7 @@ function _renderScanModal(){
         <div style="flex:1;min-width:0"><label class="flabel">Estabelecimento</label>
           <input id="scan-store" value="${(_scanState.store||'').replace(/"/g,'&quot;')}" placeholder="Mercado" style="width:100%"/></div>
       </div>
-      <div style="font-size:9px;color:var(--warn);margin-bottom:10px">⚠️ Protótipo: itens de demonstração. Confira e edite antes de salvar.</div>
+      <div style="font-size:9px;color:${_scanState.demo?'var(--warn)':'var(--good)'};margin-bottom:10px">${_scanState.demo?'⚠️ Demonstração (backend de IA não configurado). Confira e edite antes de salvar.':'✅ Lido pela IA — confira e edite se precisar.'}</div>
       ${items.map((it,i)=>`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:9px;margin-bottom:8px">
         <div style="display:flex;gap:6px;margin-bottom:6px">
           <input id="sc_n_${i}" value="${(it.name||'').replace(/"/g,'&quot;')}" placeholder="Item" style="flex:1"/>
