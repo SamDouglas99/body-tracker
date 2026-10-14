@@ -540,6 +540,7 @@ input:focus,select:focus{border-color:var(--muted)}
     <button class="sn"         onclick="go('treinos')"><span class="si">💪</span>Treinos</button>
     <button class="sn"         onclick="go('nutricao')"><span class="si">🥗</span>Nutrição</button>
     <button class="sn"         onclick="go('estoque')"><span class="si">🛒</span>Estoque</button>
+    <button class="sn"         onclick="go('gastos')"><span class="si">💰</span>Gastos</button>
     <button class="sn"         onclick="go('guia')"><span class="si">💡</span>Guia</button>
   </nav>
 
@@ -561,8 +562,13 @@ input:focus,select:focus{border-color:var(--muted)}
   <button class="mn" onclick="go('treinos')"><span class="mi">💪</span>Treinos</button>
   <button class="mn" onclick="go('nutricao')"><span class="mi">🥗</span>Nutrição</button>
   <button class="mn" onclick="go('estoque')"><span class="mi">🛒</span>Estoque</button>
+  <button class="mn" onclick="go('gastos')"><span class="mi">💰</span>Gastos</button>
   <button class="mn" onclick="go('evolucao')"><span class="mi">📈</span>Evolução</button>
 </div>
+
+<!-- Voice command FAB -->
+<button id="voice-fab" onclick="startVoice()" title="Comando de voz" aria-label="Comando de voz"
+  style="position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:500;width:52px;height:52px;border-radius:50%;border:none;background:var(--him);color:#08080e;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center">🎤</button>
 
 <!-- Rest timer -->
 <div id="rest-timer">
@@ -1277,8 +1283,8 @@ function getThisWeekSessions(){
 // ══════════════════════════════════════
 function go(tab){
   CT=tab;
-  document.querySelectorAll('.sn').forEach((b,i)=>{const tabs=['dashboard','medidas','registrar','evolucao','treinos','nutricao','estoque','guia'];b.classList.toggle('active',tabs[i]===tab);});
-  document.querySelectorAll('.mn').forEach((b,i)=>{const tabs=['dashboard','medidas','registrar','treinos','nutricao','estoque','evolucao'];b.classList.toggle('active',tabs[i]===tab);});
+  document.querySelectorAll('.sn').forEach((b,i)=>{const tabs=['dashboard','medidas','registrar','evolucao','treinos','nutricao','estoque','gastos','guia'];b.classList.toggle('active',tabs[i]===tab);});
+  document.querySelectorAll('.mn').forEach((b,i)=>{const tabs=['dashboard','medidas','registrar','treinos','nutricao','estoque','gastos','evolucao'];b.classList.toggle('active',tabs[i]===tab);});
   render();
 }
 function saveSetup(){
@@ -1296,11 +1302,11 @@ function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catc
 function render(){
   destroyCharts();
   const d=getD(),p=PROFILES[CP];
-  const tabN={dashboard:'Dashboard',medidas:'Medidas',registrar:'Registrar',evolucao:'Evolução',treinos:'Treinos',nutricao:'Nutrição',estoque:'Estoque 🛒',guia:'Guia'};
+  const tabN={dashboard:'Dashboard',medidas:'Medidas',registrar:'Registrar',evolucao:'Evolução',treinos:'Treinos',nutricao:'Nutrição',estoque:'Estoque 🛒',gastos:'Gastos 💰',guia:'Guia'};
   document.getElementById('tb-title').innerHTML=`<span class="tb-accent">${tabN[CT]||CT}</span>`;
   document.getElementById('tb-sub').textContent=`${p.emoji} ${d.name} · ${d.curW}kg · Meta: ${d.goalW}kg`;
   document.getElementById('tb-badge').textContent=`${d.progress.toFixed(0)}% da meta`;
-  const builders={dashboard:buildDashboard,medidas:buildMedidas,registrar:buildRegistrar,evolucao:buildEvolucao,treinos:buildTreinos,nutricao:buildNutricao,estoque:buildEstoque,guia:buildGuia};
+  const builders={dashboard:buildDashboard,medidas:buildMedidas,registrar:buildRegistrar,evolucao:buildEvolucao,treinos:buildTreinos,nutricao:buildNutricao,estoque:buildEstoque,gastos:buildGastos,guia:buildGuia};
   document.getElementById('content').innerHTML=(builders[CT]||buildDashboard)();
   // Force mobile nav and prog-bar visible on small screens
   const mn=document.getElementById('mobile-nav');
@@ -5167,6 +5173,264 @@ function addWater(ml){
   const cur=parseInt(localStorage.getItem(key)||'0');
   localStorage.setItem(key, Math.max(0,cur+ml));
   render();
+}
+
+// ══════════════════════════════════════
+// GASTOS + SCANNER DE NOTAS (protótipo) + VOZ
+// ══════════════════════════════════════
+const EXPENSE_CATS=['Mercado','Alimentação','Suplementos','Academia','Saúde','Transporte','Outros'];
+const CAT_ICON={Mercado:'🛒',Alimentação:'🍽️',Suplementos:'💊',Academia:'🏋️',Saúde:'🩺',Transporte:'🚗',Outros:'📦'};
+function brl(v){ return 'R$ '+(Number(v)||0).toFixed(2).replace('.',','); }
+function getExpenses(){ try{ return JSON.parse(localStorage.getItem('bt_expenses_'+CP)||'[]'); }catch{ return []; } }
+function saveExpenses(arr){ try{ localStorage.setItem('bt_expenses_'+CP,JSON.stringify(arr)); }catch(e){} }
+function expenseTotal(e){ if(e.total!=null&&!e.items?.length) return Number(e.total)||0; if(e.items&&e.items.length) return e.items.reduce((t,i)=>t+(parseFloat(i.price)||0)*(parseFloat(i.qty)||1),0); return Number(e.total)||0; }
+function addExpense(exp){ const a=getExpenses(); exp.id=exp.id||('e'+Date.now()+Math.random().toString(36).slice(2,6)); exp.date=exp.date||new Date().toISOString(); a.push(exp); saveExpenses(a); }
+function deleteExpense(id){ if(!confirm('Excluir este gasto?'))return; saveExpenses(getExpenses().filter(e=>e.id!==id)); render(); }
+
+function buildGastos(){
+  const ac=PROFILES[CP].accentHex;
+  const exps=getExpenses().slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const now=new Date(); const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const monthExps=exps.filter(e=>(e.date||'').slice(0,7)===ym);
+  const monthTotal=monthExps.reduce((t,e)=>t+expenseTotal(e),0);
+  // por categoria (soma itens pela categoria do item; senão a categoria do gasto)
+  const byCat={};
+  monthExps.forEach(e=>{
+    if(e.items&&e.items.length){ e.items.forEach(i=>{ const c=i.category||e.category||'Outros'; byCat[c]=(byCat[c]||0)+(parseFloat(i.price)||0)*(parseFloat(i.qty)||1); }); }
+    else { const c=e.category||'Outros'; byCat[c]=(byCat[c]||0)+expenseTotal(e); }
+  });
+  const catRows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,v])=>{
+    const pct=monthTotal>0?Math.round(v/monthTotal*100):0;
+    return`<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>${CAT_ICON[c]||'📦'} ${c}</span><span style="font-weight:700">${brl(v)} <span style="color:var(--muted);font-weight:400">· ${pct}%</span></span></div>
+      <div class="bar sm"><div class="fill" style="width:${Math.max(pct,2)}%;background:${ac}"></div></div>
+    </div>`;
+  }).join('')||'<div style="font-size:11px;color:var(--muted)">Nenhum gasto neste mês ainda.</div>';
+
+  const list=exps.slice(0,40).map(e=>{
+    const tot=expenseTotal(e);
+    const d=new Date(e.date);
+    const dStr=isNaN(d)?'':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const itemsHtml=(e.items&&e.items.length)?`<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${e.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);padding:2px 0"><span>${(parseFloat(i.qty)||1)>1?((parseFloat(i.qty)||1)+'x '):''}${i.name}</span><span>${brl((parseFloat(i.price)||0)*(parseFloat(i.qty)||1))}</span></div>`).join('')}</div>`:'';
+    return`<div class="card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:13px;font-weight:700;overflow-wrap:anywhere">${e.store||e.category||'Gasto'}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">${dStr}${e.source==='scan'?' · 📷 nota':''}${e.items&&e.items.length?' · '+e.items.length+' itens':''} · ${CAT_ICON[e.category]||''} ${e.category||''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:800;color:${ac}">${brl(tot)}</div>
+          <button onclick="deleteExpense('${e.id}')" style="margin-top:4px;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:6px;font-size:9px;padding:3px 8px;cursor:pointer">excluir</button>
+        </div>
+      </div>
+      ${itemsHtml}
+    </div>`;
+  }).join('')||'<div class="card" style="text-align:center;padding:26px"><div style="font-size:30px;margin-bottom:6px">🧾</div><div style="font-size:12px;color:var(--sub)">Nenhum gasto ainda. Escaneie uma nota ou adicione manualmente.</div></div>';
+
+  return`<div class="page">
+    <div class="sec-title" style="padding:0 0 14px">💰 Gastos</div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Total do mês</div>
+      <div style="font-size:30px;font-weight:800;color:${ac};line-height:1">${brl(monthTotal)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">${monthExps.length} gasto(s) em ${now.toLocaleDateString('pt-BR',{month:'long'})}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button onclick="openReceiptScan()" style="flex:1;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:11px;font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer">📷 Escanear nota</button>
+      <button onclick="openExpenseManual()" style="flex:1;padding:13px;background:var(--bg4);border:1px solid var(--border2);border-radius:11px;color:var(--text);font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer">+ Adicionar</button>
+    </div>
+    <div class="card-accent" style="margin-bottom:14px;border-color:${ac}28">
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Por categoria (mês)</div>
+      ${catRows}
+    </div>
+    <div class="sec-title" style="padding:4px 0 10px">🧾 Histórico</div>
+    ${list}
+  </div>`;
+}
+
+// ── Scanner de notas (PROTÓTIPO) ──
+let _scanState=null; // {img, items|null, busy, store}
+function openReceiptScan(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.setAttribute('capture','environment');
+  inp.onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) _handleReceiptFile(f); };
+  inp.click();
+}
+function _handleReceiptFile(file){
+  const r=new FileReader();
+  r.onload=()=>{ _scanState={img:r.result,items:null,busy:true,store:''}; _renderScanModal();
+    scanReceipt(r.result).then(res=>{ _scanState.items=res.items; _scanState.store=res.store||''; _scanState.busy=false; _renderScanModal(); })
+      .catch(err=>{ _scanState.busy=false; _scanState.error=(err&&err.message)||'falha'; _renderScanModal(); });
+  };
+  r.readAsDataURL(file);
+}
+// ⚠️ PROTÓTIPO: extração simulada. Para produção, trocar por chamada ao backend (Vercel)
+// que envia a imagem p/ a API da Claude (visão) e devolve {store, items:[{name,qty,price,category}]}.
+// Ex.: return fetch('/api/scan-receipt',{method:'POST',body:JSON.stringify({image:dataUrl})}).then(r=>r.json());
+async function scanReceipt(dataUrl){
+  await new Promise(r=>setTimeout(r,1400)); // simula o processamento da IA
+  return { store:'Supermercado (demo)', items:[
+    {name:'Arroz tipo 1 5kg',       qty:1,   price:27.90, category:'Mercado'},
+    {name:'Feijão carioca 1kg',     qty:2,   price:8.49,  category:'Mercado'},
+    {name:'Peito de frango (kg)',   qty:1.2, price:18.90, category:'Mercado'},
+    {name:'Ovos brancos 20un',      qty:1,   price:17.90, category:'Mercado'},
+    {name:'Banana prata (kg)',      qty:1.5, price:5.99,  category:'Mercado'},
+    {name:'Aveia em flocos 500g',   qty:1,   price:9.49,  category:'Mercado'},
+    {name:'Whey protein 900g',      qty:1,   price:129.90,category:'Suplementos'},
+  ]};
+}
+function _scanClose(){ const el=document.getElementById('scan-modal'); if(el) el.remove(); _scanState=null; }
+function _scanReadInputs(){
+  if(!_scanState||!_scanState.items)return;
+  _scanState.store=(document.getElementById('scan-store')||{}).value||_scanState.store;
+  _scanState.items.forEach((it,i)=>{
+    const n=document.getElementById('sc_n_'+i), q=document.getElementById('sc_q_'+i), p=document.getElementById('sc_p_'+i), c=document.getElementById('sc_c_'+i);
+    if(n) it.name=n.value; if(q) it.qty=parseFloat(q.value)||1; if(p) it.price=parseFloat(p.value)||0; if(c) it.category=c.value;
+  });
+}
+function _scanAddItem(){ _scanReadInputs(); _scanState.items.push({name:'',qty:1,price:0,category:'Mercado'}); _renderScanModal(); }
+function _scanRemoveItem(i){ _scanReadInputs(); _scanState.items.splice(i,1); _renderScanModal(); }
+function _scanSave(){
+  _scanReadInputs();
+  const items=(_scanState.items||[]).filter(i=>i.name&&i.name.trim());
+  if(!items.length){ alert('Nenhum item para salvar.'); return; }
+  // categoria predominante do gasto
+  const catCount={}; items.forEach(i=>{catCount[i.category]=(catCount[i.category]||0)+1;});
+  const mainCat=Object.entries(catCount).sort((a,b)=>b[1]-a[1])[0][0];
+  addExpense({store:_scanState.store||'Nota escaneada',items,category:mainCat,source:'scan'});
+  _scanClose(); render(); showSyncStatus&&showSyncStatus('✓ Nota salva nos gastos','var(--good)');
+}
+function _renderScanModal(){
+  const prev=document.getElementById('scan-modal'); if(prev) prev.remove();
+  const ac=PROFILES[CP].accentHex;
+  const ov=document.createElement('div'); ov.id='scan-modal';
+  ov.style.cssText='position:fixed;inset:0;z-index:660;background:rgba(8,8,14,.85);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
+  let body;
+  if(_scanState.busy){
+    body=`<div style="padding:30px 16px;text-align:center">
+      <img src="${_scanState.img}" style="max-height:180px;border-radius:10px;margin-bottom:14px;opacity:.85"/>
+      <div style="font-size:30px;margin-bottom:8px">🔎</div>
+      <div style="font-size:13px;font-weight:700">Lendo a nota...</div>
+      <div style="font-size:10px;color:var(--warn);margin-top:6px">⚠️ Protótipo — extração de demonstração (sem backend de IA ainda)</div>
+    </div>`;
+  } else if(_scanState.error){
+    body=`<div style="padding:30px 16px;text-align:center"><div style="font-size:28px">⚠️</div><div style="font-size:12px;color:var(--bad);margin-top:8px">Não consegui ler: ${_scanState.error}</div></div>`;
+  } else {
+    const items=_scanState.items||[];
+    const total=items.reduce((t,i)=>t+(parseFloat(i.price)||0)*(parseFloat(i.qty)||1),0);
+    const catOpts=EXPENSE_CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+    body=`
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <img src="${_scanState.img}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0"/>
+        <div style="flex:1;min-width:0"><label class="flabel">Estabelecimento</label>
+          <input id="scan-store" value="${(_scanState.store||'').replace(/"/g,'&quot;')}" placeholder="Mercado" style="width:100%"/></div>
+      </div>
+      <div style="font-size:9px;color:var(--warn);margin-bottom:10px">⚠️ Protótipo: itens de demonstração. Confira e edite antes de salvar.</div>
+      ${items.map((it,i)=>`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:9px;margin-bottom:8px">
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input id="sc_n_${i}" value="${(it.name||'').replace(/"/g,'&quot;')}" placeholder="Item" style="flex:1"/>
+          <button onclick="_scanRemoveItem(${i})" style="width:36px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer">🗑️</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1.2fr 1.4fr;gap:6px">
+          <div><label class="flabel" style="font-size:8px">Qtd</label><input id="sc_q_${i}" type="number" step="0.1" value="${it.qty||1}" style="width:100%;text-align:center"/></div>
+          <div><label class="flabel" style="font-size:8px">Preço R$</label><input id="sc_p_${i}" type="number" step="0.01" value="${it.price||0}" style="width:100%;text-align:center"/></div>
+          <div><label class="flabel" style="font-size:8px">Categoria</label><select id="sc_c_${i}" style="width:100%">${EXPENSE_CATS.map(c=>`<option value="${c}" ${it.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        </div>
+      </div>`).join('')}
+      <button onclick="_scanAddItem()" style="width:100%;padding:10px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer;margin-bottom:6px">+ Adicionar item</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 2px;font-weight:800"><span>Total</span><span style="color:${ac};font-size:18px">${brl(total)}</span></div>`;
+  }
+  const footer=(!_scanState.busy&&!_scanState.error)?`<div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <button onclick="_scanClose()" style="padding:12px 16px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-weight:700;cursor:pointer">Cancelar</button>
+      <button onclick="_scanSave()" style="flex:1;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;text-transform:uppercase;cursor:pointer">💾 Salvar nos gastos</button>
+    </div>`:`<div style="padding:12px 14px;border-top:1px solid var(--border);text-align:right"><button onclick="_scanClose()" style="padding:10px 18px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-weight:700;cursor:pointer">Fechar</button></div>`;
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 40px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">📷 Escanear nota</div>
+      <button onclick="_scanClose()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
+    </div>
+    <div style="padding:14px;overflow-y:auto;flex:1">${body}</div>
+    ${footer}
+  </div>`;
+  ov.addEventListener('click',e=>{ if(e.target===ov) _scanClose(); });
+  document.body.appendChild(ov);
+}
+
+// ── Adicionar gasto manual ──
+function openExpenseManual(){
+  const ac=PROFILES[CP].accentHex;
+  const prev=document.getElementById('exp-modal'); if(prev) prev.remove();
+  const ov=document.createElement('div'); ov.id='exp-modal';
+  ov.style.cssText='position:fixed;inset:0;z-index:660;background:rgba(8,8,14,.85);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:420px;overflow:hidden;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">+ Novo gasto</div>
+      <button onclick="document.getElementById('exp-modal').remove()" style="width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--text);cursor:pointer">✕</button>
+    </div>
+    <div style="padding:14px">
+      <label class="flabel">Descrição / estabelecimento</label>
+      <input id="exp-store" placeholder="Ex: Mercado, farmácia..." style="width:100%;margin-bottom:10px"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><label class="flabel">Valor (R$)</label><input id="exp-total" type="number" step="0.01" placeholder="0,00" style="width:100%"/></div>
+        <div><label class="flabel">Categoria</label><select id="exp-cat" style="width:100%">${EXPENSE_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+      </div>
+      <label class="flabel">Data</label>
+      <input id="exp-date" type="date" value="${getTodayKey()}" style="width:100%;margin-bottom:14px"/>
+      <button onclick="_saveExpenseManual()" style="width:100%;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;text-transform:uppercase;cursor:pointer">💾 Salvar</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+function _saveExpenseManual(){
+  const total=parseFloat(document.getElementById('exp-total').value);
+  if(!(total>0)){ alert('Informe um valor válido.'); return; }
+  const store=(document.getElementById('exp-store').value||'').trim();
+  const cat=document.getElementById('exp-cat').value;
+  const dv=document.getElementById('exp-date').value;
+  const date=dv?new Date(dv+'T12:00:00').toISOString():new Date().toISOString();
+  addExpense({store:store||cat,total,category:cat,source:'manual',date});
+  document.getElementById('exp-modal').remove(); render(); showSyncStatus&&showSyncStatus('✓ Gasto salvo','var(--good)');
+}
+
+// ── Comandos de voz (Web Speech API) ──
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert('Seu navegador não suporta reconhecimento de voz. Use o Chrome (Android/desktop).'); return; }
+  const fab=document.getElementById('voice-fab');
+  const rec=new SR(); rec.lang='pt-BR'; rec.interimResults=false; rec.maxAlternatives=1;
+  if(fab){ fab.textContent='🔴'; fab.style.background='var(--bad)'; }
+  rec.onresult=e=>{ const txt=e.results[0][0].transcript; handleVoiceCommand(txt); };
+  rec.onerror=e=>{ showSyncStatus&&showSyncStatus('🎤 '+(e.error==='not-allowed'?'permita o microfone':'erro: '+e.error),'var(--bad)'); };
+  rec.onend=()=>{ if(fab){ fab.textContent='🎤'; fab.style.background='var(--him)'; } };
+  try{ rec.start(); }catch(e){}
+}
+// Interpreta comandos simples de voz. Retorna o que fez (ou null).
+function parseVoiceCommand(txt){
+  const t=(txt||'').toLowerCase().trim();
+  const num=s=>{ const m=s.match(/(\d+(?:[.,]\d+)?)/); return m?parseFloat(m[1].replace(',','.')):null; };
+  // Água: "água 500", "bebi 2 litros", "500 ml de agua"
+  if(/[aá]gua|litro|\bml\b|bebi/.test(t)){
+    let ml=null; const litros=t.match(/(\d+(?:[.,]\d+)?)\s*(l|litro|litros)\b/); const mls=t.match(/(\d+)\s*ml/);
+    if(mls) ml=parseInt(mls[1]); else if(litros) ml=Math.round(parseFloat(litros[1].replace(',','.'))*1000); else { const n=num(t); if(n) ml=n<=10?Math.round(n*1000):Math.round(n); }
+    if(ml){ return {action:'water',ml,msg:`💧 +${ml}ml de água`}; }
+  }
+  // Gasto: "gastei 50 no mercado", "gasto 30 farmácia", "50 reais mercado"
+  if(/gast|reais|r\$|comprei/.test(t)){
+    const v=num(t);
+    if(v){ let store=t.replace(/.*?(no|na|em|de)\s+/,''); if(store===t) store=''; store=store.replace(/\d+[.,]?\d*\s*(reais|r\$)?/g,'').replace(/gast\w+|comprei/g,'').trim();
+      let cat='Outros'; if(/mercad|supermerc/.test(t))cat='Mercado'; else if(/farm[aá]cia|rem[eé]dio|sa[uú]de/.test(t))cat='Saúde'; else if(/whey|creatina|suplement/.test(t))cat='Suplementos'; else if(/academia|gym/.test(t))cat='Academia'; else if(/uber|gasolina|transporte|[ôo]nibus/.test(t))cat='Transporte'; else if(/comida|lanche|restaurante|ifood/.test(t))cat='Alimentação';
+      return {action:'expense',total:v,store:store||cat,category:cat,msg:`💰 Gasto ${brl(v)} (${cat})`}; }
+  }
+  // Peso: "peso 72", "me pesei 72.5"
+  if(/peso|pesei|pesando/.test(t)){ const v=num(t); if(v&&v>20&&v<400){ return {action:'weight',kg:v,msg:`⚖️ Peso ${v}kg anotado`}; } }
+  return null;
+}
+function handleVoiceCommand(txt){
+  const cmd=parseVoiceCommand(txt);
+  if(!cmd){ showSyncStatus&&showSyncStatus('🎤 Não entendi: "'+txt+'"','var(--warn)'); return; }
+  if(cmd.action==='water'){ addWater(cmd.ml); }
+  else if(cmd.action==='expense'){ addExpense({store:cmd.store,total:cmd.total,category:cmd.category,source:'voz'}); render(); }
+  else if(cmd.action==='weight'){ try{ localStorage.setItem('bt_voice_weight',String(cmd.kg)); }catch(e){} go('registrar'); }
+  showSyncStatus&&showSyncStatus(cmd.msg,'var(--good)');
 }
 
 // ── Food log helpers ──

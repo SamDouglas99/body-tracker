@@ -1,11 +1,11 @@
 // Body Tracker Pro — Service Worker v2
-const CACHE_NAME = 'bodytracker-v2';
+const CACHE_NAME = 'bodytracker-v3';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
-  'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap',
+  'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap',
 ];
 
 // ── INSTALL ──
