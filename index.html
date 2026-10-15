@@ -5568,9 +5568,17 @@ async function _runMigration(){
   showSyncStatus&&showSyncStatus('⏳ Migrando dados...','var(--info)');
   try{
     const r=await migrateFirebaseToSupabase();
-    alert('✅ Migração concluída!\n\nMedidas: '+r.entriesWritten+' novas (de '+r.entriesFound+' encontradas)\nTreinos: '+r.workoutsWritten+' novos (de '+r.workoutsFound+' encontrados)\nPerfil: '+(r.settings?'migrado':'—')+(r.errors?('\n⚠️ Erros: '+r.errors):''));
+    try{ localStorage.removeItem('bt_migration_payload'); localStorage.setItem('bt_migrated','1'); }catch(_){}
+    alert('✅ Migração concluída!\n\nMedidas: '+r.entriesWritten+' novas (de '+r.entriesFound+' encontradas)\nTreinos: '+r.workoutsWritten+' novos (de '+r.workoutsFound+' encontrados)\nPerfil: '+(r.settings?'migrado':'—')+(r.errors?('\n⚠️ Erros: '+r.errors):'')+'\n\n🧹 Dados temporários de migração limpos deste aparelho.');
     render();
   }catch(e){ alert('❌ Falha na migração: '+((e&&e.message)||e)); }
+}
+// Limpa os dados temporários de migração (snapshot) deste aparelho. Dados no Supabase ficam intactos.
+function _clearMigrationData(){
+  if(!confirm('Limpar os dados temporários de migração deste aparelho (o snapshot preparado)?\nSeus dados no Supabase continuam intactos.'))return;
+  try{ localStorage.removeItem('bt_migration_payload'); localStorage.setItem('bt_migrated','1'); }catch(e){}
+  showSyncStatus&&showSyncStatus('🧹 Dados de migração limpos','var(--good)');
+  const el=document.getElementById('settings-modal'); if(el){ closeSettings(); openSettings(); }
 }
 // Fotografa os dados ATUAIS (modo Firebase, convidado OU conta logada) p/ migrar depois.
 // Acumula entre perfis: pode preparar no convidado e também na conta, que junta tudo.
@@ -5930,9 +5938,17 @@ function openSettings(onboarding){
         let html='<div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Atual: <strong style="color:var(--text)">'+status+'</strong></div>';
         html+='<button onclick="_setBackend(\''+toggleTarget+'\')" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;margin-bottom:8px">'+toggleLabel+'</button>';
         if(be==='firebase'){ html+='<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Antes de migrar, entre onde estão seus dados (convidado ou sua conta) e clique abaixo p/ "fotografar":</div><button onclick="_runCapture()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">📦 Preparar meus dados p/ migração</button>'; }
-        if(be==='supabase'){ html+= logged
-          ? '<button onclick="_runMigration()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬆️ Importar meus dados do Firebase</button>'
-          : '<div style="font-size:10px;color:var(--warn);text-align:center">Faça login (Google) pra habilitar a importação</div>'; }
+        if(be==='supabase'){
+          let migd=false; try{ migd=localStorage.getItem('bt_migrated')==='1'; }catch(e){}
+          if(logged){
+            html+= migd
+              ? '<div style="font-size:10px;color:var(--good);margin-bottom:6px">✅ Migração concluída neste aparelho.</div><button onclick="_runMigration()" style="width:100%;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">⬆️ Importar de novo (idempotente)</button>'
+              : '<button onclick="_runMigration()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬆️ Importar meus dados do Firebase</button>';
+            html+= '<button onclick="_clearMigrationData()" style="width:100%;padding:9px;margin-top:6px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">🧹 Limpar dados de migração deste aparelho</button>';
+          } else {
+            html+= '<div style="font-size:10px;color:var(--warn);text-align:center">Faça login (Google) pra habilitar a importação</div>';
+          }
+        }
         return html;
       })()}
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
