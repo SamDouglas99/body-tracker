@@ -1,4 +1,4 @@
-name: Lembretes push
+name: Lembretes push (Supabase)
 
 on:
   schedule:
@@ -12,14 +12,14 @@ jobs:
       - name: Verificar configuração
         id: cfg
         env:
-          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          SR: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           VP: ${{ secrets.VAPID_PRIVATE }}
         run: |
-          if [ -n "$SA" ] && [ -n "$VP" ]; then
+          if [ -n "$SR" ] && [ -n "$VP" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "Secrets ainda nao configurados (FIREBASE_SERVICE_ACCOUNT / VAPID_PRIVATE). Robo em espera — nada a fazer."
+            echo "Secrets ainda nao configurados (SUPABASE_SERVICE_ROLE / VAPID_PRIVATE). Robo em espera — nada a fazer."
           fi
       - uses: actions/checkout@v4
         if: steps.cfg.outputs.ready == 'true'
@@ -35,8 +35,9 @@ jobs:
         if: steps.cfg.outputs.ready == 'true'
         working-directory: scripts
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: node send-reminders.js
+        run: node send-reminders-supabase.js
