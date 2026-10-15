@@ -67,14 +67,21 @@ window._fb={
   async savePushSub(uid,sub){ await setDoc(doc(db,'push_subs',uid),sub); },
   async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} }
 };
-// Escolhe o backend: Firebase (padrão) ou Supabase (localStorage bt_backend='supabase').
+// Escolhe o backend: Supabase (PADRÃO) ou Firebase (plano B: localStorage bt_backend='firebase').
 async function _bootBackend(){
-  window._fbFirebase = window._fb; // guarda o Firebase (fonte da migração de dados)
-  let backend='firebase'; try{ backend=localStorage.getItem('bt_backend')||'firebase'; }catch(e){}
+  window._fbFirebase = window._fb; // guarda o Firebase (plano B / fonte da migração de dados)
+  // Supabase é o padrão p/ usuários logados. Convidado (modo local) usa Firebase,
+  // que lida bem com dados locais sem sessão na nuvem. Flag explícita sempre vence.
+  let backend='supabase';
+  try{
+    const explicit=localStorage.getItem('bt_backend');
+    const guest=localStorage.getItem('bt_guest')==='1';
+    backend = explicit || (guest ? 'firebase' : 'supabase');
+  }catch(e){}
   if(backend==='supabase' && window._buildSupabaseAdapter){
     try{ window._fb = await window._buildSupabaseAdapter(); console.log('Backend ativo: Supabase'); }
-    catch(e){ console.error('Supabase indisponível — mantendo Firebase:', e); }
-  }
+    catch(e){ console.error('Supabase indisponível — caindo para Firebase:', e); /* mantém _fb = Firebase */ }
+  } else { console.log('Backend ativo: Firebase'); }
   if(window._btInit) window._btInit();
 }
 if(document.readyState==="complete"){ _bootBackend(); }
@@ -5745,6 +5752,19 @@ async function _sbDiagnose(){
 }
 window._sbDiagnose=_sbDiagnose;
 function _setBackend(b){ try{ localStorage.setItem('bt_backend',b); }catch(e){} location.reload(); }
+// ── Modo avançado (dono do app) — esconde Backend/Migração dos usuários finais ──
+function _isDev(){ try{ return localStorage.getItem('bt_dev')==='1'; }catch(e){ return false; } }
+let _devTapN=0, _devTapT=null;
+function _devTap(){
+  _devTapN++; clearTimeout(_devTapT); _devTapT=setTimeout(()=>{ _devTapN=0; },1200);
+  if(_devTapN>=7){
+    _devTapN=0;
+    const on=_isDev();
+    try{ if(on) localStorage.removeItem('bt_dev'); else localStorage.setItem('bt_dev','1'); }catch(e){}
+    try{ showSyncStatus(on?'🔧 Modo avançado OFF':'🔧 Modo avançado ON','var(--him)'); }catch(e){}
+    const el=document.getElementById('settings-modal'); if(el){ closeSettings(); openSettings(); }
+  }
+}
 async function _runMigration(){
   if(!confirm('Importar seus dados do Firebase para o Supabase?\nPode rodar de novo sem duplicar.'))return;
   showSyncStatus&&showSyncStatus('⏳ Migrando dados...','var(--info)');
@@ -6108,7 +6128,7 @@ function openSettings(onboarding){
   ov.style.cssText='position:fixed;inset:0;z-index:650;background:rgba(8,8,14,.8);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 13px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
   ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:440px;box-shadow:0 14px 44px rgba(0,0,0,.6);overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 15px 13px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0">
-      <div style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">⚙️ Perfil & Ajustes</div>
+      <div onclick="_devTap()" style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">⚙️ Perfil & Ajustes</div>
       <button onclick="closeSettings()" aria-label="Fechar" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
     <div style="padding:15px">
@@ -6126,15 +6146,16 @@ function openSettings(onboarding){
         <button onclick="exportData()" style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬇️ Exportar backup</button>
         <label style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" onchange="importData(this)" style="display:none"/></label>
       </div>
-      <div style="height:1px;background:var(--border);margin:18px 0"></div>
-      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">☁️ Backend / Migração</div>
       ${(()=>{
-        let be='firebase'; try{be=localStorage.getItem('bt_backend')||'firebase';}catch(e){}
+        if(!_isDev()) return ''; // escondido dos usuários finais (7 toques no título p/ revelar)
+        let be='supabase'; try{be=localStorage.getItem('bt_backend')||'supabase';}catch(e){}
         const logged=!!(window._fb&&window._fb.currentUser&&window._fb.currentUser());
-        const status=be==='supabase'?('Supabase (beta) · login: '+(logged?'ok':'faça o login')):'Firebase';
+        const status=be==='supabase'?('Supabase · login: '+(logged?'ok':'faça o login')):'Firebase (plano B)';
         const toggleTarget=be==='supabase'?'firebase':'supabase';
-        const toggleLabel=be==='supabase'?'↩️ Voltar para Firebase':'☁️ Ativar Supabase (beta)';
-        let html='<div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Atual: <strong style="color:var(--text)">'+status+'</strong></div>';
+        const toggleLabel=be==='supabase'?'↩️ Voltar para Firebase (plano B)':'☁️ Ativar Supabase (padrão)';
+        let html='<div style="height:1px;background:var(--border);margin:18px 0"></div>';
+        html+='<div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🔧 Avançado · Backend (só você vê)</div>';
+        html+='<div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Atual: <strong style="color:var(--text)">'+status+'</strong></div>';
         html+='<button onclick="_setBackend(\''+toggleTarget+'\')" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;margin-bottom:8px">'+toggleLabel+'</button>';
         if(be==='firebase'){ html+='<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Antes de migrar, entre onde estão seus dados (convidado ou sua conta) e clique abaixo p/ "fotografar":</div><button onclick="_runCapture()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">📦 Preparar meus dados p/ migração</button>'; }
         if(be==='supabase'){
@@ -6161,7 +6182,7 @@ function openSettings(onboarding){
         <button onclick="doSignOut()" style="width:100%;padding:11px;background:transparent;border:1px solid var(--bad);border-radius:10px;color:var(--bad);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🚪 Sair da conta</button>
       `:`
         <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Crie uma conta para sincronizar seus dados com segurança em qualquer aparelho.</div>
-        <button onclick="closeSettings();showAuthScreen();" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🔐 Criar conta / Entrar</button>
+        <button onclick="_goCreateAccount()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🔐 Criar conta / Entrar</button>
       `}
       ${!onboarding?`<button onclick="closeSettings()" style="width:100%;padding:12px;margin-top:16px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:11px;font-weight:700;cursor:pointer">Fechar</button>`:''}
     </div>
@@ -6420,7 +6441,9 @@ async function authReset(){
   try{ await window._fb.sendReset(email); authError(''); alert('Enviamos um link de redefinição de senha para '+email); }
   catch(e){ authError(authMsg(e)); }
 }
-function authGuest(){ try{localStorage.setItem('bt_guest','1');}catch(_){} CP='him'; _authUser=null; hideAuthScreen(); _enterApp(); loadUserData(); }
+function authGuest(){ try{localStorage.setItem('bt_guest','1');}catch(_){} location.reload(); /* recarrega p/ o backend reavaliar (convidado → Firebase local) */ }
+// Convidado quer criar conta → sai do modo local e recarrega no Supabase (padrão), mostrando o login.
+function _goCreateAccount(){ try{localStorage.removeItem('bt_guest');}catch(_){} location.reload(); }
 async function doSignOut(){
   if(!confirm('Sair da sua conta? Você poderá entrar de novo depois.')) return;
   try{localStorage.removeItem('bt_guest');}catch(_){}
