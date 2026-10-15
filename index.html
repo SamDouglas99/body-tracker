@@ -1329,6 +1329,7 @@ function render(){
   const mn=document.getElementById('mobile-nav');
   if(window.innerWidth<=720) mn.style.display='flex';
   setTimeout(initCharts,60);
+  if(CT==='treinos'&&woSubTab==='log'&&activeWorkoutType&&activeWorkoutType!=='rest') setTimeout(restoreWoDraftInputs,0);
 }
 
 // ══════════════════════════════════════
@@ -2456,8 +2457,12 @@ function buildWoLog(tabs){
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
           <button onclick="saveWorkoutSession()" style="padding:10px 18px;background:${prog.color};color:#08080e;border:none;border-radius:8px;font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">✅ Salvar</button>
-          <button onclick="activeWorkoutType=null;resetWoStopwatch();render()" style="padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;font-family:var(--font2);font-size:9px;font-weight:700;color:var(--muted);cursor:pointer">✕ Sair</button>
+          <button onclick="exitWorkout()" style="padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;font-family:var(--font2);font-size:9px;font-weight:700;color:var(--muted);cursor:pointer">✕ Sair</button>
         </div>
+    </div>
+    <div id="wo-draft-note" style="display:none;align-items:center;gap:8px;padding:9px 12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);border-radius:10px;margin-bottom:14px">
+      <span style="font-size:16px">↩️</span>
+      <div style="font-size:10px;color:var(--sub);line-height:1.4">Recuperamos o seu <strong style="color:var(--good)">treino em andamento</strong>. Continue de onde parou — nada se perdeu. 💪</div>
     </div>
     ${exCards}
     <div style="margin-top:20px">
@@ -2508,6 +2513,7 @@ function doneSet(exIdx,si,restSecs,exIdxOrName,isWork,prevW,prevR,maxLoad){
     }catch(e){}
     startTimer(restSecs,exName);
   }
+  saveWoDraft();
 }
 
 // ── Vibration helpers ──
@@ -2583,6 +2589,84 @@ function resetWoStopwatch(){
   stopWoStopwatch();
   woStartTime=null;
 }
+
+// ══════════════════════════════════════
+// RASCUNHO DE TREINO EM ANDAMENTO
+// Sobrevive a: tela bloqueada, troca de app, aba morta pelo celular.
+// Só vira registro definitivo quando o usuário toca "Finalizar e Salvar".
+// ══════════════════════════════════════
+function _woDraftKey(){ return 'bt_wo_draft_'+(CP||'him'); }
+function _woDraftFresh(d){ return !!(d && d.savedAt && (Date.now()-d.savedAt) < 16*3600*1000); }
+function loadWoDraft(){ try{ return JSON.parse(localStorage.getItem(_woDraftKey())||'null'); }catch(e){ return null; } }
+function clearWoDraft(){ try{ localStorage.removeItem(_woDraftKey()); }catch(e){} }
+function saveWoDraft(){
+  try{
+    if(!activeWorkoutType||activeWorkoutType==='rest') return;
+    const prog=getWorkoutProgram()[activeWorkoutType];
+    if(!prog) return;
+    if(!document.getElementById('w_0_0')) return; // só na tela de log
+    const inputs={}; let hasData=false;
+    prog.exercises.forEach((ex,ei)=>{
+      ex.sets.forEach((s,si)=>{
+        const w=document.getElementById(`w_${ei}_${si}`)?.value||'';
+        const r=document.getElementById(`r_${ei}_${si}`)?.value||'';
+        const done=document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done')||false;
+        if(w||r||done){ inputs[`${ei}_${si}`]={w,r,done}; hasData=true; }
+      });
+    });
+    if(!hasData){ clearWoDraft(); return; }
+    localStorage.setItem(_woDraftKey(),JSON.stringify({type:activeWorkoutType,program:activeProgram,startTime:woStartTime||Date.now(),savedAt:Date.now(),inputs}));
+  }catch(e){}
+}
+let _woDraftT=null;
+function _woDraftDebounced(){ clearTimeout(_woDraftT); _woDraftT=setTimeout(saveWoDraft,500); }
+// Repõe os valores salvos nos inputs já renderizados (chamado após render do log)
+function restoreWoDraftInputs(){
+  try{
+    const d=loadWoDraft();
+    if(!_woDraftFresh(d)||d.type!==activeWorkoutType) return;
+    if(!document.getElementById('w_0_0')) return;
+    let restored=0;
+    Object.keys(d.inputs||{}).forEach(k=>{
+      const v=d.inputs[k];
+      const wi=document.getElementById('w_'+k), ri=document.getElementById('r_'+k), btn=document.getElementById('btn_'+k), row=document.getElementById('srow_'+k);
+      if(wi&&v.w){ wi.value=v.w; }
+      if(ri&&v.r){ ri.value=v.r; }
+      if(v.done&&btn){ btn.classList.add('done'); btn.textContent='✓'; if(row) row.classList.add('done-row'); }
+      if(v.w||v.r||v.done) restored++;
+    });
+    if(restored){
+      if(d.startTime) woStartTime=d.startTime;
+      const note=document.getElementById('wo-draft-note');
+      if(note){ note.style.display='flex'; }
+    }
+  }catch(e){}
+}
+// Reabre o treino em andamento quando o app volta do zero (aba foi morta)
+function _maybeResumeWorkout(){
+  try{
+    const d=loadWoDraft();
+    if(!_woDraftFresh(d)||!d.type) return;
+    if(d.program && d.program!==activeProgram){ activeProgram=d.program; try{localStorage.setItem('bt_program',String(d.program));}catch(_){ } }
+    if(!getWorkoutProgram()[d.type]) return;
+    activeWorkoutType=d.type;
+    woStartTime=d.startTime||Date.now();
+    CT='treinos'; woSubTab='log';
+    render();
+    showSyncStatus('↩️ Treino em andamento recuperado','var(--good)');
+  }catch(e){}
+}
+// Liga os gatilhos de salvamento uma única vez
+function _wireWoDraft(){
+  if(window._woDraftWired) return; window._woDraftWired=true;
+  document.addEventListener('input',e=>{ if(e.target&&e.target.classList&&e.target.classList.contains('set-inp')) _woDraftDebounced(); },true);
+  // Momento CRÍTICO no celular: a página pode ser morta assim que fica oculta
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) saveWoDraft(); });
+  window.addEventListener('pagehide',saveWoDraft);
+  window.addEventListener('blur',saveWoDraft);
+}
+// Sair do treino de propósito descarta o rascunho
+function exitWorkout(){ clearWoDraft(); activeWorkoutType=null; resetWoStopwatch(); render(); }
 
 // ── Edição rápida de séries diretamente no log ──
 function showQuickEditSets(woKey, exIdx){
@@ -2721,6 +2805,7 @@ function saveWorkoutSession(){
     });
   });
   saveWorkout(session);
+  clearWoDraft();
   stopTimer();
   woSubTab='history';
   render();
@@ -5588,8 +5673,8 @@ window._buildSupabaseAdapter = async function(){
     async getPhotos(){ return []; },
     async savePhotoMeta(){},
     async getPhotoMeta(){ return {photos:[]}; },
-    async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'user_id'})); },
-    async deletePushSub(){ const u=await ensureUid(); if(u) chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); },
+    async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'endpoint'})); },
+    async deletePushSub(_uid,endpoint){ const u=await ensureUid(); if(endpoint){ chk(await sb.from('push_subs').update({disabled:true}).eq('endpoint',endpoint)); } else if(u){ chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); } },
   };
 };
 
@@ -6352,6 +6437,7 @@ function _enterApp(){
   document.getElementById('mobile-nav').className='him-mode';
   if(window.innerWidth<=720) document.getElementById('mobile-nav').style.display='flex';
   setTimeout(()=>{ if(Notification.permission==='granted') scheduleMealReminders(); },2000);
+  _wireWoDraft();
 }
 async function loadUserData(){
   showSyncStatus('⟳ Sincronizando...','var(--info)');
@@ -6380,9 +6466,11 @@ async function loadUserData(){
     _cache.workouts=mergeWorkouts([]);
   }
   render();
+  _maybeResumeWorkout();
   if(!localStorage.getItem('bt_onboarded') && getEntries().length===0){ setTimeout(()=>openSettings(true),700); }
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
+  if(_authUser) _resubscribePushIfGranted();
 }
 window._btInit = function(){
   if(window._btInitDone) return; window._btInitDone=true;
@@ -6444,6 +6532,15 @@ async function savePushSubToCloud(sub){
       await window._fb.savePushSub(u.uid,{ endpoint:j.endpoint, keys:j.keys, uid:u.uid, tzOffset:new Date().getTimezoneOffset(), updatedAt:Date.now() });
     }
   }catch(e){ console.warn('savePushSub falhou:',e); }
+}
+// Re-salva a inscrição DESTE aparelho após o login (garante 1 linha por aparelho
+// no Supabase, mesmo que o SW tenha registrado antes da sessão existir).
+async function _resubscribePushIfGranted(){
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted') return;
+    if(!_swReg){ _swReg = await navigator.serviceWorker.ready.catch(()=>null); }
+    if(_swReg) await subscribePush();
+  }catch(e){}
 }
 async function enableNotifications(){
   if(!('Notification' in window)){ alert('Seu navegador não suporta notificações.'); return; }

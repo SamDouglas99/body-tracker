@@ -62,7 +62,8 @@ const H = { apikey: SERVICE_ROLE, Authorization: 'Bearer ' + SERVICE_ROLE };
     } catch (err) {
       const code = err.statusCode;
       if (code === 404 || code === 410) {
-        await fetch(SUPABASE_URL + '/rest/v1/push_subs?user_id=eq.' + encodeURIComponent(s.user_id), {
+        // Desativa só ESTE aparelho (endpoint), nunca os outros do mesmo usuário
+        await fetch(SUPABASE_URL + '/rest/v1/push_subs?endpoint=eq.' + encodeURIComponent(s.endpoint), {
           method: 'PATCH',
           headers: Object.assign({ 'content-type': 'application/json' }, H),
           body: JSON.stringify({ disabled: true }),
