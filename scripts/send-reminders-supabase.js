@@ -18,6 +18,10 @@ if (!SUPABASE_URL || !SERVICE_ROLE || !VAPID_PUBLIC || !VAPID_PRIVATE) {
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
+// Modo teste (disparo manual com input test=true): envia uma notificação agora,
+// pra todos os inscritos, ignorando o horário dos lembretes.
+const TEST = process.env.TEST_PUSH === 'true' || process.env.TEST_PUSH === '1';
+
 // Lembretes por HORA LOCAL do usuário (0–23). Ajuste à vontade.
 const SLOTS = {
   7:  { title: '☀️ Bom dia, campeão!', body: 'Refeição 1 e suplementos da manhã (D3+K2, B12).' },
@@ -48,8 +52,9 @@ const H = { apikey: SERVICE_ROLE, Authorization: 'Bearer ' + SERVICE_ROLE };
   let sent = 0, expired = 0, skipped = 0;
   for (const s of subs) {
     if (!s || !s.endpoint || !s.keys) { skipped++; continue; }
-    const slot = SLOTS[localHourFor(s.tz_offset)];
-    if (!slot) { skipped++; continue; }
+    let slot;
+    if (TEST) { slot = { title: '🔔 Body Tracker', body: 'Teste de notificação — funcionou! 🎉' }; }
+    else { slot = SLOTS[localHourFor(s.tz_offset)]; if (!slot) { skipped++; continue; } }
     const payload = JSON.stringify({ title: slot.title, body: slot.body, tag: 'reminder', url: './' });
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload);

@@ -3,7 +3,12 @@ name: Lembretes push (Supabase)
 on:
   schedule:
     - cron: '0 * * * *'   # de hora em hora (horário UTC)
-  workflow_dispatch: {}    # permite disparar manualmente para testar
+  workflow_dispatch:       # disparo manual
+    inputs:
+      test:
+        description: 'Enviar notificação de TESTE agora (ignora o horário)'
+        type: boolean
+        default: false
 
 jobs:
   send:
@@ -40,4 +45,5 @@ jobs:
           VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          TEST_PUSH: ${{ inputs.test }}
         run: node send-reminders-supabase.js
