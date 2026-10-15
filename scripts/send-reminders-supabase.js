@@ -17,9 +17,11 @@ const SLOTS = {
   22: { title: '😴 Ceia + sono',       body: 'Refeição 6 e os suplementos do sono.' },
 };
 
-// Janela de captura: casa um slot se o "agora local" caiu até 20 min depois dele.
-// Com cron a cada ~15 min + dedup, cada slot avisa 1x/dia mesmo com atraso do cron.
-const WINDOW_MIN = 20;
+// Janela de captura: casa um slot se o "agora local" caiu até 35 min depois dele.
+// Larga de propósito: com cron a cada 5 min, cada horário é pego por VÁRIAS execuções
+// (e sobrevive a atraso do cron ou a um horário recém-criado); o dedup (last_sent)
+// garante que avisa 1x/dia mesmo sendo pego várias vezes.
+const WINDOW_MIN = 35;
 
 // Minuto local do dia (0..1439) a partir do fuso (offset em minutos, ex.: Brasil=180).
 function localNowFor(tzOffsetMin) {

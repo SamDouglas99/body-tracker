@@ -15,12 +15,13 @@
 --   <SEU_CRON_SECRET> → o MESMO valor que você pôs em CRON_SECRET na Vercel
 -- ============================================================
 
--- (Opcional) remove um agendamento anterior com o mesmo nome:
+-- Se você JÁ tinha agendado a cada 15 min, remova o antigo primeiro:
 -- select cron.unschedule('bt-reminders-15min');
 
+-- A cada 5 min = menos espera e mais chances de pegar cada horário (o dedup evita repetir).
 select cron.schedule(
-  'bt-reminders-15min',
-  '*/15 * * * *',
+  'bt-reminders-5min',
+  '*/5 * * * *',
   $$
     select net.http_post(
       url     := '<SUA_URL_VERCEL>/api/send-reminders',

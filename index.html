@@ -3847,7 +3847,13 @@ async function _remSave(){
   saveMealTimes(meals);
   saveWaterCfg(cfg);
   try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){}
-  showSyncStatus&&showSyncStatus('✓ Horários salvos','var(--good)');
+  // CRÍTICO: o robô lê os horários do Supabase. Garante (await) que chegaram à nuvem
+  // e AVISA se não sincronizou — senão a notificação agendada pode não disparar.
+  let _cloudOk=false;
+  try{ if(window._fb&&window._fb.saveSettings){ await window._fb.saveSettings(CP,getSettings()); _cloudOk=true; } else { _cloudOk=true; } }catch(e){ _cloudOk=false; }
+  if(_cloudOk) showSyncStatus&&showSyncStatus('✓ Horários salvos e sincronizados','var(--good)');
+  else { showSyncStatus&&showSyncStatus('⚠ Salvo no aparelho, mas NÃO sincronizou','var(--warn)');
+    try{ alert('Atenção: os horários foram salvos no aparelho, mas NÃO sincronizaram com a nuvem.\n\nAs notificações agendadas (com o app fechado) dependem da sincronização. Verifique sua conexão e se está logado, e salve de novo.'); }catch(e){} }
   // Confirma com uma notificação real — e garante que as notificações estão ligadas.
   try{
     if(!('Notification' in window)){ /* sem suporte */ }
