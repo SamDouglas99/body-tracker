@@ -4206,6 +4206,12 @@ function buildNutricao(){
         ${[['⚡',Math.round(dayTotals.kcal),'kcal','var(--him)'],['🥩',Math.round(dayTotals.prot)+'g','prot','var(--good)'],['🍚',Math.round(dayTotals.carb)+'g','carb','var(--info)'],['🥑',Math.round(dayTotals.gord)+'g','gord','var(--warn)'],['🌾',Math.round(dayTotals.fibra)+'g','fibra','var(--purple)']].map(([icon,val,lab,col])=>`<div style="background:var(--bg4);border-radius:8px;padding:8px 4px"><div style="font-size:14px">${icon}</div><div style="font-size:13px;font-weight:700;color:${col}">${val}</div><div style="font-size:8px;color:var(--muted)">${lab}</div></div>`).join('')}
       </div>
     </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="width:100%;font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">⚡ Montar dieta rápida por objetivo</span>
+      <button onclick="_quickDiet('gain')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">💪 Ganho</button>
+      <button onclick="_quickDiet('maint')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">⚖️ Manutenção</button>
+      <button onclick="_quickDiet('cut')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">🔥 Definição</button>
+    </div>
     <button onclick="openDietEditor()" style="width:100%;padding:12px;margin-bottom:12px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">✏️ Editar meu plano alimentar</button>
     <div style="display:flex;flex-direction:column;gap:12px">${mealCards}</div>
   </div>`;
@@ -6078,6 +6084,15 @@ function _dietAdd(){ _dietEdit=_readDietEditor(); _dietEdit.push({meal:'Nova ref
 function _dietRemove(i){ _dietEdit=_readDietEditor(); _dietEdit.splice(i,1); _renderDietEditor(); }
 function _dietRestore(){ if(!confirm('Restaurar o plano padrão? Suas edições serão perdidas.'))return; _dietEdit=DEFAULT_MEALS.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
 function _dietLoadPreset(key){ const p=DIET_PRESETS[key]; if(!p)return; if(!confirm('Carregar o preset "'+p.label+'"? As refeições atuais no editor serão substituídas (salve para confirmar).'))return; _dietEdit=p.meals.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
+// Dieta rápida (1 toque): salva direto o plano por objetivo, sem abrir o editor.
+function _quickDiet(key){
+  const map={gain:DIET_PRESETS.gain, cut:DIET_PRESETS.cut, maint:{label:'Manutenção', meals:DEFAULT_MEALS}};
+  const p=map[key]; if(!p||!p.meals)return;
+  if(!confirm('Carregar a dieta "'+p.label+'" como seu plano? (substitui o plano atual — dá pra ajustar depois em Editar plano)'))return;
+  const meals=p.meals.map(m=>({meal:m.meal,icon:m.icon,options:(m.options||[]).slice(),macros:{...m.macros}}));
+  saveDiet(meals, getSupps()); render();
+  showSyncStatus&&showSyncStatus('✓ Dieta "'+p.label+'" carregada','var(--good)');
+}
 function saveDietEditor(){ const meals=_readDietEditor(); if(!meals.length){ alert('Adicione ao menos uma refeição.'); return; } saveDiet(meals,getSupps()); closeDietEditor(); render(); showSyncStatus('✓ Plano salvo','var(--good)'); }
 
 let _suppEdit=null;
