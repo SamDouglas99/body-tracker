@@ -67,8 +67,17 @@ window._fb={
   async savePushSub(uid,sub){ await setDoc(doc(db,'push_subs',uid),sub); },
   async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} }
 };
-if(document.readyState==="complete"){if(window._btInit)window._btInit();}
-else{window.addEventListener("load",()=>{if(window._btInit)window._btInit();});}
+// Escolhe o backend: Firebase (padrão) ou Supabase (localStorage bt_backend='supabase').
+async function _bootBackend(){
+  let backend='firebase'; try{ backend=localStorage.getItem('bt_backend')||'firebase'; }catch(e){}
+  if(backend==='supabase' && window._buildSupabaseAdapter){
+    try{ window._fb = await window._buildSupabaseAdapter(); console.log('Backend ativo: Supabase'); }
+    catch(e){ console.error('Supabase indisponível — mantendo Firebase:', e); }
+  }
+  if(window._btInit) window._btInit();
+}
+if(document.readyState==="complete"){ _bootBackend(); }
+else{ window.addEventListener("load", _bootBackend); }
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -5464,6 +5473,55 @@ function handleVoiceCommand(txt){
   else if(cmd.action==='weight'){ try{ localStorage.setItem('bt_voice_weight',String(cmd.kg)); }catch(e){} go('registrar'); }
   showSyncStatus&&showSyncStatus(cmd.msg,'var(--good)');
 }
+
+// ══════════════════════════════════════
+// SUPABASE — adaptador (Fase 2 da migração). Ativa com localStorage bt_backend='supabase'.
+// Mesma interface do window._fb (Firebase), então o resto do app NÃO muda.
+// ══════════════════════════════════════
+const SUPA_URL='https://diztwwgccioldwwngaea.supabase.co';
+const SUPA_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpenR3d2djY2lvbGR3d25nYWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwMjAyMzcsImV4cCI6MjEwNzU5NjIzN30.UeupuKpuIlp6lsaaLYD_xyiEo1YokT1FM8DLTkblsc4'; // chave ANON (pública, protegida por RLS)
+const _PROFILE_COLS=['name','height','weight','goal','pace','theme','program'];
+function _sbRowToSettings(row){ if(!row) return null; const s={...(row.settings||{})}; _PROFILE_COLS.forEach(k=>{ if(row[k]!=null) s[k]=row[k]; }); if(row.diet!=null) s.diet=row.diet; return s; }
+function _sbSettingsToRow(uid,d){ const row={user_id:uid,settings:{}}; Object.keys(d||{}).forEach(k=>{ if(k==='diet'){ row.diet=d.diet||{}; } else if(_PROFILE_COLS.includes(k)){ row[k]=d[k]; } else { row.settings[k]=d[k]; } }); return row; }
+function _sbCid(row){ const c=row.client_id; if(c==null) return row.id; return /^\d+$/.test(String(c))?Number(c):c; }
+function _sbEntryToRow(uid,e){ const {id,date,weight,...rest}=e; return {user_id:uid, client_id:String(id), date:date||new Date().toISOString(), weight:(weight!=null?weight:null), measures:rest}; }
+function _sbRowToEntry(row){ return {id:_sbCid(row), date:row.date, weight:row.weight, ...(row.measures||{})}; }
+function _sbWorkoutToRow(uid,s){ return {user_id:uid, client_id:String(s.id), date:s.date||new Date().toISOString(), type:s.type, exercises:s.exercises||[], tonnage:(s.tonnage??null), total_sets:(s.totalSets??null), duration:(s.duration??null)}; }
+function _sbRowToWorkout(row){ return {id:_sbCid(row), date:row.date, type:row.type, exercises:row.exercises||[], tonnage:row.tonnage, totalSets:row.total_sets, duration:row.duration}; }
+function _sbMapUser(u){ return u?{uid:u.id, email:u.email, displayName:(u.user_metadata&&(u.user_metadata.name||u.user_metadata.full_name))||''}:null; }
+
+window._buildSupabaseAdapter = async function(){
+  const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sb = mod.createClient(SUPA_URL, SUPA_ANON);
+  let _user=null;
+  sb.auth.getUser().then(r=>{ _user=(r.data&&r.data.user)||null; }).catch(()=>{});
+  const uid=()=> _user&&_user.id;
+  return {
+    _sb: sb,
+    onAuth(cb){ const s=sb.auth.onAuthStateChange((_e,session)=>{ _user=(session&&session.user)||null; cb(_sbMapUser(_user)); }); return ()=>{ try{ s.data.subscription.unsubscribe(); }catch(e){} }; },
+    currentUser(){ return _sbMapUser(_user); },
+    async signUp(email,pass,name){ const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name:name||''}}}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
+    async signIn(email,pass){ const {data,error}=await sb.auth.signInWithPassword({email,password:pass}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
+    async signInGoogle(){ const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}}); if(error) throw error; return null; },
+    async signOutUser(){ await sb.auth.signOut(); _user=null; },
+    async sendReset(email){ const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}); if(error) throw error; },
+    async getSettings(){ const {data}=await sb.from('profiles').select('*').eq('user_id',uid()).maybeSingle(); return _sbRowToSettings(data); },
+    async saveSettings(_p,d){ await sb.from('profiles').upsert(_sbSettingsToRow(uid(),d),{onConflict:'user_id'}); },
+    async getEntries(){ const {data}=await sb.from('entries').select('*').eq('user_id',uid()).order('date'); return (data||[]).map(_sbRowToEntry); },
+    async saveEntry(_p,e){ await sb.from('entries').insert(_sbEntryToRow(uid(),e)); },
+    async getWorkouts(){ const {data}=await sb.from('workouts').select('*').eq('user_id',uid()).order('date'); return (data||[]).map(_sbRowToWorkout); },
+    async saveWorkout(_ns,s){ await sb.from('workouts').insert(_sbWorkoutToRow(uid(),s)); },
+    listenEntries(_p,cb){ this.getEntries().then(cb).catch(()=>{}); return ()=>{}; },   // realtime cross-device: Fase 3
+    listenWorkouts(_ns,cb){ this.getWorkouts().then(cb).catch(()=>{}); return ()=>{}; },
+    async uploadPhoto(){ throw new Error('Fotos no Supabase: Fase 3'); },               // Storage: Fase 3
+    async deletePhoto(){},
+    async getPhotos(){ return []; },
+    async savePhotoMeta(){},
+    async getPhotoMeta(){ return {photos:[]}; },
+    async savePushSub(uid2,sub){ await sb.from('push_subs').upsert({user_id:uid()||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'user_id'}); },
+    async deletePushSub(){ await sb.from('push_subs').update({disabled:true}).eq('user_id',uid()); },
+  };
+};
 
 // ── Food log helpers ──
 function addFoodToLog(){
