@@ -5502,31 +5502,38 @@ window._buildSupabaseAdapter = async function(){
   const sb = mod.createClient(SUPA_URL, SUPA_ANON);
   let _user=null;
   sb.auth.getUser().then(r=>{ _user=(r.data&&r.data.user)||null; }).catch(()=>{});
-  const uid=()=> _user&&_user.id;
+  // Garante o usuário ANTES de gravar/ler (valida/renova a sessão). Evita user_id vazio → RLS rejeitar.
+  async function ensureUid(){
+    if(_user&&_user.id) return _user.id;
+    try{ const r=await sb.auth.getUser(); _user=(r.data&&r.data.user)||null; }catch(e){}
+    return _user&&_user.id;
+  }
+  // O supabase-js NÃO lança em erro de query — checa e lança, pra o backup/retry do app funcionar.
+  const chk=(res)=>{ if(res&&res.error) throw res.error; return res; };
   return {
     _sb: sb,
     onAuth(cb){ const s=sb.auth.onAuthStateChange((_e,session)=>{ _user=(session&&session.user)||null; cb(_sbMapUser(_user)); }); return ()=>{ try{ s.data.subscription.unsubscribe(); }catch(e){} }; },
     currentUser(){ return _sbMapUser(_user); },
     async signUp(email,pass,name){ const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name:name||''}}}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
     async signIn(email,pass){ const {data,error}=await sb.auth.signInWithPassword({email,password:pass}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
-    async signInGoogle(){ const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}}); if(error) throw error; return null; },
+    async signInGoogle(){ const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); if(error) throw error; return null; },
     async signOutUser(){ await sb.auth.signOut(); _user=null; },
     async sendReset(email){ const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}); if(error) throw error; },
-    async getSettings(){ const {data}=await sb.from('profiles').select('*').eq('user_id',uid()).maybeSingle(); return _sbRowToSettings(data); },
-    async saveSettings(_p,d){ await sb.from('profiles').upsert(_sbSettingsToRow(uid(),d),{onConflict:'user_id'}); },
-    async getEntries(){ const {data}=await sb.from('entries').select('*').eq('user_id',uid()).order('date'); return (data||[]).map(_sbRowToEntry); },
-    async saveEntry(_p,e){ await sb.from('entries').insert(_sbEntryToRow(uid(),e)); },
-    async getWorkouts(){ const {data}=await sb.from('workouts').select('*').eq('user_id',uid()).order('date'); return (data||[]).map(_sbRowToWorkout); },
-    async saveWorkout(_ns,s){ await sb.from('workouts').insert(_sbWorkoutToRow(uid(),s)); },
-    listenEntries(_p,cb){ this.getEntries().then(cb).catch(()=>{}); return ()=>{}; },   // realtime cross-device: Fase 3
-    listenWorkouts(_ns,cb){ this.getWorkouts().then(cb).catch(()=>{}); return ()=>{}; },
+    async getSettings(){ const u=await ensureUid(); if(!u) return null; const r=chk(await sb.from('profiles').select('*').eq('user_id',u).maybeSingle()); return _sbRowToSettings(r.data); },
+    async saveSettings(_p,d){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); chk(await sb.from('profiles').upsert(_sbSettingsToRow(u,d),{onConflict:'user_id'})); },
+    async getEntries(){ const u=await ensureUid(); if(!u) return []; const r=chk(await sb.from('entries').select('*').eq('user_id',u).order('date')); return (r.data||[]).map(_sbRowToEntry); },
+    async saveEntry(_p,e){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); chk(await sb.from('entries').insert(_sbEntryToRow(u,e))); },
+    async getWorkouts(){ const u=await ensureUid(); if(!u) return []; const r=chk(await sb.from('workouts').select('*').eq('user_id',u).order('date')); return (r.data||[]).map(_sbRowToWorkout); },
+    async saveWorkout(_ns,s){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); chk(await sb.from('workouts').insert(_sbWorkoutToRow(u,s))); },
+    listenEntries(_p,cb){ this.getEntries().then(cb).catch(e=>console.warn('Supabase getEntries:',e&&e.message)); return ()=>{}; },
+    listenWorkouts(_ns,cb){ this.getWorkouts().then(cb).catch(e=>console.warn('Supabase getWorkouts:',e&&e.message)); return ()=>{}; },
     async uploadPhoto(){ throw new Error('Fotos no Supabase: Fase 3'); },               // Storage: Fase 3
     async deletePhoto(){},
     async getPhotos(){ return []; },
     async savePhotoMeta(){},
     async getPhotoMeta(){ return {photos:[]}; },
-    async savePushSub(uid2,sub){ await sb.from('push_subs').upsert({user_id:uid()||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'user_id'}); },
-    async deletePushSub(){ await sb.from('push_subs').update({disabled:true}).eq('user_id',uid()); },
+    async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'user_id'})); },
+    async deletePushSub(){ const u=await ensureUid(); if(u) chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); },
   };
 };
 
@@ -5950,7 +5957,6 @@ function openSettings(onboarding){
             html+= migd
               ? '<div style="font-size:10px;color:var(--good);margin-bottom:6px">✅ Migração concluída neste aparelho.</div><button onclick="_runMigration()" style="width:100%;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">⬆️ Importar de novo (idempotente)</button>'
               : '<button onclick="_runMigration()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬆️ Importar meus dados do Firebase</button>';
-            html+= '<button onclick="_clearMigrationData()" style="width:100%;padding:9px;margin-top:6px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">🧹 Limpar dados de migração deste aparelho</button>';
           } else {
             html+= '<div style="font-size:10px;color:var(--warn);text-align:center">Faça login (Google) pra habilitar a importação</div>';
           }
