@@ -1180,7 +1180,14 @@ function mergeWorkouts(fbList){
   if(window._fb) missing.forEach(s=>{ window._fb.saveWorkout(CP,s).catch(()=>{}); });
   // mantém no backup apenas os que ainda não estão no Firebase
   saveWorkoutBackup(missing);
-  return [...ordered,...missing].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  missing.forEach(s=>{ byId[s.id]=s; });
+  // Recupera treinos órfãos do modo CONVIDADO (device-local) quando logado — evita subcontagem
+  let guestExtra=[];
+  if(CP!=='him'){
+    try{ JSON.parse(localStorage.getItem('bt_workouts_backup')||'[]')
+      .forEach(s=>{ if(s&&s.id!=null&&!(s.id in byId)){ byId[s.id]=s; guestExtra.push(s); } }); }catch(e){}
+  }
+  return [...ordered,...missing,...guestExtra].sort((a,b)=>new Date(a.date)-new Date(b.date));
 }
 
 // ── Medidas: gravação DURÁVEL (mesmo esquema de backup dos treinos) ──
@@ -5680,13 +5687,16 @@ function buildEvolutionReport(period){
     // Deload check
     const deloadNeeded=checkDeload();
     if(deloadNeeded) improvements.push(`Você treinou ${deloadNeeded} semanas seguidas — semana de deload recomendada! Vá ao Guia para mais detalhes`);
-    // Desequilíbrio
-    const typeCount={pull:0,push:0,legs:0,upper:0,lower:0,a1:0,b1:0,c1:0,a2:0,b2:0,c2:0};
+    // Desequilíbrio — só entre os tipos do PROGRAMA ATIVO (evita falso "0x" de outros programas)
+    const typeCount={}; Object.keys(getWorkoutProgram()).forEach(t=>typeCount[t]=0);
     recentWo.forEach(s=>{if(typeCount[s.type]!==undefined)typeCount[s.type]++;});
-    const minType=Object.entries(typeCount).sort(([,a],[,b])=>a-b)[0];
-    const maxType=Object.entries(typeCount).sort(([,a],[,b])=>b-a)[0];
-    if(maxType[1]>0&&minType[1]<maxType[1]*0.4)
-      improvements.push(`Desequilíbrio: ${getWorkoutProgram()[minType[0]]?.label||minType[0]} com só ${minType[1]}x — equalize o volume`);
+    const _counts=Object.entries(typeCount);
+    if(_counts.length){
+      const minType=_counts.slice().sort(([,a],[,b])=>a-b)[0];
+      const maxType=_counts.slice().sort(([,a],[,b])=>b-a)[0];
+      if(maxType[1]>=3&&minType[1]<maxType[1]*0.4)
+        improvements.push(`Desequilíbrio: ${getWorkoutProgram()[minType[0]]?.label||minType[0]} com só ${minType[1]}x — equalize o volume`);
+    }
   }
 
   return{achievements,improvements,period};
