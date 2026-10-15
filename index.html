@@ -3688,11 +3688,67 @@ function buildMercado(subtabs){
   </div>`;
 }
 
+function buildLembretes(subtabs){
+  const ac=PROFILES[CP].accentHex;
+  const meals=getMealTimes();
+  const wc=getWaterCfg();
+  const hhmm=(h,m)=> String(h).padStart(2,'0')+':'+String(m||0).padStart(2,'0');
+  const mealRows=meals.map((mt,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+    <input type="hidden" id="rt_icon_${i}" value="${(mt.icon||'🍽️')}"/>
+    <span style="font-size:18px">${mt.icon||'🍽️'}</span>
+    <input id="rt_name_${i}" value="${(mt.meal||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0"/>
+    <input id="rt_time_${i}" type="time" value="${hhmm(mt.hour,mt.min)}" style="width:115px"/>
+    <button onclick="_remRemoveMeal(${i})" title="Remover" style="width:34px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer;flex-shrink:0">🗑️</button>
+  </div>`).join('');
+  return `<div class="page">
+    <div class="sec-title" style="padding:0 0 14px">⏰ Lembretes</div>
+    ${subtabs}
+    <div class="card-accent" style="margin-bottom:14px;border-color:${ac}28">
+      <div style="font-size:11px;color:var(--sub);line-height:1.6">Defina os horários das suas refeições e da água. Com o app <strong>aberto</strong>, os lembretes já usam esses horários. Com o app <strong>fechado</strong> (push), passam a usar na próxima atualização do robô.</div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">🍽️ Refeições</div>
+      ${mealRows}
+      <button onclick="_remAddMeal()" style="width:100%;margin-top:10px;padding:10px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar refeição</button>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">💧 Água</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div><label class="flabel">A cada (h)</label><input id="rt_w_every" type="number" min="1" max="6" value="${wc.every}" style="width:100%;text-align:center"/></div>
+        <div><label class="flabel">Das (h)</label><input id="rt_w_start" type="number" min="0" max="23" value="${wc.start}" style="width:100%;text-align:center"/></div>
+        <div><label class="flabel">Até (h)</label><input id="rt_w_end" type="number" min="0" max="23" value="${wc.end}" style="width:100%;text-align:center"/></div>
+      </div>
+      <div style="font-size:9px;color:var(--muted);margin-top:6px">Ex.: a cada 1h, das 8h às 22h.</div>
+    </div>
+    <button onclick="_remSave()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:11px;font-family:var(--font2);font-size:12px;font-weight:800;text-transform:uppercase;cursor:pointer">💾 Salvar horários</button>
+    <button onclick="_remReset()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">↺ Restaurar padrão</button>
+  </div>`;
+}
+function _remReadMeals(){ const out=[]; for(let i=0; document.getElementById('rt_name_'+i); i++){
+  const name=(document.getElementById('rt_name_'+i).value||'').trim();
+  const tv=(document.getElementById('rt_time_'+i).value||'00:00').split(':');
+  const icon=(document.getElementById('rt_icon_'+i)||{}).value||'🍽️';
+  out.push({meal:name||('Refeição '+(i+1)), hour:parseInt(tv[0])||0, min:parseInt(tv[1])||0, icon});
+} return out; }
+function _remAddMeal(){ const m=_remReadMeals(); m.push({meal:'Nova refeição',hour:12,min:0,icon:'🍽️'}); saveMealTimes(m); render(); }
+function _remRemoveMeal(i){ const m=_remReadMeals(); m.splice(i,1); if(!m.length) m.push({meal:'Refeição 1',hour:8,min:0,icon:'🍽️'}); saveMealTimes(m); render(); }
+function _remSave(){
+  saveMealTimes(_remReadMeals());
+  const cfg={ every:Math.max(1,parseInt(document.getElementById('rt_w_every').value)||1),
+    start:Math.min(23,Math.max(0,parseInt(document.getElementById('rt_w_start').value)||8)),
+    end:Math.min(23,Math.max(0,parseInt(document.getElementById('rt_w_end').value)||22)) };
+  saveWaterCfg(cfg);
+  try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){}
+  showSyncStatus&&showSyncStatus('✓ Horários salvos','var(--good)'); render();
+}
+function _remReset(){ if(!confirm('Restaurar os horários padrão?'))return; try{ localStorage.removeItem('bt_meal_times'); localStorage.removeItem('bt_water_cfg'); }catch(e){} _syncReminderCfg(); try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){} render(); }
+
 function buildNutricao(){
-  const subtabs=`<div class="subtabs">${[['plano','📋 Plano Alimentar'],['dieta','📊 Acompanhamento'],['mercado','🛒 Lista do Mercado'],['macros','🥩 Macros & Micros'],['suplementos','💊 Suplementos'],['simulador','⚡ Simulador'],['dicas','💡 Orientações']].map(([k,l])=>`<button class="stab${nuSubTab===k?' active':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
+  const subtabs=`<div class="subtabs">${[['plano','📋 Plano Alimentar'],['dieta','📊 Acompanhamento'],['mercado','🛒 Lista do Mercado'],['macros','🥩 Macros & Micros'],['suplementos','💊 Suplementos'],['lembretes','⏰ Lembretes'],['simulador','⚡ Simulador'],['dicas','💡 Orientações']].map(([k,l])=>`<button class="stab${nuSubTab===k?' active':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
   const d=getD();
   const ac=d.p.accentHex;
   const w=d.curW;
+  if(nuSubTab==='lembretes') return buildLembretes(subtabs);
 
   if(nuSubTab==='dieta'){
     const stats=getMealStats();
@@ -5675,6 +5731,21 @@ const WATER_TIMES=[
 let _mealTimers=[];
 let _waterTimers=[];
 
+// ── Horários de lembrete EDITÁVEIS (localStorage + espelho em settings p/ Supabase) ──
+function getMealTimes(){
+  try{ const v=JSON.parse(localStorage.getItem('bt_meal_times')||'null'); if(Array.isArray(v)&&v.length) return v; }catch(e){}
+  try{ const s=getSettings(); if(s&&s.reminders&&Array.isArray(s.reminders.meals)&&s.reminders.meals.length) return s.reminders.meals; }catch(e){}
+  return MEAL_TIMES;
+}
+function getWaterCfg(){
+  try{ const v=JSON.parse(localStorage.getItem('bt_water_cfg')||'null'); if(v&&v.every) return v; }catch(e){}
+  try{ const s=getSettings(); if(s&&s.reminders&&s.reminders.water&&s.reminders.water.every) return s.reminders.water; }catch(e){}
+  return {every:1,start:8,end:22};
+}
+function _syncReminderCfg(){ try{ const s={...(getSettings()||{})}; s.reminders={meals:getMealTimes(),water:getWaterCfg()}; saveSettings(s); }catch(e){} }
+function saveMealTimes(arr){ try{ localStorage.setItem('bt_meal_times',JSON.stringify(arr)); }catch(e){} _syncReminderCfg(); }
+function saveWaterCfg(cfg){ try{ localStorage.setItem('bt_water_cfg',JSON.stringify(cfg)); }catch(e){} _syncReminderCfg(); }
+
 function scheduleWaterReminders(){
   if(localStorage.getItem('bt_water_reminders')==='off') return;
   _waterTimers.forEach(t=>clearTimeout(t));
@@ -5688,7 +5759,9 @@ function scheduleWaterReminders(){
     'Lembre do 1L durante o treino!',
     'Já tomou água hoje? Beba agora!',
   ];
-  WATER_TIMES.forEach(({hour,min},i)=>{
+  const _wc=getWaterCfg(); const _wtimes=[];
+  for(let h=_wc.start; h<=_wc.end; h+=Math.max(1,_wc.every|0)){ _wtimes.push({hour:h,min:0}); }
+  _wtimes.forEach(({hour,min},i)=>{
     let target=new Date();
     target.setHours(hour,min,0,0);
     if(target-now <= 0) target.setDate(target.getDate()+1);
@@ -5727,7 +5800,7 @@ function scheduleMealReminders(){
   if(!('Notification' in window)||Notification.permission!=='granted') return;
   const now=new Date();
 
-  MEAL_TIMES.forEach(({meal,hour,min,icon})=>{
+  getMealTimes().forEach(({meal,hour,min,icon})=>{
     // Try today first, then tomorrow if already passed
     let target=new Date();
     target.setHours(hour,min,0,0);
