@@ -6169,7 +6169,12 @@ function openSettings(onboarding){
       <button onclick="closeSettings()" aria-label="Fechar" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
     <div style="padding:15px">
-      ${onboarding?`<div style="background:var(--himb);border:1px solid var(--himl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--sub);line-height:1.5">👋 Bem-vindo! Preencha seu perfil para o app calcular seu progresso rumo à meta.</div>`:''}
+      ${onboarding?`<div style="background:var(--himb);border:1px solid var(--himl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--sub);line-height:1.5">👋 Bem-vindo! Escolha seu objetivo e preencha o perfil — o app já configura um treino e uma dieta pra você começar.</div>
+      <div style="font-size:11px;font-weight:800;color:var(--him);margin-bottom:4px">🎯 Qual seu objetivo?</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Sugerimos treino + dieta (dá pra trocar depois em Treinos e Nutrição).</div>
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        ${[['gain','💪','Ganho de massa'],['maint','⚖️','Manutenção'],['cut','🔥','Definição']].map(([k,ic,lbl])=>`<button type="button" class="onb-obj" data-k="${k}" onclick="_onbPickObjective('${k}',this)" style="flex:1;padding:12px 6px;background:${window._onbObjective===k?'var(--himb)':'var(--bg4)'};border:2px solid ${window._onbObjective===k?'var(--him)':'var(--border2)'};border-radius:12px;cursor:pointer;text-align:center"><div style="font-size:22px;line-height:1">${ic}</div><div style="font-size:9px;font-weight:800;color:var(--text);margin-top:5px;font-family:var(--font2)">${lbl}</div></button>`).join('')}
+      </div>`:''}
       ${field('set_name','Seu nome',nameVal,'Como quer ser chamado')}
       ${field('set_height','Altura (m)',s.height||'','ex: 1.75','0.01')}
       ${field('set_goal','Meta de peso (kg)',s.goal||'','ex: 80','0.1')}
@@ -6336,6 +6341,26 @@ function _dietRemove(i){ _dietEdit=_readDietEditor(); _dietEdit.splice(i,1); _re
 function _dietRestore(){ if(!confirm('Restaurar o plano padrão? Suas edições serão perdidas.'))return; _dietEdit=DEFAULT_MEALS.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
 function _dietLoadPreset(key){ const p=DIET_PRESETS[key]; if(!p)return; if(!confirm('Carregar o preset "'+p.label+'"? As refeições atuais no editor serão substituídas (salve para confirmar).'))return; _dietEdit=p.meals.map(m=>({meal:m.meal,icon:m.icon,options:m.options.slice(),macros:{...m.macros}})); _renderDietEditor(); }
 // Dieta rápida (1 toque): salva direto o plano por objetivo, sem abrir o editor.
+// Onboarding: objetivo → treino sugerido + dieta preset, num toque. Robusto (feedback em falha).
+function _onbPickObjective(key, btn){
+  const info={gain:{lbl:'Ganho de massa',prog:3,diet:'gain'}, maint:{lbl:'Manutenção',prog:1,diet:'maint'}, cut:{lbl:'Definição',prog:4,diet:'cut'}};
+  const it=info[key]; if(!it) return;
+  // destaca a card escolhida (sem re-render do modal)
+  try{ document.querySelectorAll('.onb-obj').forEach(b=>{ b.style.borderColor='var(--border2)'; b.style.background='var(--bg4)'; }); if(btn){ btn.style.borderColor='var(--him)'; btn.style.background='var(--himb)'; } }catch(e){}
+  window._onbObjective=key;
+  try{
+    const st={...(getSettings()||{})};
+    // treino sugerido (local + settings p/ sincronizar na conta)
+    activeProgram=it.prog; try{ localStorage.setItem('bt_program',String(activeProgram)); }catch(e){}
+    st.program=activeProgram;
+    // dieta sugerida
+    const map={gain:DIET_PRESETS.gain, cut:DIET_PRESETS.cut, maint:{label:'Manutenção', meals:DEFAULT_MEALS}};
+    const p=map[it.diet];
+    if(p&&p.meals) st.diet={meals:p.meals.map(m=>({meal:m.meal,icon:m.icon,options:(m.options||[]).slice(),macros:{...m.macros}})), supps:(getSupps()||[])};
+    saveSettings(st);
+    showSyncStatus&&showSyncStatus('✓ '+it.lbl+': treino e dieta sugeridos','var(--good)');
+  }catch(e){ showSyncStatus&&showSyncStatus('Não deu p/ aplicar o objetivo — tente de novo','var(--warn)'); }
+}
 function _quickDiet(key){
   const map={gain:DIET_PRESETS.gain, cut:DIET_PRESETS.cut, maint:{label:'Manutenção', meals:DEFAULT_MEALS}};
   const p=map[key]; if(!p||!p.meals)return;
