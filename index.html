@@ -5631,6 +5631,34 @@ async function migrateFirebaseToSupabase(opts){
   return {settings:okS, entriesWritten:okE, workoutsWritten:okW, entriesFound:foundE, workoutsFound:foundW, errors:errs};
 }
 window.migrateFirebaseToSupabase=migrateFirebaseToSupabase;
+// Diagnóstico de sincronização: testa gravar/ler com a SUA sessão e mostra onde falha.
+async function _sbDiagnose(){
+  const sb = window._fb && window._fb._sb;
+  if(!sb){ alert('Diagnóstico: o app não está no modo Supabase.'); return; }
+  const L=[]; let u=null;
+  try{
+    const se=await sb.auth.getSession();
+    const sess=se.data&&se.data.session;
+    L.push('Sessão: '+(sess?('OK · expira '+new Date(sess.expires_at*1000).toLocaleString('pt-BR')):'NENHUMA — faça login'));
+    const ur=await sb.auth.getUser();
+    u=ur.data&&ur.data.user;
+    L.push('Usuário: '+(u?(u.id.slice(0,8)+'… · '+(u.email||'')):'null'+(ur.error?(' — '+ur.error.message):'')));
+  }catch(e){ L.push('Auth exceção: '+(e.message||e)); }
+  if(u){
+    const cid='diag'+Date.now();
+    try{ const ins=await sb.from('workouts').insert({user_id:u.id,client_id:cid,date:new Date().toISOString(),type:'diag',exercises:[]});
+      L.push('Gravar treino: '+(ins.error?('❌ '+ins.error.message+(ins.error.code?(' ['+ins.error.code+']'):'')):'✅ OK')); }catch(e){ L.push('Gravar treino: exceção '+(e.message||e)); }
+    try{ const sel=await sb.from('workouts').select('client_id').eq('client_id',cid);
+      L.push('Ler de volta: '+(sel.error?('❌ '+sel.error.message):((sel.data&&sel.data.length)?'✅ achou':'⚠️ não achou'))); }catch(e){ L.push('Ler: exceção '+(e.message||e)); }
+    try{ await sb.from('workouts').delete().eq('client_id',cid); }catch(e){}
+    try{ const e2=await sb.from('entries').insert({user_id:u.id,client_id:cid,date:new Date().toISOString(),weight:70,measures:{}});
+      L.push('Gravar medida: '+(e2.error?('❌ '+e2.error.message):'✅ OK')); await sb.from('entries').delete().eq('client_id',cid); }catch(e){ L.push('Medida: exceção '+(e.message||e)); }
+  }
+  const txt='🔍 Diagnóstico Supabase\n\n'+L.join('\n');
+  try{ await navigator.clipboard.writeText(txt); }catch(e){}
+  alert(txt+'\n\n(copiado — cole aqui no chat)');
+}
+window._sbDiagnose=_sbDiagnose;
 function _setBackend(b){ try{ localStorage.setItem('bt_backend',b); }catch(e){} location.reload(); }
 async function _runMigration(){
   if(!confirm('Importar seus dados do Firebase para o Supabase?\nPode rodar de novo sem duplicar.'))return;
@@ -6030,6 +6058,7 @@ function openSettings(onboarding){
             html+= migd
               ? '<div style="font-size:10px;color:var(--good);margin-bottom:6px">✅ Migração concluída neste aparelho.</div><button onclick="_runMigration()" style="width:100%;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">⬆️ Importar de novo (idempotente)</button>'
               : '<button onclick="_runMigration()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬆️ Importar meus dados do Firebase</button>';
+            html+= '<button onclick="_sbDiagnose()" style="width:100%;margin-top:6px;padding:9px;background:transparent;border:1px solid var(--info);border-radius:10px;color:var(--info);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">🔍 Diagnóstico de sincronização</button>';
           } else {
             html+= '<div style="font-size:10px;color:var(--warn);text-align:center">Faça login (Google) pra habilitar a importação</div>';
           }
