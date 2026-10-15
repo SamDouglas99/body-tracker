@@ -69,6 +69,7 @@ window._fb={
 };
 // Escolhe o backend: Firebase (padrão) ou Supabase (localStorage bt_backend='supabase').
 async function _bootBackend(){
+  window._fbFirebase = window._fb; // guarda o Firebase (fonte da migração de dados)
   let backend='firebase'; try{ backend=localStorage.getItem('bt_backend')||'firebase'; }catch(e){}
   if(backend==='supabase' && window._buildSupabaseAdapter){
     try{ window._fb = await window._buildSupabaseAdapter(); console.log('Backend ativo: Supabase'); }
@@ -5523,6 +5524,51 @@ window._buildSupabaseAdapter = async function(){
   };
 };
 
+// ── Migração Firebase → Supabase (Fase 4) — idempotente (rodar 2x não duplica) ──
+async function migrateFirebaseToSupabase(opts){
+  opts=opts||{};
+  const target=window._fb;            // Supabase (backend ativo)
+  const source=window._fbFirebase;    // Firebase (fonte dos dados antigos)
+  const u=target&&target.currentUser&&target.currentUser();
+  if(!u||!u.uid) throw new Error('Faça login no Supabase (Google) antes de migrar.');
+  if(!source||!source.getWorkouts) throw new Error('Firebase indisponível como fonte.');
+  const profiles=opts.profiles||['him'];
+  let settings=null, entries=[], workouts=[];
+  for(const p of profiles){
+    try{ const s=await source.getSettings(p); if(s&&!settings) settings=s; }catch(e){}
+    try{ const e=await source.getEntries(p); if(Array.isArray(e)) entries=entries.concat(e); }catch(e){}
+    try{ const w=await source.getWorkouts(p); if(Array.isArray(w)) workouts=workouts.concat(w); }catch(e){}
+  }
+  // + backups locais deste aparelho (qualquer perfil) — captura o que o Firebase não devolveu
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+    if(/^bt_entries_backup_/.test(k)){ try{ entries=entries.concat(JSON.parse(localStorage.getItem(k)||'[]')); }catch(_){} }
+    else if(/^bt_workouts_backup/.test(k)){ try{ workouts=workouts.concat(JSON.parse(localStorage.getItem(k)||'[]')); }catch(_){} }
+    else if(!settings && /^bt_settings_/.test(k)){ try{ settings=JSON.parse(localStorage.getItem(k)||'null'); }catch(_){} }
+  } }catch(e){}
+  const dedup=a=>{ const m={},o=[]; a.forEach(x=>{ if(x&&x.id!=null){ if(!m[x.id]){m[x.id]=1;o.push(x);} } else if(x) o.push(x); }); return o; };
+  entries=dedup(entries); workouts=dedup(workouts);
+  const foundE=entries.length, foundW=workouts.length;
+  // idempotência: pula o que já existe no Supabase
+  try{ const exE=await target.getEntries(); const h=new Set((exE||[]).map(x=>String(x.id))); entries=entries.filter(e=>!h.has(String(e.id))); }catch(e){}
+  try{ const exW=await target.getWorkouts(); const h=new Set((exW||[]).map(x=>String(x.id))); workouts=workouts.filter(w=>!h.has(String(w.id))); }catch(e){}
+  let okS=0,okE=0,okW=0,errs=0;
+  if(settings){ try{ await target.saveSettings(u.uid,settings); okS=1; }catch(e){ errs++; } }
+  for(const e of entries){ try{ await target.saveEntry(u.uid,e); okE++; }catch(_){ errs++; } }
+  for(const w of workouts){ try{ await target.saveWorkout(u.uid,w); okW++; }catch(_){ errs++; } }
+  return {settings:okS, entriesWritten:okE, workoutsWritten:okW, entriesFound:foundE, workoutsFound:foundW, errors:errs};
+}
+window.migrateFirebaseToSupabase=migrateFirebaseToSupabase;
+function _setBackend(b){ try{ localStorage.setItem('bt_backend',b); }catch(e){} location.reload(); }
+async function _runMigration(){
+  if(!confirm('Importar seus dados do Firebase para o Supabase?\nPode rodar de novo sem duplicar.'))return;
+  showSyncStatus&&showSyncStatus('⏳ Migrando dados...','var(--info)');
+  try{
+    const r=await migrateFirebaseToSupabase();
+    alert('✅ Migração concluída!\n\nMedidas: '+r.entriesWritten+' novas (de '+r.entriesFound+' encontradas)\nTreinos: '+r.workoutsWritten+' novos (de '+r.workoutsFound+' encontrados)\nPerfil: '+(r.settings?'migrado':'—')+(r.errors?('\n⚠️ Erros: '+r.errors):''));
+    render();
+  }catch(e){ alert('❌ Falha na migração: '+((e&&e.message)||e)); }
+}
+
 // ── Food log helpers ──
 function addFoodToLog(){
   const food=document.getElementById('food-select')?.value;
@@ -5851,6 +5897,21 @@ function openSettings(onboarding){
         <label style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" onchange="importData(this)" style="display:none"/></label>
       </div>
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">☁️ Backend / Migração</div>
+      ${(()=>{
+        let be='firebase'; try{be=localStorage.getItem('bt_backend')||'firebase';}catch(e){}
+        const logged=!!(window._fb&&window._fb.currentUser&&window._fb.currentUser());
+        const status=be==='supabase'?('Supabase (beta) · login: '+(logged?'ok':'faça o login')):'Firebase';
+        const toggleTarget=be==='supabase'?'firebase':'supabase';
+        const toggleLabel=be==='supabase'?'↩️ Voltar para Firebase':'☁️ Ativar Supabase (beta)';
+        let html='<div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Atual: <strong style="color:var(--text)">'+status+'</strong></div>';
+        html+='<button onclick="_setBackend(\''+toggleTarget+'\')" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;margin-bottom:8px">'+toggleLabel+'</button>';
+        if(be==='supabase'){ html+= logged
+          ? '<button onclick="_runMigration()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬆️ Importar meus dados do Firebase</button>'
+          : '<div style="font-size:10px;color:var(--warn);text-align:center">Faça login (Google) pra habilitar a importação</div>'; }
+        return html;
+      })()}
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
       <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🔔 Notificações</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Lembretes de refeição, água e treino. Status: <strong style="color:${ns.color}">${ns.label}</strong></div>
       ${ns.on?`<div style="font-size:10px;color:var(--good);line-height:1.5">✓ Ativas. Para receber com o app fechado no iPhone, adicione o app à Tela de Início.</div>`:`<button onclick="enableNotifications()" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🔔 Ativar notificações</button>`}
@@ -6175,8 +6236,12 @@ window._btInit = function(){
     }
   });
 };
-if(window._fb){window._btInit();}
-else{let t=0;const w=setInterval(()=>{t++;if(window._fb){clearInterval(w);window._btInit();}else if(t>30){clearInterval(w);CP='him';_cache.settings.him={weight:63,goal:80,height:1.71};_enterApp();render();}},100);}
+// _bootBackend (no módulo) é o caminho primário de init. Aqui só um fallback de timeout:
+// se o backend não inicializar em ~3s (ex.: CDN bloqueado), entra em modo convidado local.
+{let t=0;const w=setInterval(()=>{t++;
+  if(window._btInitDone){clearInterval(w);return;}
+  if(t>30){clearInterval(w);if(!window._btInitDone){CP='him';_cache.settings.him={weight:63,goal:80,height:1.71};_enterApp();render();}}
+},100);}
 
 // ── Service Worker + Web Push ──
 const VAPID_PUBLIC_KEY = 'BMjMbNe5MZME1O2BkO8w3L6SnHy447txtp1bk3GrLT4Y02pvFgR15xMeppS6W0f-8adrAapqLIoc5JBGk2wHBfg';
