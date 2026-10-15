@@ -6504,8 +6504,63 @@ async function authReset(){
   catch(e){ authError(authMsg(e)); }
 }
 function authGuest(){ try{localStorage.setItem('bt_guest','1');}catch(_){} location.reload(); /* recarrega p/ o backend reavaliar (convidado → Firebase local) */ }
-// Convidado quer criar conta → sai do modo local e recarrega no Supabase (padrão), mostrando o login.
-function _goCreateAccount(){ try{localStorage.removeItem('bt_guest');}catch(_){} location.reload(); }
+// Convidado quer criar conta → fotografa os dados do teste (pra não perder), marca p/ importar
+// depois do login, sai do modo local e recarrega no Supabase (padrão), mostrando o login.
+function _goCreateAccount(){
+  try{
+    _captureForMigration(); // snapshot em bt_migration_payload (sobrevive ao reload)
+    let pl={}; try{ pl=JSON.parse(localStorage.getItem('bt_migration_payload')||'{}'); }catch(e){}
+    const s=pl.settings||{};
+    const temDados=(Array.isArray(pl.entries)&&pl.entries.length>0)||(Array.isArray(pl.workouts)&&pl.workouts.length>0)||!!(s.diet||s.program||s.name||s.goal||s.reminders);
+    if(temDados) localStorage.setItem('bt_pending_guest_import','1');
+  }catch(e){}
+  try{localStorage.removeItem('bt_guest');}catch(_){}
+  location.reload();
+}
+// Depois do login numa conta Supabase VAZIA, traz os dados do teste (convidado) — idempotente e à prova de falha.
+async function _maybeImportGuestData(){
+  try{
+    if(localStorage.getItem('bt_pending_guest_import')!=='1') return;
+    if(window._importingGuest) return;
+    const isSupa=!!(window._fb&&window._fb._sb);
+    const u=window._fb&&window._fb.currentUser&&window._fb.currentUser();
+    if(!isSupa||!u||!u.uid) return; // ainda não logado — tenta no próximo load
+    let pl={}; try{ pl=JSON.parse(localStorage.getItem('bt_migration_payload')||'{}'); }catch(e){}
+    const temDados=(Array.isArray(pl.entries)&&pl.entries.length>0)||(Array.isArray(pl.workouts)&&pl.workouts.length>0)||!!pl.settings;
+    if(!temDados){ try{ localStorage.removeItem('bt_pending_guest_import'); }catch(e){} return; } // nada p/ trazer
+    // Pede o OK uma vez; em retry (já consentido) importa sem perguntar de novo. A migração
+    // é IDEMPOTENTE (pula o que já existe por id), então rodar de novo é seguro.
+    const consented=localStorage.getItem('bt_guest_import_ok')==='1';
+    if(!consented){
+      if(!confirm('Encontramos os dados do seu teste (modo convidado).\n\nTrazer para a sua conta agora? Nada se perde.')){ try{ localStorage.removeItem('bt_pending_guest_import'); }catch(e){} return; }
+      try{ localStorage.setItem('bt_guest_import_ok','1'); }catch(e){}
+    }
+    window._importingGuest=true;
+    showSyncStatus&&showSyncStatus('⏳ Trazendo seus dados...','var(--info)');
+    try{
+      const res=await migrateFirebaseToSupabase();
+      // recarrega o que entrou (sem recursão em loadUserData)
+      try{ _cache.entries[CP]=mergeEntries(CP, await window._fb.getEntries(CP)); _cache.workouts=mergeWorkouts(await window._fb.getWorkouts(CP)); const st=await window._fb.getSettings(CP); if(st) _cache.settings[CP]=st; }catch(e){}
+      render();
+      const wrote=(res.entriesWritten>0)||(res.workoutsWritten>0)||!!res.settings;
+      const tinha=(res.entriesFound>0)||(res.workoutsFound>0);
+      if(res.errors>0 || (tinha && !wrote)){
+        // Falha total/parcial → MANTÉM flag+payload p/ nova tentativa (consent já dado = silenciosa)
+        showSyncStatus&&showSyncStatus('⚠ Importação incompleta — tentaremos de novo','var(--warn)');
+        try{ alert('Trouxemos parte dos seus dados, mas alguns itens falharam ('+res.errors+').\n\nMedidas: '+res.entriesWritten+' · Treinos: '+res.workoutsWritten+'\n\nSeus dados do teste CONTINUAM guardados — reabra o app com internet que buscamos o resto. Nada foi perdido.'); }catch(_){}
+      } else {
+        // Sucesso total → limpa
+        try{ localStorage.removeItem('bt_pending_guest_import'); localStorage.removeItem('bt_migration_payload'); localStorage.removeItem('bt_guest_import_ok'); localStorage.setItem('bt_migrated','1'); }catch(e){}
+        try{ alert('✅ Prontinho! Seus dados do teste foram trazidos:\n\nMedidas: '+res.entriesWritten+'\nTreinos: '+res.workoutsWritten+'\nPerfil: '+(res.settings?'ok':'—')); }catch(_){}
+      }
+    }catch(e){
+      // Exceção dura → NÃO limpa nada (retry depois)
+      showSyncStatus&&showSyncStatus('⚠ Não deu p/ importar agora','var(--warn)');
+      try{ alert('Não conseguimos trazer os dados agora:\n'+((e&&e.message)||e)+'\n\nSeus dados do teste estão guardados. Reabra o app (com internet e logado) que tentamos de novo.'); }catch(_){}
+    } finally { window._importingGuest=false; }
+  }catch(e){}
+}
+window._maybeImportGuestData=_maybeImportGuestData;
 async function doSignOut(){
   if(!confirm('Sair da sua conta? Você poderá entrar de novo depois.')) return;
   try{localStorage.removeItem('bt_guest');}catch(_){}
@@ -6552,7 +6607,8 @@ async function loadUserData(){
   }
   render();
   _maybeResumeWorkout();
-  if(!localStorage.getItem('bt_onboarded') && getEntries().length===0){ setTimeout(()=>openSettings(true),700); }
+  _maybeImportGuestData(); // traz dados do teste (convidado) após login, se houver
+  if(!localStorage.getItem('bt_onboarded') && getEntries().length===0 && localStorage.getItem('bt_pending_guest_import')!=='1'){ setTimeout(()=>openSettings(true),700); }
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
   if(_authUser) _resubscribePushIfGranted();
