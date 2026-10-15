@@ -3837,10 +3837,14 @@ function _remReadMeals(){ const out=[]; for(let i=0; document.getElementById('rt
 function _remAddMeal(){ const m=_remReadMeals(); m.push({meal:'Nova refeição',hour:12,min:0,icon:'🍽️'}); saveMealTimes(m); render(); }
 function _remRemoveMeal(i){ const m=_remReadMeals(); m.splice(i,1); if(!m.length) m.push({meal:'Refeição 1',hour:8,min:0,icon:'🍽️'}); saveMealTimes(m); render(); }
 async function _remSave(){
-  saveMealTimes(_remReadMeals());
+  const meals=_remReadMeals();
   const cfg={ every:Math.max(1,parseInt(document.getElementById('rt_w_every').value)||1),
     start:Math.min(23,Math.max(0,parseInt(document.getElementById('rt_w_start').value)||8)),
     end:Math.min(23,Math.max(0,parseInt(document.getElementById('rt_w_end').value)||22)) };
+  // Caixa de confirmação (igual à do treino), com um resumo do que vai ser salvo
+  const _lista=meals.map(m=>`${m.icon||'🍽️'} ${m.meal} ${String(m.hour).padStart(2,'0')}:${String(m.min||0).padStart(2,'0')}`).join('\n');
+  if(!confirm(`Salvar estes lembretes?\n\n${_lista}\n💧 Água a cada ${cfg.every}h (${cfg.start}h–${cfg.end}h)`)) return;
+  saveMealTimes(meals);
   saveWaterCfg(cfg);
   try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){}
   showSyncStatus&&showSyncStatus('✓ Horários salvos','var(--good)');
