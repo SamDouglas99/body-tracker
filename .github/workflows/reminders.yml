@@ -2,7 +2,7 @@ name: Lembretes push (Supabase)
 
 on:
   schedule:
-    - cron: '0 * * * *'   # de hora em hora (horário UTC)
+    - cron: '*/15 * * * *'   # a cada 15 min (UTC) — honra horários com minutos (ex.: 09:10)
   workflow_dispatch:       # disparo manual
     inputs:
       test:

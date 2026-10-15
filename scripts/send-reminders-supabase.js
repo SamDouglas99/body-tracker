@@ -1,6 +1,7 @@
 // Body Tracker — enviador de lembretes push (versão SUPABASE)
-// Roda no GitHub Actions (de hora em hora). Lê push_subs do Supabase com a SERVICE ROLE
-// (bypassa RLS) e envia web-push nos horários locais de cada usuário.
+// Roda no GitHub Actions (a cada 15 min). Lê push_subs do Supabase com a SERVICE ROLE
+// (bypassa RLS) e envia web-push nos horários locais de cada usuário (com minutos).
+// Dedup por aparelho/dia via push_subs.last_sent (schema-04) — 1 aviso por slot por dia.
 // Sem dependência do Supabase SDK: usa a REST API via fetch (Node 20+ tem fetch global).
 //
 // INDIVIDUALIDADE: cada usuário recebe nos SEUS horários (profiles.settings.reminders,
@@ -18,38 +19,65 @@ const SLOTS = {
   22: { title: '😴 Ceia + sono',       body: 'Refeição 6 e os suplementos do sono.' },
 };
 
-function localHourFor(tzOffsetMin) {
+// Janela de captura: o cron roda a cada 15 min; 20 min dá folga p/ atrasos do GitHub Actions.
+// A deduplicação (push_subs.last_sent) garante que cada slot avisa só 1x por dia.
+const WINDOW_MIN = 20;
+
+// Minuto local do dia (0..1439) a partir do fuso (offset em minutos, ex.: Brasil=180).
+function localNowFor(tzOffsetMin) {
   const now = new Date();
   const utcMin = now.getUTCHours() * 60 + now.getUTCMinutes();
   const off = Number.isFinite(tzOffsetMin) ? tzOffsetMin : 180; // padrão UTC-3 (Brasil)
-  const localMin = (((utcMin - off) % 1440) + 1440) % 1440;
-  return Math.floor(localMin / 60);
+  return (((utcMin - off) % 1440) + 1440) % 1440;
+}
+function localHourFor(tzOffsetMin) { return Math.floor(localNowFor(tzOffsetMin) / 60); }
+
+// Data local do usuário (YYYY-MM-DD) — chave do dia p/ deduplicar envios.
+function localDayKeyFor(tzOffsetMin) {
+  const off = Number.isFinite(tzOffsetMin) ? tzOffsetMin : 180;
+  return new Date(Date.now() - off * 60000).toISOString().slice(0, 10);
 }
 
-// O que mandar para ESTE usuário nesta HORA local.
-// - Se ele tem lembretes personalizados (reminders): respeita refeições + intervalo de água.
-// - Senão: usa o SLOTS padrão (comportamento antigo).
-// Refeição tem prioridade sobre água quando caem na mesma hora (evita push duplo).
-function plannedForHour(reminders, hour) {
+// Slots do dia (minuto do dia + mensagem) a partir dos lembretes do usuário.
+// Sem config → SLOTS padrão. prio: refeição(2) > água(1) p/ desempate no mesmo minuto.
+function slotsFor(reminders) {
+  const out = [];
   const hasCustom = reminders && (Array.isArray(reminders.meals) || reminders.water);
   if (hasCustom) {
-    const meals = Array.isArray(reminders.meals) ? reminders.meals : [];
-    const m = meals.find(x => x && Number(x.hour) === hour);
-    if (m) return { title: `${m.icon || '🍽️'} ${m.meal || 'Refeição'}`, body: 'Hora da refeição — confira seu plano alimentar. 💪' };
+    (Array.isArray(reminders.meals) ? reminders.meals : []).forEach(m => {
+      if (m && Number.isFinite(+m.hour)) {
+        const min = Number.isFinite(+m.min) ? +m.min : 0;
+        out.push({ key: 'm' + (+m.hour) + ':' + min, mod: (+m.hour) * 60 + min, prio: 2,
+          title: (m.icon || '🍽️') + ' ' + (m.meal || 'Refeição'), body: 'Hora da refeição — confira seu plano alimentar. 💪' });
+      }
+    });
     const w = reminders.water;
     if (w) {
       const every = Math.max(1, parseInt(w.every) || 1);
       const start = parseInt(w.start), end = parseInt(w.end);
-      if (Number.isFinite(start) && Number.isFinite(end) && hour >= start && hour <= end && ((hour - start) % every) === 0) {
-        return { title: '💧 Hora da água', body: 'Bora manter a meta de água de hoje! 💧' };
+      if (Number.isFinite(start) && Number.isFinite(end)) {
+        for (let h = start; h <= end; h += every) {
+          out.push({ key: 'w' + h, mod: h * 60, prio: 1, title: '💧 Hora da água', body: 'Bora manter a meta de água de hoje! 💧' });
+        }
       }
     }
-    return null;
+  } else {
+    Object.keys(SLOTS).forEach(h => { out.push({ key: 's' + h, mod: (+h) * 60, prio: 1, title: SLOTS[h].title, body: SLOTS[h].body }); });
   }
-  return SLOTS[hour] || null;
+  return out;
 }
 
-module.exports = { SLOTS, localHourFor, plannedForHour };
+// Slot "vencido" agora: minuto do slot dentro de (nowMod - janela, nowMod]. Pega o mais recente;
+// empate no mesmo minuto → refeição ganha da água. null se nada no intervalo.
+function dueSlotFor(reminders, nowMod, windowMin) {
+  const win = windowMin || WINDOW_MIN;
+  const cand = slotsFor(reminders).filter(s => s.mod <= nowMod && (nowMod - s.mod) < win);
+  if (!cand.length) return null;
+  cand.sort((a, b) => (b.mod - a.mod) || (b.prio - a.prio));
+  return cand[0];
+}
+
+module.exports = { SLOTS, WINDOW_MIN, localNowFor, localHourFor, localDayKeyFor, slotsFor, dueSlotFor };
 
 // ── Execução (só quando rodado direto: node send-reminders-supabase.js) ──
 if (require.main === module) {
@@ -95,16 +123,29 @@ if (require.main === module) {
       } catch (e) { console.warn('Falha ao ler horários personalizados (usando padrão):', e.message); }
     }
 
-    let sent = 0, expired = 0, skipped = 0;
+    let sent = 0, expired = 0, skipped = 0, deduped = 0;
     for (const s of subs) {
       if (!s || !s.endpoint || !s.keys) { skipped++; continue; }
-      let slot;
+      let slot, dedupeKey = null;
       if (TEST) { slot = { title: '🔔 Body Tracker', body: 'Teste de notificação — funcionou! 🎉' }; }
-      else { slot = plannedForHour(remindersByUser[s.user_id], localHourFor(s.tz_offset)); if (!slot) { skipped++; continue; } }
+      else {
+        const due = dueSlotFor(remindersByUser[s.user_id], localNowFor(s.tz_offset));
+        if (!due) { skipped++; continue; }
+        dedupeKey = localDayKeyFor(s.tz_offset) + ':' + due.key;
+        if (s.last_sent === dedupeKey) { deduped++; continue; } // já avisou esse slot hoje
+        slot = due;
+      }
       const payload = JSON.stringify({ title: slot.title, body: slot.body, tag: 'reminder', url: './' });
       try {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload);
         sent++;
+        if (dedupeKey) {
+          await fetch(SUPABASE_URL + '/rest/v1/push_subs?endpoint=eq.' + encodeURIComponent(s.endpoint), {
+            method: 'PATCH',
+            headers: Object.assign({ 'content-type': 'application/json' }, H),
+            body: JSON.stringify({ last_sent: dedupeKey }),
+          }).catch(() => {});
+        }
       } catch (err) {
         const code = err.statusCode;
         if (code === 404 || code === 410) {
@@ -120,6 +161,6 @@ if (require.main === module) {
         }
       }
     }
-    console.log(`Enviados: ${sent} · expirados: ${expired} · pulados: ${skipped}`);
+    console.log(`Enviados: ${sent} · expirados: ${expired} · pulados: ${skipped} · dedupe: ${deduped}`);
   })().catch(e => { console.error(e); process.exit(1); });
 }

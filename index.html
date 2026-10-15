@@ -1024,7 +1024,7 @@ const WEEK_SCHEDULE = [
 const _PROFILES = {
   him:{
     id:'him',name:'Você',emoji:'👨',accentHex:'#e2e240',
-    initialWeight:63,goalWeight:80,height:1.71,isLoss:false,
+    initialWeight:0,goalWeight:0,height:0,isLoss:false,
     measurements:[
       {key:'weight',label:'Peso',unit:'kg',icon:'⚖️',priority:false,target:80},
       // Tronco — coef 0.47 → peito ~103, ombros ~122, cintura ~79
@@ -1228,22 +1228,26 @@ function getD(){
   const p=PROFILES[CP],s=getSettings(),entries=getEntries();
   // Linha de base = primeiro peso realmente registrado (mais fiel que o peso das configurações)
   const firstEntryW=(()=>{for(const e of entries){if(e.weight!=null&&e.weight!=='')return parseFloat(e.weight);}return null;})();
-  const initW=firstEntryW!=null?firstEntryW:(s?.weight||p.initialWeight||60);
-  const goalW=s?.goal||p.goalWeight||55;
-  const h=s?.height||p.height||1.65;
+  // Novo usuário começa do ZERO — nada do perfil de referência vaza (sem peso/meta fixos).
+  const hasWeight=firstEntryW!=null||(s&&s.weight!=null&&s.weight!=='');
+  const hasGoal=!!(s&&s.goal!=null&&s.goal!=='');
+  const initW=firstEntryW!=null?firstEntryW:(hasWeight?parseFloat(s.weight):0);
+  const goalW=hasGoal?parseFloat(s.goal):0;
+  const h=(s&&s.height)?parseFloat(s.height):0;
   const latest=entries.length>0?entries[entries.length-1]:null;
-  const curW=latest?.weight||initW;
+  const curW=(latest&&latest.weight)?parseFloat(latest.weight):initW;
+  const isEmpty=!hasWeight&&!hasGoal&&entries.length===0;
   const totalD=goalW-initW;
-  const progress=totalD!==0?Math.min(Math.max(((curW-initW)/totalD)*100,0),100):100;
-  const remaining=(goalW-curW).toFixed(1);
-  const bmi=h?(curW/(h*h)).toFixed(1):null;
+  const progress=(totalD!==0&&curW>0)?Math.min(Math.max(((curW-initW)/totalD)*100,0),100):0;
+  const remaining=(goalW>0&&curW>0)?(goalW-curW).toFixed(1):'0';
+  const bmi=(h>0&&curW>0)?(curW/(h*h)).toFixed(1):null;
   const bmiInfo=getBMI(bmi);
   const wp=entries.length>=2?((entries[entries.length-1].weight-entries[entries.length-2].weight).toFixed(1)):null;
   const pace=(s&&s.pace>0)?s.pace:0.3;
   const weeks=Math.abs(remaining)>0.1?Math.ceil(Math.abs(remaining)/pace):0;
   const bf=estimateBF(latest,h);
   const name=(s&&s.name)?s.name:p.name;
-  return{p,s,entries,initW,goalW,h,latest,curW,totalD,progress,remaining,bmi,bmiInfo,wp,weeks,bf,pace,name};
+  return{p,s,entries,initW,goalW,h,latest,curW,totalD,progress,remaining,bmi,bmiInfo,wp,weeks,bf,pace,name,isEmpty};
 }
 function getBMI(b){
   if(!b)return{label:'—',color:'var(--muted)'};
@@ -1328,8 +1332,8 @@ function render(){
   const d=getD(),p=PROFILES[CP];
   const tabN={dashboard:'Dashboard',medidas:'Medidas',registrar:'Registrar',evolucao:'Evolução',treinos:'Treinos',nutricao:'Nutrição',estoque:'Estoque 🛒',gastos:'Gastos 💰',guia:'Guia'};
   document.getElementById('tb-title').innerHTML=`<span class="tb-accent">${tabN[CT]||CT}</span>`;
-  document.getElementById('tb-sub').textContent=`${p.emoji} ${d.name} · ${d.curW}kg · Meta: ${d.goalW}kg`;
-  document.getElementById('tb-badge').textContent=`${d.progress.toFixed(0)}% da meta`;
+  document.getElementById('tb-sub').textContent=`${p.emoji} ${d.name} · ${d.curW>0?d.curW+'kg':'—'} · Meta: ${d.goalW>0?d.goalW+'kg':'definir'}`;
+  document.getElementById('tb-badge').textContent=d.goalW>0?`${d.progress.toFixed(0)}% da meta`:'Complete seu perfil';
   const builders={dashboard:buildDashboard,medidas:buildMedidas,registrar:buildRegistrar,evolucao:buildEvolucao,treinos:buildTreinos,nutricao:buildNutricao,estoque:buildEstoque,gastos:buildGastos,guia:buildGuia};
   document.getElementById('content').innerHTML=(builders[CT]||buildDashboard)();
   // Force mobile nav and prog-bar visible on small screens
@@ -1498,15 +1502,16 @@ function buildDashboard(){
     <div class="grid2" style="margin-bottom:12px">
       <div class="card-accent" style="border-color:${ac}28">
         <span class="lbl">Peso Atual</span>
-        <div class="big-num" style="margin-bottom:4px">${curW}<span style="font-size:18px;color:var(--muted);font-weight:400"> kg</span></div>
+        <div class="big-num" style="margin-bottom:4px">${curW>0?curW:'—'}<span style="font-size:18px;color:var(--muted);font-weight:400"> kg</span></div>
         ${wpHtml}
         <div style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          ${goalW>0?`<div style="display:flex;justify-content:space-between;margin-bottom:5px">
             <span style="font-size:9px;color:var(--muted);letter-spacing:1px">→ ${goalW}kg</span>
             <span style="font-size:11px;font-weight:800;color:${ac}">${progress.toFixed(1)}%</span>
           </div>
           <div class="bar"><div class="fill" style="width:${Math.max(progress,2)}%"></div></div>
-          <div style="font-size:9px;color:var(--muted);margin-top:4px">${Math.abs(remaining)>0.1?`${isLoss?'Perder':'Ganhar'} ${Math.abs(remaining)}kg${weeks>0?` · ~${weeks} sem`:''}`:''}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:4px">${Math.abs(remaining)>0.1?`${isLoss?'Perder':'Ganhar'} ${Math.abs(remaining)}kg${weeks>0?` · ~${weeks} sem`:''}`:''}</div>`
+          :`<div onclick="openSettings()" style="font-size:10px;color:${ac};cursor:pointer;padding:8px 0">🎯 Defina sua meta de peso →</div>`}
         </div>
       </div>
       <div class="grid2" style="gap:10px">
@@ -2673,7 +2678,10 @@ function _wireWoDraft(){
   window.addEventListener('blur',saveWoDraft);
 }
 // Sair do treino de propósito descarta o rascunho
-function exitWorkout(){ clearWoDraft(); activeWorkoutType=null; resetWoStopwatch(); render(); }
+function exitWorkout(){
+  if(!confirm('Sair do treino?\n\nO treino em andamento (não salvo) será descartado.')) return;
+  clearWoDraft(); activeWorkoutType=null; resetWoStopwatch(); render();
+}
 
 // ── Edição rápida de séries diretamente no log ──
 function showQuickEditSets(woKey, exIdx){
@@ -2772,6 +2780,10 @@ function calcSessionSets(session){
 function saveWorkoutSession(){
   const prog=getWorkoutProgram()[activeWorkoutType];
   if(!prog){alert('Selecione um treino primeiro!');return;}
+  // Conta séries feitas p/ um "certeza?" informativo
+  let _doneSets=0;
+  prog.exercises.forEach((ex,ei)=>ex.sets.forEach((s,si)=>{ if(document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done')) _doneSets++; }));
+  if(!confirm(`Finalizar e salvar este treino?\n\n${_doneSets} série(s) marcada(s) como feita(s).`)) return;
   const session={id:Date.now(),date:new Date().toISOString(),type:activeWorkoutType,exercises:[]};
   prog.exercises.forEach((ex,ei)=>{
     const sets=[];
@@ -3824,14 +3836,29 @@ function _remReadMeals(){ const out=[]; for(let i=0; document.getElementById('rt
 } return out; }
 function _remAddMeal(){ const m=_remReadMeals(); m.push({meal:'Nova refeição',hour:12,min:0,icon:'🍽️'}); saveMealTimes(m); render(); }
 function _remRemoveMeal(i){ const m=_remReadMeals(); m.splice(i,1); if(!m.length) m.push({meal:'Refeição 1',hour:8,min:0,icon:'🍽️'}); saveMealTimes(m); render(); }
-function _remSave(){
+async function _remSave(){
   saveMealTimes(_remReadMeals());
   const cfg={ every:Math.max(1,parseInt(document.getElementById('rt_w_every').value)||1),
     start:Math.min(23,Math.max(0,parseInt(document.getElementById('rt_w_start').value)||8)),
     end:Math.min(23,Math.max(0,parseInt(document.getElementById('rt_w_end').value)||22)) };
   saveWaterCfg(cfg);
   try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){}
-  showSyncStatus&&showSyncStatus('✓ Horários salvos','var(--good)'); render();
+  showSyncStatus&&showSyncStatus('✓ Horários salvos','var(--good)');
+  // Confirma com uma notificação real — e garante que as notificações estão ligadas.
+  try{
+    if(!('Notification' in window)){ /* sem suporte */ }
+    else if(Notification.permission==='granted'){
+      const reg=_swReg||await navigator.serviceWorker.ready.catch(()=>null);
+      const nMeals=_remReadMeals().length;
+      const body=`Avisaremos nas suas ${nMeals} refeição(ões) e na água a cada ${cfg.every}h (${cfg.start}h–${cfg.end}h).`;
+      if(reg&&reg.showNotification) reg.showNotification('✅ Lembretes salvos',{body,icon:'https://em-content.zobj.net/source/apple/354/alarm-clock_23f0.png',tag:'rem-saved'});
+      else sendNotif('✅ Lembretes salvos',body,'rem-saved');
+    } else if(Notification.permission==='default'){
+      const p=await Notification.requestPermission();
+      if(p==='granted'){ try{ if(_swReg) await subscribePush(); }catch(e){} sendNotif('✅ Lembretes ativados','Você será avisado nos horários definidos.','rem-saved'); }
+    }
+  }catch(e){}
+  render();
 }
 function _remReset(){ if(!confirm('Restaurar os horários padrão?'))return; try{ localStorage.removeItem('bt_meal_times'); localStorage.removeItem('bt_water_cfg'); }catch(e){} _syncReminderCfg(); try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){} render(); }
 
@@ -6470,7 +6497,7 @@ async function loadUserData(){
       window._fb.getEntries(CP),
       window._fb.getWorkouts(CP)
     ]);
-    _cache.settings[CP]=s||JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null')||{weight:63,goal:80,height:1.71};
+    _cache.settings[CP]=s||JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null')||{};
     if(_pendingName && _authUser && !_cache.settings[CP].name){ _cache.settings[CP].name=_pendingName; }
     _pendingName=null;
     _cache.entries[CP]=mergeEntries(CP,e);
@@ -6484,7 +6511,7 @@ async function loadUserData(){
   }catch(e){
     console.error('Firebase:',e);
     showSyncStatus('⚠ Offline','var(--warn)');
-    _cache.settings[CP]=JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null')||{weight:63,goal:80,height:1.71};
+    _cache.settings[CP]=JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null')||{};
     _cache.entries[CP]=mergeEntries(CP,[]);
     _cache.workouts=mergeWorkouts([]);
   }
@@ -6514,7 +6541,7 @@ window._btInit = function(){
 // se o backend não inicializar em ~3s (ex.: CDN bloqueado), entra em modo convidado local.
 {let t=0;const w=setInterval(()=>{t++;
   if(window._btInitDone){clearInterval(w);return;}
-  if(t>30){clearInterval(w);if(!window._btInitDone){CP='him';_cache.settings.him={weight:63,goal:80,height:1.71};_enterApp();render();}}
+  if(t>30){clearInterval(w);if(!window._btInitDone){CP='him';_cache.settings.him=_cache.settings.him||{};_enterApp();render();}}
 },100);}
 
 // ── Service Worker + Web Push ──
