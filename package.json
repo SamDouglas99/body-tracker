@@ -1,0 +1,10 @@
+{
+  "name": "body-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Body Tracker — site estático (GitHub Pages) + funções serverless (Vercel /api)",
+  "type": "commonjs",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
