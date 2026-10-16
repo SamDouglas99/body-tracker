@@ -1025,7 +1025,8 @@ const WEEK_SCHEDULE = [
 // ══════════════════════════════════════
 const _PROFILES = {
   him:{
-    id:'him',name:'Você',emoji:'👨',accentHex:'#e2e240',
+    id:'him',name:'Você',emoji:'👨',
+    get accentHex(){ try{ return document.documentElement.getAttribute('data-theme')==='light'?'#4E8C00':'#D6F84C'; }catch(e){ return '#D6F84C'; } },
     initialWeight:0,goalWeight:0,height:0,isLoss:false,
     measurements:[
       {key:'weight',label:'Peso',unit:'kg',icon:'⚖️',priority:false,target:80},
