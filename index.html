@@ -323,11 +323,19 @@ input:focus,select:focus{border-color:var(--muted)}
 /* Mobile */
 /* ── MOBILE NAV (hidden on desktop) ── */
 /* ── Program switcher bar (fixed, above mobile nav) ── */
-#mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:200;padding:4px 0 calc(4px + env(safe-area-inset-bottom));overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-#mobile-nav::-webkit-scrollbar{display:none}
-.mn{flex:0 0 calc(100vw / 5.4);min-width:60px;max-width:80px;background:none;border:none;font-family:var(--font2);font-size:8px;font-weight:800;letter-spacing:0;text-transform:uppercase;cursor:pointer;color:var(--muted);padding:5px 2px;border-top:3px solid transparent;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;overflow:hidden;scroll-snap-align:start}
-.mn .mi{font-size:22px;line-height:1}
-.him-mode .mn.active{color:var(--him);border-top-color:var(--him)}
+#mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:200;padding:6px 10px calc(8px + env(safe-area-inset-bottom));align-items:center;justify-content:space-around;overflow:visible}
+.mn{flex:1;min-width:0;background:none;border:none;font-family:var(--font2);font-size:10px;font-weight:700;letter-spacing:.2px;cursor:pointer;color:var(--muted);padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;transition:color .15s}
+.mn .mi{font-size:21px;line-height:1;filter:grayscale(.3) opacity(.75)}
+.him-mode .mn.active{color:var(--him)}
+.him-mode .mn.active .mi{filter:none}
+.mn-fab{flex:0 0 auto;width:54px;height:54px;border-radius:18px;border:none;background:var(--him);color:#08080e;font-size:30px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:-22px;box-shadow:0 8px 20px rgba(214,248,76,.28);transition:transform .12s;-webkit-tap-highlight-color:transparent}
+.mn-fab:active{transform:scale(.93)}
+html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px rgba(78,140,0,.3)}
+.sb-div{height:1px;background:var(--border);margin:12px 16px 10px}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:7px;background:var(--bg4);border:1px solid var(--border2);border-radius:16px;padding:15px 6px;cursor:pointer;color:var(--text);font-family:var(--font2);transition:border-color .15s}
+.qa-item:active{border-color:var(--himl)}
+.qa-item .qi{font-size:23px;line-height:1}
+.qa-item .ql{font-size:11px;font-weight:700}
 
 /* ── MOBILE ≤720px ── */
 @media(max-width:720px){
@@ -401,21 +409,16 @@ input:focus,select:focus{border-color:var(--muted)}
   }
   .subtabs::-webkit-scrollbar{display:none}
 
-  /* ── Nav bottom — scroll snap, 5.2 visíveis ── */
+  /* ── Nav bottom — 4 abas + FAB central, espaçadas ── */
   #mobile-nav{
-    scroll-snap-type:x mandatory !important;
-    padding:3px 0 calc(5px + env(safe-area-inset-bottom)) !important;
-    gap:0 !important
+    padding:6px 8px calc(7px + env(safe-area-inset-bottom)) !important;
+    justify-content:space-around !important
   }
   .mn{
-    flex:0 0 calc(100vw / 5.2) !important;
-    min-width:56px !important;
-    max-width:74px !important;
-    padding:5px 1px !important;
-    font-size:7px !important;
-    font-weight:800;gap:2px !important
+    flex:1 !important;min-width:0 !important;max-width:none !important;
+    padding:6px 2px !important;font-size:10px !important;font-weight:700;gap:3px !important
   }
-  .mn .mi{font-size:20px !important;line-height:1 !important}
+  .mn .mi{font-size:21px !important;line-height:1 !important}
 
   /* ── Workout day grid ── */
   .wo-day-grid{grid-template-columns:repeat(7,1fr);gap:2px !important;margin-bottom:12px}
@@ -551,12 +554,13 @@ input:focus,select:focus{border-color:var(--muted)}
     <div class="sb-logo">Body<span>Tracker</span></div>
   </div>
   <nav class="sb-nav">
-    <button class="sn active"  onclick="go('dashboard')"><span class="si">🏠</span>Dashboard</button>
-    <button class="sn"         onclick="go('medidas')"><span class="si">📏</span>Medidas</button>
-    <button class="sn"         onclick="go('registrar')"><span class="si">➕</span>Registrar</button>
-    <button class="sn"         onclick="go('evolucao')"><span class="si">📈</span>Evolução</button>
-    <button class="sn"         onclick="go('treinos')"><span class="si">💪</span>Treinos</button>
+    <button class="sn active"  onclick="go('dashboard')"><span class="si">🏠</span>Início</button>
+    <button class="sn"         onclick="go('treinos')"><span class="si">💪</span>Treino</button>
     <button class="sn"         onclick="go('nutricao')"><span class="si">🥗</span>Nutrição</button>
+    <button class="sn"         onclick="go('evolucao')"><span class="si">🫀</span>Corpo</button>
+    <div class="sb-div"></div>
+    <button class="sn"         onclick="go('registrar')"><span class="si">➕</span>Registrar</button>
+    <button class="sn"         onclick="go('medidas')"><span class="si">📏</span>Medidas</button>
     <button class="sn"         onclick="go('estoque')"><span class="si">🛒</span>Estoque</button>
     <button class="sn"         onclick="go('gastos')"><span class="si">💰</span>Gastos</button>
     <button class="sn"         onclick="go('guia')"><span class="si">💡</span>Guia</button>
@@ -575,13 +579,10 @@ input:focus,select:focus{border-color:var(--muted)}
 <!-- Mobile nav -->
 <div id="mobile-nav">
   <button class="mn active" onclick="go('dashboard')"><span class="mi">🏠</span>Início</button>
-  <button class="mn" onclick="go('medidas')"><span class="mi">📏</span>Medidas</button>
-  <button class="mn" onclick="go('registrar')"><span class="mi">➕</span>Registrar</button>
-  <button class="mn" onclick="go('treinos')"><span class="mi">💪</span>Treinos</button>
+  <button class="mn" onclick="go('treinos')"><span class="mi">💪</span>Treino</button>
+  <button class="mn-fab" onclick="_openQuickAdd()" aria-label="Registrar algo"><span>＋</span></button>
   <button class="mn" onclick="go('nutricao')"><span class="mi">🥗</span>Nutrição</button>
-  <button class="mn" onclick="go('estoque')"><span class="mi">🛒</span>Estoque</button>
-  <button class="mn" onclick="go('gastos')"><span class="mi">💰</span>Gastos</button>
-  <button class="mn" onclick="go('evolucao')"><span class="mi">📈</span>Evolução</button>
+  <button class="mn" onclick="go('evolucao')"><span class="mi">🫀</span>Corpo</button>
 </div>
 
 <!-- Voice command FAB -->
@@ -1310,10 +1311,42 @@ function getThisWeekSessions(){
 // ══════════════════════════════════════
 // ROUTING
 // ══════════════════════════════════════
+// ── Botão central (+) do rodapé: registro rápido + atalhos ──
+function _closeSheet(){ const el=document.getElementById('bt-sheet'); if(el) el.remove(); }
+function _openQuickAdd(){
+  _closeSheet();
+  const g=(t)=>`_closeSheet();go('${t}')`;
+  const it=(ic,lb,act)=>`<button class="qa-item" onclick="${act}"><span class="qi">${ic}</span><span class="ql">${lb}</span></button>`;
+  const ov=document.createElement('div'); ov.id='bt-sheet';
+  ov.style.cssText='position:fixed;inset:0;z-index:700;background:rgba(5,6,10,.6);display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick=(e)=>{ if(e.target===ov) _closeSheet(); };
+  ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-bottom:none;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:18px 18px calc(22px + env(safe-area-inset-bottom))">
+    <div style="width:42px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-family:var(--fontd);font-size:17px;font-weight:700">Adicionar</div>
+    <div style="font-size:12px;color:var(--muted);margin:2px 0 15px">Registro rápido</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      ${it('⚖️','Peso/Medida',g('registrar'))}
+      ${it('💧','Água',g('nutricao'))}
+      ${it('🍽️','Refeição',g('nutricao'))}
+      ${it('💪','Treino',g('treinos'))}
+      ${it('💰','Gasto',g('gastos'))}
+      ${it('🎤','Por voz','_closeSheet();try{startVoice()}catch(e){}')}
+    </div>
+    <div style="height:1px;background:var(--border);margin:16px 0 13px"></div>
+    <div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Ir para</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      ${it('📏','Medidas',g('medidas'))}
+      ${it('🛒','Estoque',g('estoque'))}
+      ${it('💡','Guia',g('guia'))}
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
 function go(tab){
+  _closeSheet();
   CT=tab;
-  document.querySelectorAll('.sn').forEach((b,i)=>{const tabs=['dashboard','medidas','registrar','evolucao','treinos','nutricao','estoque','gastos','guia'];b.classList.toggle('active',tabs[i]===tab);});
-  document.querySelectorAll('.mn').forEach((b,i)=>{const tabs=['dashboard','medidas','registrar','treinos','nutricao','estoque','gastos','evolucao'];b.classList.toggle('active',tabs[i]===tab);});
+  document.querySelectorAll('.sn').forEach((b,i)=>{const tabs=['dashboard','treinos','nutricao','evolucao','registrar','medidas','estoque','gastos','guia'];b.classList.toggle('active',tabs[i]===tab);});
+  document.querySelectorAll('.mn').forEach((b,i)=>{const tabs=['dashboard','treinos','nutricao','evolucao'];b.classList.toggle('active',tabs[i]===tab);});
   render();
 }
 function saveSetup(){
@@ -1331,7 +1364,7 @@ function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catc
 function render(){
   destroyCharts();
   const d=getD(),p=PROFILES[CP];
-  const tabN={dashboard:'Dashboard',medidas:'Medidas',registrar:'Registrar',evolucao:'Evolução',treinos:'Treinos',nutricao:'Nutrição',estoque:'Estoque 🛒',gastos:'Gastos 💰',guia:'Guia'};
+  const tabN={dashboard:'Início',medidas:'Medidas',registrar:'Registrar',evolucao:'Corpo',treinos:'Treino',nutricao:'Nutrição',estoque:'Estoque 🛒',gastos:'Gastos 💰',guia:'Guia'};
   document.getElementById('tb-title').innerHTML=`<span class="tb-accent">${tabN[CT]||CT}</span>`;
   document.getElementById('tb-sub').textContent=`${p.emoji} ${d.name} · ${d.curW>0?d.curW+'kg':'—'} · Meta: ${d.goalW>0?d.goalW+'kg':'definir'}`;
   document.getElementById('tb-badge').textContent=d.goalW>0?`${d.progress.toFixed(0)}% da meta`:'Complete seu perfil';
@@ -1339,7 +1372,7 @@ function render(){
   document.getElementById('content').innerHTML=(builders[CT]||buildDashboard)();
   // Force mobile nav and prog-bar visible on small screens
   const mn=document.getElementById('mobile-nav');
-  if(window.innerWidth<=720) mn.style.display='flex';
+  mn.style.display = window.innerWidth<=720 ? 'flex' : '';
   setTimeout(initCharts,60);
   if(CT==='treinos'&&woSubTab==='log'&&activeWorkoutType&&activeWorkoutType!=='rest') setTimeout(restoreWoDraftInputs,0);
 }
@@ -6576,7 +6609,9 @@ let _authUser=null,_unsubE=null,_unsubW=null;
 function _enterApp(){
   document.getElementById('shell').className='him-mode';
   document.getElementById('mobile-nav').className='him-mode';
-  if(window.innerWidth<=720) document.getElementById('mobile-nav').style.display='flex';
+  const _mnToggle=()=>{ const mn=document.getElementById('mobile-nav'); if(mn) mn.style.display = window.innerWidth<=720 ? 'flex' : ''; };
+  _mnToggle();
+  if(!window._resizeWired){ window._resizeWired=1; let _rt; window.addEventListener('resize',()=>{ clearTimeout(_rt); _rt=setTimeout(_mnToggle,120); }); }
   setTimeout(()=>{ if(Notification.permission==='granted') scheduleMealReminders(); },2000);
   _wireWoDraft();
 }
