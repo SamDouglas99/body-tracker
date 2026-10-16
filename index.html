@@ -1778,6 +1778,8 @@ async function loadPhotoMeta(){
     const meta=await window._fb.getPhotoMeta(CP);
     _photoMeta=meta||{photos:[]};
     if(!_photoMeta.photos) _photoMeta.photos=[];
+    // Fotos privadas (Supabase): re-gera a URL assinada a partir do path salvo
+    if(window._fb.photoUrl){ await Promise.all(_photoMeta.photos.map(async ph=>{ if(ph&&ph.path){ try{ const u=await window._fb.photoUrl(ph.path); if(u) ph.url=u; }catch(e){} } })); }
   }catch(e){ _photoMeta={photos:[]}; }
 }
 
@@ -1788,11 +1790,13 @@ async function uploadProgressPhoto(file, label, category='frontal'){
     // Compress image before upload
     const compressed=await compressImage(file, 800);
     const photoId='photo_'+Date.now();
-    const url=await window._fb.uploadPhoto(CP, photoId, compressed);
-    // Save meta in Firestore
+    const up=await window._fb.uploadPhoto(CP, photoId, compressed);
+    const url=(up&&up.url!==undefined)?up.url:up;   // Supabase → {url,path}; Firebase → string
+    const path=(up&&up.path)||null;
     const entry={
       id:photoId,
       url,
+      path,
       date:localDayKey(),
       label:label||'',
       category:category||'frontal',
@@ -1800,6 +1804,7 @@ async function uploadProgressPhoto(file, label, category='frontal'){
     };
     _photoMeta.photos.push(entry);
     await window._fb.savePhotoMeta(CP, _photoMeta);
+    try{ if(getSettings()) getSettings().photoMeta=_photoMeta; }catch(e){} // mantém o cache em sincronia
     // Also save URL to localStorage as cache
     try{localStorage.setItem('bt_photo_cache_'+photoId, url);}catch(e){}
   }catch(e){
@@ -1814,6 +1819,7 @@ async function deletePhoto(photoId){
     await window._fb.deletePhoto(CP, photoId);
     _photoMeta.photos=_photoMeta.photos.filter(p=>p.id!==photoId);
     await window._fb.savePhotoMeta(CP, _photoMeta);
+    try{ if(getSettings()) getSettings().photoMeta=_photoMeta; }catch(e){}
     if(_compareA===photoId) _compareA=null;
     if(_compareB===photoId) _compareB=null;
     localStorage.removeItem('bt_photo_cache_'+photoId);
@@ -5746,11 +5752,21 @@ window._buildSupabaseAdapter = async function(){
     async saveWorkout(_ns,s){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); chk(await sb.from('workouts').insert(_sbWorkoutToRow(u,s))); },
     listenEntries(_p,cb){ this.getEntries().then(cb).catch(e=>console.warn('Supabase getEntries:',e&&e.message)); return ()=>{}; },
     listenWorkouts(_ns,cb){ this.getWorkouts().then(cb).catch(e=>console.warn('Supabase getWorkouts:',e&&e.message)); return ()=>{}; },
-    async uploadPhoto(){ throw new Error('Fotos no Supabase: Fase 3'); },               // Storage: Fase 3
-    async deletePhoto(){},
-    async getPhotos(){ return []; },
-    async savePhotoMeta(){},
-    async getPhotoMeta(){ return {photos:[]}; },
+    // ── Fotos: bucket privado 'photos', pasta por usuário (<uid>/<id>.jpg) ──
+    async uploadPhoto(_p, photoId, blob){
+      const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase');
+      const path=u+'/'+photoId+'.jpg';
+      const up=await sb.storage.from('photos').upload(path, blob, {contentType:'image/jpeg', upsert:true});
+      if(up.error) throw up.error;
+      let url=''; try{ const sg=await sb.storage.from('photos').createSignedUrl(path, 604800); url=(sg.data&&sg.data.signedUrl)||''; }catch(e){}
+      return {url, path};
+    },
+    // URL assinada (temporária) pra exibir uma foto privada — re-gerada a cada carga
+    async photoUrl(path){ if(!path) return ''; const sg=await sb.storage.from('photos').createSignedUrl(path, 604800); if(sg.error) throw sg.error; return (sg.data&&sg.data.signedUrl)||''; },
+    async deletePhoto(_p, photoId){ const u=await ensureUid(); if(!u) return; try{ await sb.storage.from('photos').remove([u+'/'+photoId+'.jpg']); }catch(e){} },
+    async getPhotos(){ return []; }, // lista vem do photoMeta (settings)
+    async getPhotoMeta(){ const u=await ensureUid(); if(!u) return {photos:[]}; const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s=(r.data&&r.data.settings)||{}; return (s.photoMeta&&Array.isArray(s.photoMeta.photos))?s.photoMeta:{photos:[]}; },
+    async savePhotoMeta(_p, meta){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s={...((r.data&&r.data.settings)||{}), photoMeta:meta}; const up=await sb.from('profiles').update({settings:s}).eq('user_id',u); if(up.error) throw up.error; },
     async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'endpoint'})); },
     async deletePushSub(_uid,endpoint){ const u=await ensureUid(); if(endpoint){ chk(await sb.from('push_subs').update({disabled:true}).eq('endpoint',endpoint)); } else if(u){ chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); } },
   };
