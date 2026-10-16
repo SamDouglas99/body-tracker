@@ -8,7 +8,7 @@
 <title>Body Tracker Pro 💪</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -91,21 +91,21 @@ else{ window.addEventListener("load", _bootBackend); }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   color-scheme:dark;
-  --bg:#08080e;--bg2:#0d0d18;--bg3:#131324;--bg4:#181830;--bg5:#1f1f38;
-  --border:#242436;--border2:#2e2e48;--muted:#606084;--text:#eeeeff;--sub:#a0a0c8;
-  --him:#e2e240;--him2:#a0e240;--him3:#ffaa00;--himb:rgba(226,226,64,.1);--himl:rgba(226,226,64,.4);
-  --good:#4ade80;--bad:#f87171;--warn:#fbbf24;--info:#60a5fa;--purple:#a78bfa;
-  --r:12px;--font:'Nunito',-apple-system,system-ui,sans-serif;--font2:'Nunito',-apple-system,system-ui,sans-serif;
-  --pull:#4a9eff;--push:#ff6b4a;--legs:#e2e240;--upper:#c084fc;--lower:#fb923c;
+  --bg:#0A0B10;--bg2:#0E1016;--bg3:#14161D;--bg4:#1B1E27;--bg5:#242834;
+  --border:#22252E;--border2:#2E323D;--muted:#5A606C;--text:#F4F6FA;--sub:#9AA0AC;
+  --him:#D6F84C;--him2:#AFE02E;--him3:#FFC94A;--himb:rgba(214,248,76,.12);--himl:rgba(214,248,76,.40);
+  --good:#4ade80;--bad:#f87171;--warn:#FFC94A;--info:#7CC6FF;--purple:#B79BFF;
+  --r:16px;--font:'Manrope',-apple-system,system-ui,sans-serif;--font2:'Manrope',-apple-system,system-ui,sans-serif;--fontd:'Space Grotesk','Manrope',system-ui,sans-serif;
+  --pull:#7CC6FF;--push:#FF8A6B;--legs:#D6F84C;--upper:#B79BFF;--lower:#FFA45A;
 }
 /* ── LIGHT THEME (dark/light toggle) ── */
 html[data-theme="light"]{
   color-scheme:light;
-  --bg:#eceef5;--bg2:#ffffff;--bg3:#ffffff;--bg4:#f3f4fa;--bg5:#e7e9f2;
-  --border:#e3e5ef;--border2:#d2d5e3;--muted:#6b7086;--text:#161824;--sub:#454a60;
-  --him:#96770a;--him2:#6f8a00;--him3:#c07600;--himb:rgba(150,119,10,.10);--himl:rgba(150,119,10,.35);
-  --good:#12934a;--bad:#d63030;--warn:#bd7708;--info:#2564d6;--purple:#7a3ded;
-  --pull:#2064d6;--push:#dd4720;--legs:#96770a;--upper:#7a3ded;--lower:#bd7708;
+  --bg:#F1F3F8;--bg2:#FFFFFF;--bg3:#FFFFFF;--bg4:#F3F5FA;--bg5:#E9ECF3;
+  --border:#E5E8F0;--border2:#D3D7E2;--muted:#767D8C;--text:#141620;--sub:#424857;
+  --him:#4E8C00;--him2:#3C7A00;--him3:#B06A00;--himb:rgba(78,140,0,.10);--himl:rgba(78,140,0,.35);
+  --good:#12934a;--bad:#d63030;--warn:#A86A00;--info:#1F6FD6;--purple:#6E34E0;
+  --pull:#1F6FD6;--push:#D2461E;--legs:#4E8C00;--upper:#6E34E0;--lower:#B06A00;
 }
 html[data-theme="light"] .trow{border-bottom-color:rgba(0,0,0,.07)}
 html[data-theme="light"] .wo-hist-ex{border-bottom-color:rgba(0,0,0,.05)}
@@ -117,6 +117,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font2);min-he
 #shell{display:flex;min-height:100vh;overflow-x:hidden}
 #sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;z-index:200;display:flex;flex-direction:column}
 #main{margin-left:220px;flex:1;min-height:100vh;overflow-x:hidden;max-width:100%}
+#content{max-width:1120px;margin:0 auto;width:100%}
 #content{padding:0 0 60px;overflow-x:hidden}
 .sb-header{padding:20px 16px 14px;border-bottom:1px solid var(--border)}
 .sb-logo{font-family:var(--font2);font-size:18px;font-weight:800;margin-bottom:12px}
@@ -135,7 +136,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font2);min-he
 .meal-check-btn.done{background:rgba(74,222,128,.2);border-color:var(--good)}
 .meal-check-btn.skipped{background:rgba(248,113,113,.15);border-color:var(--bad)}
 
-.tb-title{font-family:var(--font2);font-size:21px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-title{font-family:var(--fontd);font-size:21px;font-weight:700;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .him-mode .tb-accent{color:var(--him)}
 .tb-sub{font-size:11px;color:var(--muted);margin-top:3px;font-weight:700}
 .tb-badge{padding:6px 14px;border-radius:20px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;white-space:nowrap}
@@ -150,7 +151,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font2);min-he
 .sec-title{font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);padding:20px 24px 12px;display:flex;align-items:center;gap:8px;overflow:hidden}
 .sec-title::after{content:'';flex:1;height:1px;background:var(--border);margin-left:8px}
 .him-mode .accent-val{color:var(--him)}
-.big-num{font-size:40px;font-weight:800;line-height:1;font-family:var(--font2)}
+.big-num{font-size:40px;font-weight:700;line-height:1;font-family:var(--fontd);letter-spacing:-.5px}
 .him-mode .big-num{color:var(--him)}
 .bar{height:7px;background:var(--bg5);border-radius:4px;overflow:hidden}
 .bar.sm{height:4px}
