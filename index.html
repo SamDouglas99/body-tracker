@@ -325,9 +325,9 @@ input:focus,select:focus{border-color:var(--muted)}
 /* ── Program switcher bar (fixed, above mobile nav) ── */
 #mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:200;padding:6px 10px calc(8px + env(safe-area-inset-bottom));align-items:center;justify-content:space-around;overflow:visible}
 .mn{flex:1;min-width:0;background:none;border:none;font-family:var(--font2);font-size:10px;font-weight:700;letter-spacing:.2px;cursor:pointer;color:var(--muted);padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;transition:color .15s}
-.mn .mi{font-size:21px;line-height:1;filter:grayscale(.3) opacity(.75)}
+.mn .mi{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
 .him-mode .mn.active{color:var(--him)}
-.him-mode .mn.active .mi{filter:none}
+.him-mode .mn.active .mi{opacity:1}
 .mn-fab{flex:0 0 auto;width:54px;height:54px;border-radius:18px;border:none;background:var(--him);color:#08080e;font-size:30px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:-22px;box-shadow:0 8px 20px rgba(214,248,76,.28);transition:transform .12s;-webkit-tap-highlight-color:transparent}
 .mn-fab:active{transform:scale(.93)}
 html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px rgba(78,140,0,.3)}
@@ -578,11 +578,11 @@ html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px rgba(78,140,0,.3)}
 
 <!-- Mobile nav -->
 <div id="mobile-nav">
-  <button class="mn active" onclick="go('dashboard')"><span class="mi">🏠</span>Início</button>
-  <button class="mn" onclick="go('treinos')"><span class="mi">💪</span>Treino</button>
-  <button class="mn-fab" onclick="_openQuickAdd()" aria-label="Registrar algo"><span>＋</span></button>
-  <button class="mn" onclick="go('nutricao')"><span class="mi">🥗</span>Nutrição</button>
-  <button class="mn" onclick="go('evolucao')"><span class="mi">🫀</span>Corpo</button>
+  <button class="mn active" onclick="go('dashboard')"><svg class="mi" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/></svg>Início</button>
+  <button class="mn" onclick="go('treinos')"><svg class="mi" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M4 9l-1 1 4 4M20 15l1-1-4-4M9 4l-1 1M16 20l-1-1"/></svg>Treino</button>
+  <button class="mn-fab" onclick="_openQuickAdd()" aria-label="Registrar algo"><svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="mn" onclick="go('nutricao')"><svg class="mi" viewBox="0 0 24 24"><path d="M12 7c-2-3-7-3-7 2 0 4 7 8 7 8s7-4 7-8c0-5-5-5-7-2Z"/></svg>Nutrição</button>
+  <button class="mn" onclick="go('evolucao')"><svg class="mi" viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.4"/><path d="M12 9v7M8 12l4-2 4 2M9 20l3-4 3 4"/></svg>Corpo</button>
 </div>
 
 <!-- Voice command FAB -->
@@ -1532,27 +1532,50 @@ function buildDashboard(){
     <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">${todayDate}</div>
     ${deloadBadge}
 
-    <!-- Peso + meta -->
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="card-accent" style="border-color:${ac}28">
-        <span class="lbl">Peso Atual</span>
-        <div class="big-num" style="margin-bottom:4px">${curW>0?curW:'—'}<span style="font-size:18px;color:var(--muted);font-weight:400"> kg</span></div>
-        ${wpHtml}
-        <div style="margin-top:12px">
-          ${goalW>0?`<div style="display:flex;justify-content:space-between;margin-bottom:5px">
-            <span style="font-size:9px;color:var(--muted);letter-spacing:1px">→ ${goalW}kg</span>
-            <span style="font-size:11px;font-weight:800;color:${ac}">${progress.toFixed(1)}%</span>
-          </div>
-          <div class="bar"><div class="fill" style="width:${Math.max(progress,2)}%"></div></div>
-          <div style="font-size:9px;color:var(--muted);margin-top:4px">${Math.abs(remaining)>0.1?`${isLoss?'Perder':'Ganhar'} ${Math.abs(remaining)}kg${weeks>0?` · ~${weeks} sem`:''}`:''}</div>`
-          :`<div onclick="openSettings()" style="font-size:10px;color:${ac};cursor:pointer;padding:8px 0">🎯 Defina sua meta de peso →</div>`}
+    <!-- Hero: anel de progresso de peso -->
+    ${(()=>{ const C=(2*Math.PI*54), off=(C*(1-Math.min(Math.max(progress,0),100)/100)); return `
+    <div class="card-accent" style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-color:${ac}28">
+      <div style="position:relative;width:122px;height:122px;flex-shrink:0">
+        <svg width="122" height="122" viewBox="0 0 122 122" style="transform:rotate(-90deg);display:block">
+          <circle cx="61" cy="61" r="54" fill="none" stroke="var(--bg5)" stroke-width="11"/>
+          ${goalW>0&&curW>0?`<circle cx="61" cy="61" r="54" fill="none" stroke="${ac}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C.toFixed(0)}" stroke-dashoffset="${off.toFixed(0)}"/>`:''}
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div class="big-num" style="font-size:30px;margin:0">${curW>0?curW:'—'}<span style="font-size:13px;color:var(--muted);font-weight:400">kg</span></div>
+          <div style="font-size:10px;color:var(--muted);font-weight:700">${goalW>0&&curW>0?progress.toFixed(0)+'% da meta':'sem meta'}</div>
         </div>
       </div>
-      <div class="grid2" style="gap:10px">
-        <div class="card"><div style="font-size:18px;margin-bottom:4px">🫀</div><div style="font-size:18px;font-weight:800;color:${bmiInfo.color}">${bmi||'—'}</div><div class="lbl" style="margin:0">IMC</div><div style="font-size:9px;color:${bmiInfo.color}">${bmiInfo.label}</div></div>
-        <div class="card"><div style="font-size:18px;margin-bottom:4px">🔬</div><div style="font-size:18px;font-weight:800;color:${ac}">${bf?`${bf}%`:'—'}</div><div class="lbl" style="margin:0">% Gordura</div></div>
-        <div class="card" onclick="go('treinos')" style="cursor:pointer"><div style="font-size:18px;margin-bottom:4px">💪</div><div style="font-size:18px;font-weight:800;color:${ac}">${doneThisWeek}<span style="font-size:11px;color:var(--muted)">/${plannedThisWeek}</span></div><div class="lbl" style="margin:0">Treinos</div></div>
-        <div class="card" onclick="go('nutricao');nuSubTab='dieta';render()" style="cursor:pointer"><div style="font-size:18px;margin-bottom:4px">🥗</div><div style="font-size:18px;font-weight:800;color:${ms.todayDone===ms.todayTotal&&ms.todayTotal>0?'var(--good)':ac}">${ms.todayDone}<span style="font-size:11px;color:var(--muted)">/${ms.todayTotal}</span></div><div class="lbl" style="margin:0">Refeições</div></div>
+      <div style="flex:1;min-width:0">
+        <span class="lbl">Meta de peso</span>
+        <div class="big-num" style="font-size:24px;margin:3px 0 2px">${goalW>0?goalW+'<span style="font-size:13px;color:var(--muted);font-weight:400"> kg</span>':'—'}</div>
+        ${wpHtml}
+        <div style="font-size:11px;color:var(--sub);line-height:1.5;margin-top:2px">${goalW>0&&curW>0?(Math.abs(remaining)>0.1?`Faltam <b style="color:${ac}">${Math.abs(remaining)}kg</b>${weeks>0?` · ~${weeks} sem`:''}`:'Meta atingida! 🎉'):`<span onclick="openSettings()" style="color:${ac};cursor:pointer;font-weight:700">Defina sua meta →</span>`}</div>
+        <div style="display:flex;gap:7px;margin-top:12px">
+          <div style="background:var(--bg4);border-radius:12px;padding:8px 11px;flex:1"><div style="font-size:9px;color:var(--muted);font-weight:800">IMC</div><div class="big-num" style="font-size:16px;color:${bmiInfo.color}">${bmi||'—'}</div></div>
+          <div style="background:var(--bg4);border-radius:12px;padding:8px 11px;flex:1"><div style="font-size:9px;color:var(--muted);font-weight:800">GORDURA</div><div class="big-num" style="font-size:16px;color:${ac}">${bf?bf+'%':'—'}</div></div>
+        </div>
+      </div>
+    </div>`; })()}
+
+    <!-- Hoje: tiles -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="card" style="padding:13px">
+        <div style="font-size:18px;margin-bottom:6px">💧</div>
+        <div class="big-num" style="font-size:19px">${waterL}<span style="font-size:11px;color:var(--muted)">/4L</span></div>
+        <div class="lbl" style="margin:2px 0 0">Água</div>
+        <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(waterPct,2)}%;background:var(--info)"></div></div>
+      </div>
+      <div class="card" onclick="go('nutricao');nuSubTab='dieta';render()" style="padding:13px;cursor:pointer">
+        <div style="font-size:18px;margin-bottom:6px">🍽️</div>
+        <div class="big-num" style="font-size:19px">${ms.todayDone}<span style="font-size:11px;color:var(--muted)">/${ms.todayTotal}</span></div>
+        <div class="lbl" style="margin:2px 0 0">Refeições</div>
+        <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(ms.todayTotal?Math.round(ms.todayDone/ms.todayTotal*100):0,2)}%"></div></div>
+      </div>
+      <div class="card" onclick="go('treinos')" style="padding:13px;cursor:pointer">
+        <div style="font-size:18px;margin-bottom:6px">💪</div>
+        <div class="big-num" style="font-size:19px">${doneThisWeek}<span style="font-size:11px;color:var(--muted)">/${plannedThisWeek}</span></div>
+        <div class="lbl" style="margin:2px 0 0">Treinos</div>
+        <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(plannedThisWeek?Math.round(doneThisWeek/plannedThisWeek*100):0,2)}%;background:var(--purple)"></div></div>
       </div>
     </div>
   </div>
@@ -2316,6 +2339,9 @@ function buildTreinos(){
 }
 
 function buildWoLog(tabs){
+  // Se o treino ativo não existe no programa atual (ex.: trocou de programa),
+  // volta pra tela inicial em vez de ficar em branco.
+  if(activeWorkoutType&&activeWorkoutType!=='rest'&&!getWorkoutProgram()[activeWorkoutType]) activeWorkoutType=null;
   // Week schedule selector
   const labels={pull:'Pull',push:'Push',legs:'Legs',upper:'Upper',lower:'Lower',a1:'A1',b1:'B1',c1:'C1',a2:'A2',b2:'B2',c2:'C2',rest:'Rest'};
   const ac=activeWorkoutType&&activeWorkoutType!=='rest'?getWorkoutProgram()[activeWorkoutType]?.color||'var(--him)':'var(--muted)';
