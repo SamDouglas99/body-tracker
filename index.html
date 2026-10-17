@@ -1369,6 +1369,10 @@ function render(){
   document.getElementById('tb-title').innerHTML=`<span class="tb-accent">${tabN[CT]||CT}</span>`;
   document.getElementById('tb-sub').textContent=`${p.emoji} ${d.name} · ${d.curW>0?d.curW+'kg':'—'} · Meta: ${d.goalW>0?d.goalW+'kg':'definir'}`;
   document.getElementById('tb-badge').textContent=d.goalW>0?`${d.progress.toFixed(0)}% da meta`:'Complete seu perfil';
+  // Telas com cabeçalho próprio (Dashboard; Treino em andamento) → esconde a barra de cima
+  const _tb=document.getElementById('topbar');
+  const _hideTb=(CT==='dashboard')||(CT==='treinos'&&woSubTab==='log'&&activeWorkoutType&&activeWorkoutType!=='rest');
+  if(_tb) _tb.style.display = _hideTb ? 'none' : '';
   const builders={dashboard:buildDashboard,medidas:buildMedidas,registrar:buildRegistrar,evolucao:buildEvolucao,treinos:buildTreinos,nutricao:buildNutricao,estoque:buildEstoque,gastos:buildGastos,guia:buildGuia};
   document.getElementById('content').innerHTML=(builders[CT]||buildDashboard)();
   // Force mobile nav and prog-bar visible on small screens
@@ -1527,9 +1531,25 @@ function buildDashboard(){
       <div class="page" style="padding-top:0"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${sparkCards}</div></div>`:'';
   })():'';
 
+  // Streak de treino (dias seguidos) + treino sugerido de hoje p/ o cabeçalho e o CTA
+  const _streak=(()=>{ try{ const days=new Set(getWorkouts().map(w=>localDayKey(new Date(w.date)))); let s=0,dd=new Date(); if(!days.has(localDayKey(dd))) dd.setDate(dd.getDate()-1); while(days.has(localDayKey(dd))){ s++; dd.setDate(dd.getDate()-1); } return s; }catch(e){ return 0; } })();
+  const _sched=getActiveSchedule(); const _todayType=(_sched[(new Date().getDay()+6)%7]||{}).type; const _prog=getWorkoutProgram(); const _todayP=_prog[_todayType]; const _trainedToday=getWorkouts().some(w=>localDayKey(new Date(w.date))===getTodayKey());
+  const _initial=((name||'V').trim().charAt(0)||'V').toUpperCase();
+
   return`
   <!-- ── HOJE ── -->
   <div class="page" style="padding-bottom:8px">
+    <!-- Cabeçalho de saudação -->
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--fontd);font-weight:700;color:${ac};flex-shrink:0">${_initial}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--sub);font-weight:600">Bom treino,</div>
+        <div class="big-num" style="font-size:19px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name||'Você'}</div>
+      </div>
+      ${_streak>0?`<span style="display:inline-flex;align-items:center;gap:3px;background:${ac}1e;color:${ac};border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;flex-shrink:0">🔥 ${_streak}d</span>`:''}
+      <button onclick="openSettings()" aria-label="Ajustes" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⚙️</button>
+      <button onclick="toggleTheme()" aria-label="Tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🌙</button>
+    </div>
     <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">${todayDate}</div>
     ${deloadBadge}
 
@@ -1579,6 +1599,24 @@ function buildDashboard(){
         <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(plannedThisWeek?Math.round(doneThisWeek/plannedThisWeek*100):0,2)}%;background:var(--purple)"></div></div>
       </div>
     </div>
+
+    <!-- Treino de hoje (CTA) -->
+    ${_todayType&&_todayType!=='rest'&&_todayP?`
+    <a onclick="go('treinos');activeWorkoutType='${_todayType}';setTimeout(()=>{woSubTab='log';render();},10)" style="display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,${ac},${ac}cc);color:#0A0B0F;border-radius:20px;padding:15px 16px;margin-top:2px;cursor:pointer;text-decoration:none">
+      <div style="width:48px;height:48px;border-radius:14px;background:rgba(10,11,15,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" style="width:25px;height:25px;stroke:#0A0B0F;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round"><path d="M6.5 6.5l11 11M4 9l-1 1 4 4M20 15l1-1-4-4"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;font-weight:800;opacity:.7;letter-spacing:.5px">${_trainedToday?'TREINAR DE NOVO':'TREINO DE HOJE'}</div>
+        <div class="big-num" style="font-size:16px;line-height:1.15;color:#0A0B0F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(_todayP.label||'').split('—').pop().trim()||_todayP.label}</div>
+        <div style="font-size:11px;font-weight:700;opacity:.75">${_todayP.exercises.length} exercícios</div>
+      </div>
+      <svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:#0A0B0F;fill:#0A0B0F;stroke-width:1;flex-shrink:0"><path d="M8 5l11 7-11 7V5Z"/></svg>
+    </a>`:`
+    <div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:15px 16px;margin-top:2px">
+      <div style="font-size:26px">😴</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.4">Hoje é dia de descanso — recuperação é onde o músculo cresce.</div>
+    </div>`}
   </div>
 
   <!-- ── SEMANA ── -->
@@ -2521,33 +2559,46 @@ function buildWoLog(tabs){
     </div>`;
   }).join('');
 
+  const _totalSets=prog.exercises.reduce((n,ex)=>n+ex.sets.filter(s=>s.t==='work').length,0);
+  const _lp=(prog.label||'').split('—'); const _labTop=_lp.length>1?_lp[0].trim():''; const _labName=(_lp.length>1?_lp.slice(1).join('—'):prog.label).trim();
+  setTimeout(updateWoProgress,40);
+
   return`<div class="page">
-    <div class="sec-title" style="padding:0 0 14px">💪 Treinos</div>
-    ${tabs}
-    <div style="margin-bottom:14px"><div class="wo-day-grid">${days}</div></div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:16px">
-      <div style="min-width:0;flex:1">
-        <div style="font-size:15px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;color:${prog.color}">${prog.label}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span>${prog.exercises.length} exercícios · ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
-          <span style="background:rgba(226,226,64,.12);border:1px solid rgba(226,226,64,.3);border-radius:20px;padding:2px 9px;font-size:9px;letter-spacing:1px;color:var(--him);font-weight:700">⏱ <span id="wo-elapsed">${fmtElapsed(woStartTime?Date.now()-woStartTime:0)}</span></span>
-        </div>
-        ${(()=>{const last=getWorkouts().slice().reverse().find(s=>s.type===activeWorkoutType);return last?`<div style="font-size:9px;color:var(--info);margin-top:3px">Último: ${calcSessionSets(last)||'?'} séries · ${last.tonnage||calcSessionVolume(last)||'?'}kg ton.</div>`:'';})()}
+    <!-- Header do treino ativo -->
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:13px">
+      <button onclick="activeWorkoutType=null;render()" aria-label="Voltar" style="background:var(--bg4);border:1px solid var(--border2);color:var(--sub);border-radius:12px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div style="flex:1;min-width:0">
+        ${_labTop?`<div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_labTop}</div>`:''}
+        <div class="big-num" style="font-size:17px;line-height:1.15;color:${prog.color};overflow-wrap:anywhere">${_labName}</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
-          <button onclick="saveWorkoutSession()" style="padding:10px 18px;background:${prog.color};color:#08080e;border:none;border-radius:8px;font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">✅ Salvar</button>
-          <button onclick="exitWorkout()" style="padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;font-family:var(--font2);font-size:9px;font-weight:700;color:var(--muted);cursor:pointer">✕ Sair</button>
-        </div>
+      <div style="display:inline-flex;align-items:center;gap:6px;background:var(--bg4);border:1px solid var(--border2);border-radius:999px;padding:7px 12px;flex-shrink:0">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:${prog.color};fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+        <span class="big-num" style="font-size:14px" id="wo-elapsed">${fmtElapsed(woStartTime?Date.now()-woStartTime:0)}</span>
+      </div>
     </div>
-    <div id="wo-draft-note" style="display:none;align-items:center;gap:7px;padding:6px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.35);border-radius:20px;margin-bottom:14px;width:fit-content">
+    <!-- Status + progresso -->
+    <div id="wo-draft-note" style="display:inline-flex;align-items:center;gap:7px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.35);border-radius:999px;padding:6px 13px;margin-bottom:9px">
       <span style="width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 1.6s infinite"></span>
-      <span style="font-size:11px;font-weight:700;color:var(--good);letter-spacing:.3px">Treino em andamento</span>
+      <span style="font-size:12px;font-weight:800;color:var(--good)">Treino em andamento</span>
     </div>
+    <div class="bar" style="height:6px;margin-bottom:5px"><div class="fill" id="wo-progress-bar" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:14px"><span id="wo-progress-txt">0</span> de ${_totalSets} séries concluídas</div>
     ${exCards}
     <div style="margin-top:20px">
-      <button onclick="saveWorkoutSession()" style="width:100%;padding:13px;background:${prog.color};color:#08080e;border:none;border-radius:8px;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer">✅ Finalizar e Salvar Treino</button>
+      <button onclick="saveWorkoutSession()" style="width:100%;padding:15px;background:${prog.color};color:#08080e;border:none;border-radius:14px;font-family:var(--fontd);font-size:14px;font-weight:700;cursor:pointer">Finalizar e salvar treino</button>
     </div>
   </div>`;
+}
+// Atualiza a barra "X de Y séries concluídas" do treino ativo
+function updateWoProgress(){
+  try{
+    const prog=getWorkoutProgram()[activeWorkoutType]; if(!prog) return;
+    let total=0,done=0;
+    prog.exercises.forEach((ex,ei)=>ex.sets.forEach((s,si)=>{ if(s.t==='work'){ total++; if(document.getElementById('btn_'+ei+'_'+si)?.classList.contains('done')) done++; } }));
+    const bar=document.getElementById('wo-progress-bar'), txt=document.getElementById('wo-progress-txt');
+    if(bar) bar.style.width=(total?Math.round(done/total*100):0)+'%';
+    if(txt) txt.textContent=done;
+  }catch(e){}
 }
 
 // Feedback de progressão de UMA série vs. o último treino / recorde
@@ -2593,6 +2644,7 @@ function doneSet(exIdx,si,restSecs,exIdxOrName,isWork,prevW,prevR,maxLoad){
     startTimer(restSecs,exName);
   }
   saveWoDraft();
+  updateWoProgress();
 }
 
 // ── Vibration helpers ──
