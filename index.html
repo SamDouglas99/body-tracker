@@ -2136,8 +2136,8 @@ function buildEvolucao(){
   const bfColor=bf?(CP==='him'?(bf<15?'var(--good)':bf<20?'var(--warn)':'var(--bad)'):(bf<22?'var(--good)':bf<28?'var(--warn)':'var(--bad)')):'var(--muted)';
   const leanMass=bf?((curW*(1-bf/100)).toFixed(1)):null;
   const _evAll=[['chart','Gráfico'],['fotos','Fotos'],['metas','Metas'],['indicators','Indicadores'],['1rm','1RM'],['history','Histórico']];
-  const _evTabs=_isSimple()?_evAll.filter(t=>['chart','fotos','metas'].includes(t[0])):_evAll;
-  if(_isSimple()&&['indicators','1rm','history'].includes(evSubTab)) evSubTab='chart';
+  const _evTabs=_isSimple()?_evAll.filter(t=>['chart','fotos','metas','indicators'].includes(t[0])):_evAll;
+  if(_isSimple()&&['1rm','history'].includes(evSubTab)) evSubTab='chart';
   const subtabs=`<div class="subtabs">${_evTabs.map(([k,l])=>`<button class="stab${evSubTab===k?' active':''}" onclick="evSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
   if(evSubTab==='fotos') return buildFotos(subtabs);
   if(evSubTab==='indicators'){
@@ -2259,11 +2259,6 @@ function buildEvolucao(){
     ${subtabs}
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${cfs}</div>
     <div class="card" style="margin-bottom:20px"><div style="height:220px;position:relative"><canvas id="mainChart"></canvas></div></div>
-    <div class="sec-title" style="padding:0 0 14px">Evolução por Exercício</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
-      ${CP==='him'?Object.values(getWorkoutProgram()).flatMap(w=>w.exercises).filter((_,i)=>i%3===0).slice(0,8).map(ex=>`<button class="cf${woPrgExercise===ex.name?' active':''}" onclick="setWoChart('${ex.name}',this)">${ex.name.substring(0,14)}</button>`).join(''):''}
-    </div>
-    <div class="card"><div style="height:200px;position:relative"><canvas id="woChart"></canvas></div></div>
   </div>`;
 }
 function setChartKey(k,btn){
@@ -4304,7 +4299,7 @@ function buildNutricao(){
             {label:'Proteína',val:totProt,meta:targetProt,unit:'g',color:'var(--good)'},
             {label:'Carboidratos',val:totCarb,meta:targetCarb,unit:'g',color:'var(--info)'},
             {label:'Gorduras',val:totGord,meta:targetGord,unit:'g',color:'var(--warn)'},
-            {label:'Fibras',val:totFibra,meta:30,unit:'g',color:'var(--purple)'},
+            {label:'Fibras',val:totFibra,meta:30,unit:'g',color:'var(--sub)'},
           ].map(m=>`<div style="background:var(--bg4);border-radius:8px;padding:10px">
             <div style="font-size:9px;color:var(--muted);margin-bottom:3px">${m.label}</div>
             <div style="font-size:18px;font-weight:700;color:${m.val>=m.meta?'var(--good)':m.color}">${m.val}<span style="font-size:10px;color:var(--muted)"> ${m.unit}</span></div>
