@@ -2126,7 +2126,10 @@ function buildEvolucao(){
   const ac=p.accentHex;
   const bfColor=bf?(CP==='him'?(bf<15?'var(--good)':bf<20?'var(--warn)':'var(--bad)'):(bf<22?'var(--good)':bf<28?'var(--warn)':'var(--bad)')):'var(--muted)';
   const leanMass=bf?((curW*(1-bf/100)).toFixed(1)):null;
-  const subtabs=`<div class="subtabs">${[['chart','Gráfico'],['fotos','Fotos'],['metas','Metas'],['indicators','Indicadores'],['1rm','1RM'],['history','Histórico']].map(([k,l])=>`<button class="stab${evSubTab===k?' active':''}" onclick="evSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
+  const _evAll=[['chart','Gráfico'],['fotos','Fotos'],['metas','Metas'],['indicators','Indicadores'],['1rm','1RM'],['history','Histórico']];
+  const _evTabs=_isSimple()?_evAll.filter(t=>['chart','fotos','metas'].includes(t[0])):_evAll;
+  if(_isSimple()&&['indicators','1rm','history'].includes(evSubTab)) evSubTab='chart';
+  const subtabs=`<div class="subtabs">${_evTabs.map(([k,l])=>`<button class="stab${evSubTab===k?' active':''}" onclick="evSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
   if(evSubTab==='fotos') return buildFotos(subtabs);
   if(evSubTab==='indicators'){
     return`<div class="page">
@@ -2329,7 +2332,10 @@ function initCharts(){
 // TREINOS — Push/Pull/Legs + Logger
 // ══════════════════════════════════════
 function buildTreinos(){
-  const tabs=`<div class="subtabs">${[['log','🏋️ Registrar Treino'],['history','📚 Histórico'],['progress','📊 Evolução de Carga'],['planner','📅 Semana'],['edit','⚙️ Editar Treinos']].map(([k,l])=>`<button class="stab${woSubTab===k?' active':''}" onclick="woSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
+  const _woAll=[['log','Registrar'],['history','Histórico'],['planner','Semana'],['progress','Progressão'],['edit','Editar']];
+  const _woTabs=_isSimple()?_woAll.filter(t=>['log','history','planner'].includes(t[0])):_woAll;
+  if(_isSimple()&&['progress','edit'].includes(woSubTab)) woSubTab='log';
+  const tabs=`<div class="subtabs">${_woTabs.map(([k,l])=>`<button class="stab${woSubTab===k?' active':''}" onclick="woSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
   if(woSubTab==='history') return buildWoHistory(tabs);
   if(woSubTab==='progress') return buildWoProgress(tabs);
   if(woSubTab==='planner') return buildWoPlanner(tabs);
@@ -5881,6 +5887,9 @@ window._sbDiagnose=_sbDiagnose;
 function _setBackend(b){ try{ localStorage.setItem('bt_backend',b); }catch(e){} location.reload(); }
 // ── Modo avançado (dono do app) — esconde Backend/Migração dos usuários finais ──
 function _isDev(){ try{ return localStorage.getItem('bt_dev')==='1'; }catch(e){ return false; } }
+// Modo de densidade: 'simples' (padrão — menos cheio) esconde o avançado; 'completo' mostra tudo.
+function _isSimple(){ try{ return localStorage.getItem('bt_mode')!=='completo'; }catch(e){ return true; } }
+function _setMode(m){ try{ localStorage.setItem('bt_mode', m==='completo'?'completo':'simples'); }catch(e){} try{ showSyncStatus(m==='completo'?'Modo Completo — tudo visível':'Modo Simples — só o essencial','var(--him)'); }catch(e){} const el=document.getElementById('settings-modal'); if(el){ closeSettings(); openSettings(); } render(); }
 let _devTapN=0, _devTapT=null;
 function _devTap(){
   _devTapN++; clearTimeout(_devTapT); _devTapT=setTimeout(()=>{ _devTapN=0; },1200);
@@ -6271,6 +6280,13 @@ function openSettings(onboarding){
       ${field('set_pace','Ritmo semanal alvo (kg/semana)',s.pace||0.3,'ex: 0.3','0.05')}
       <div style="font-size:9px;color:var(--muted);margin:-4px 0 14px;line-height:1.5">O ritmo é usado para estimar quantas semanas faltam para a meta. ~0,3kg/semana é sustentável.</div>
       <button onclick="saveProfileSettings()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">💾 Salvar perfil</button>
+      <div style="height:1px;background:var(--border);margin:18px 0"></div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Modo do app</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Simples mostra só o essencial (menos cheio). Completo libera gráficos, indicadores, 1RM e edição de treinos.</div>
+      <div style="display:flex;gap:8px;background:var(--bg4);border:1px solid var(--border2);border-radius:12px;padding:4px">
+        <button onclick="_setMode('simples')" style="flex:1;padding:11px;border-radius:9px;border:none;cursor:pointer;font-family:var(--font2);font-size:12px;font-weight:800;background:${_isSimple()?'var(--him)':'transparent'};color:${_isSimple()?'#08080e':'var(--muted)'}">✦ Simples</button>
+        <button onclick="_setMode('completo')" style="flex:1;padding:11px;border-radius:9px;border:none;cursor:pointer;font-family:var(--font2);font-size:12px;font-weight:800;background:${!_isSimple()?'var(--him)':'transparent'};color:${!_isSimple()?'#08080e':'var(--muted)'}">⚙ Completo</button>
+      </div>
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
       <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">💾 Seus dados</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Baixe um backup completo (treinos, medidas, refeições, compras) ou restaure de um arquivo.</div>
