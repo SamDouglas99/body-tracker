@@ -1931,7 +1931,7 @@ function buildFotos(subtabs){
           <input type="file" accept="image/*" capture="environment" style="display:none"
             onchange="(async function(e){const f=e.target.files[0];if(!f)return;const lbl=document.getElementById('photo-label')?.value||'';const cat=window._uploadCat||'frontal';await uploadProgressPhoto(f,lbl,cat);e.target.value='';})(event)"/>
           <div style="border:2px solid var(--border2);border-radius:10px;padding:16px 8px;text-align:center;background:var(--bg4)">
-            <div style="font-size:26px;margin-bottom:6px">📷</div>
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:${ac};fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px"><rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.2"/><path d="M8 7l1.5-2h5L16 7"/></svg>
             <div style="font-size:11px;font-weight:700;color:${ac}">Câmera</div>
           </div>
         </label>
@@ -1939,7 +1939,7 @@ function buildFotos(subtabs){
           <input type="file" accept="image/*" style="display:none"
             onchange="(async function(e){const f=e.target.files[0];if(!f)return;const lbl=document.getElementById('photo-label')?.value||'';const cat=window._uploadCat||'frontal';await uploadProgressPhoto(f,lbl,cat);e.target.value='';})(event)"/>
           <div style="border:2px solid var(--border2);border-radius:10px;padding:16px 8px;text-align:center;background:var(--bg4)">
-            <div style="font-size:26px;margin-bottom:6px">🖼️</div>
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:${ac};fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.8"/><path d="M4 18l5-5 3 3 4-4 4 4"/></svg>
             <div style="font-size:11px;font-weight:700;color:${ac}">Galeria</div>
           </div>
         </label>
@@ -1950,7 +1950,7 @@ function buildFotos(subtabs){
 
   const uploadSection=`
     <div class="card" style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">📸 Nova Foto</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Nova foto</div>
       <div style="margin-bottom:12px">
         <label class="flabel">Rótulo (ex: Semana 1, Mês 3)</label>
         <input type="text" id="photo-label" placeholder="Ex: Início, 1 mês, 3 meses..." style="width:100%"/>
@@ -2126,7 +2126,7 @@ function buildEvolucao(){
   const ac=p.accentHex;
   const bfColor=bf?(CP==='him'?(bf<15?'var(--good)':bf<20?'var(--warn)':'var(--bad)'):(bf<22?'var(--good)':bf<28?'var(--warn)':'var(--bad)')):'var(--muted)';
   const leanMass=bf?((curW*(1-bf/100)).toFixed(1)):null;
-  const subtabs=`<div class="subtabs">${[['chart','📈 Gráfico'],['indicators','🔬 Indicadores'],['1rm','🧮 Calc. 1RM'],['fotos','📸 Fotos'],['metas','🎯 Metas'],['history','🗓️ Histórico']].map(([k,l])=>`<button class="stab${evSubTab===k?' active':''}" onclick="evSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
+  const subtabs=`<div class="subtabs">${[['chart','Gráfico'],['fotos','Fotos'],['metas','Metas'],['indicators','Indicadores'],['1rm','1RM'],['history','Histórico']].map(([k,l])=>`<button class="stab${evSubTab===k?' active':''}" onclick="evSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
   if(evSubTab==='fotos') return buildFotos(subtabs);
   if(evSubTab==='indicators'){
     return`<div class="page">
