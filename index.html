@@ -337,8 +337,8 @@ html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px color-mix(in srgb, var(--
 .qa-item .qi{font-size:23px;line-height:1}
 .qa-item .ql{font-size:11px;font-weight:700}
 
-/* ── MOBILE ≤720px ── */
-@media(max-width:720px){
+/* ── MOBILE ≤640px (notebooks com escala do SO ficam ~700px e mantêm a sidebar) ── */
+@media(max-width:640px){
   #sidebar{display:none}
   #main{margin-left:0}
   #mobile-nav{display:flex !important}
@@ -349,6 +349,12 @@ html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px color-mix(in srgb, var(--
   .set-row{grid-template-columns:72px 1fr 1fr 42px}
   #content{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   input[type=number],input[type=text],select,.set-inp{font-size:16px !important}
+}
+
+/* ── Grades mais densas quando a largura útil é menor (inclui notebook com sidebar) ── */
+@media(max-width:860px){
+  .grid3,.grid4{grid-template-columns:1fr 1fr}
+  .fgrid{grid-template-columns:1fr 1fr}
 }
 
 /* ══════════════════════════════════════
@@ -1384,7 +1390,7 @@ function render(){
   const _snGas=document.getElementById('sn-gastos'); if(_snGas) _snGas.style.display=_simple?'none':'';
   // Force mobile nav and prog-bar visible on small screens
   const mn=document.getElementById('mobile-nav');
-  mn.style.display = window.innerWidth<=720 ? 'flex' : '';
+  mn.style.display = window.innerWidth<=640 ? 'flex' : '';
   setTimeout(initCharts,60);
   if(CT==='treinos'&&woSubTab==='log'&&activeWorkoutType&&activeWorkoutType!=='rest') setTimeout(restoreWoDraftInputs,0);
 }
@@ -1403,13 +1409,13 @@ function buildDashboard(){
   // ── Deload badge ──
   const deloadWeeks=checkDeload();
   const deloadBadge=deloadWeeks?`
-    <div onclick="go('guia')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.4);border-radius:12px;margin-bottom:14px;cursor:pointer">
+    <div onclick="go('guia')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:color-mix(in srgb, var(--info) 8%, transparent);border:1px solid color-mix(in srgb, var(--info) 40%, transparent);border-radius:12px;margin-bottom:14px;cursor:pointer">
       <span style="font-size:22px;flex-shrink:0">🔄</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:11px;font-weight:800;color:var(--purple)">DELOAD RECOMENDADO — ${deloadWeeks}ª semana consecutiva</div>
+        <div style="font-size:11px;font-weight:800;color:var(--info)">DELOAD RECOMENDADO — ${deloadWeeks}ª semana consecutiva</div>
         <div style="font-size:10px;color:var(--sub);margin-top:2px">Você treinou ${deloadWeeks} semanas seguidas com volume alto. Uma semana com 50% da carga vai potencializar os próximos ciclos. Toque para ver o guia.</div>
       </div>
-      <span style="font-size:14px;color:var(--purple);flex-shrink:0">→</span>
+      <span style="font-size:14px;color:var(--info);flex-shrink:0">→</span>
     </div>`:'';
 
   // ── Weekly check-in (segunda-feira, uma vez por semana) ──
@@ -1600,10 +1606,10 @@ function buildDashboard(){
         <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(ms.todayTotal?Math.round(ms.todayDone/ms.todayTotal*100):0,2)}%"></div></div>
       </div>
       <div class="card" onclick="go('treinos')" style="padding:13px;cursor:pointer">
-        <svg viewBox="0 0 24 24" style="width:21px;height:21px;stroke:var(--purple);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px"><path d="M6.5 6.5l11 11M4 9l-1 1 4 4M20 15l1-1-4-4M9 4l-1 1M16 20l-1-1"/></svg>
+        <svg viewBox="0 0 24 24" style="width:21px;height:21px;stroke:var(--him);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px"><path d="M6.5 6.5l11 11M4 9l-1 1 4 4M20 15l1-1-4-4M9 4l-1 1M16 20l-1-1"/></svg>
         <div class="big-num" style="font-size:19px">${doneThisWeek}<span style="font-size:11px;color:var(--muted)">/${plannedThisWeek}</span></div>
         <div class="lbl" style="margin:2px 0 0">Treinos</div>
-        <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(plannedThisWeek?Math.round(doneThisWeek/plannedThisWeek*100):0,2)}%;background:var(--purple)"></div></div>
+        <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(plannedThisWeek?Math.round(doneThisWeek/plannedThisWeek*100):0,2)}%;background:var(--him)"></div></div>
       </div>
     </div>
 
@@ -6691,7 +6697,7 @@ let _authUser=null,_unsubE=null,_unsubW=null;
 function _enterApp(){
   document.getElementById('shell').className='him-mode';
   document.getElementById('mobile-nav').className='him-mode';
-  const _mnToggle=()=>{ const mn=document.getElementById('mobile-nav'); if(mn) mn.style.display = window.innerWidth<=720 ? 'flex' : ''; };
+  const _mnToggle=()=>{ const mn=document.getElementById('mobile-nav'); if(mn) mn.style.display = window.innerWidth<=640 ? 'flex' : ''; };
   _mnToggle();
   if(!window._resizeWired){ window._resizeWired=1; let _rt; window.addEventListener('resize',()=>{ clearTimeout(_rt); _rt=setTimeout(_mnToggle,120); }); }
   setTimeout(()=>{ if(Notification.permission==='granted') scheduleMealReminders(); },2000);
