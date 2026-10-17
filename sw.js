@@ -1,5 +1,5 @@
 // Body Tracker Pro — Service Worker v2
-const CACHE_NAME = 'bodytracker-v4';
+const CACHE_NAME = 'bodytracker-v5';
 
 const STATIC_ASSETS = [
   './',
@@ -59,15 +59,16 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // index.html — network first, fallback cache
+  // index.html — network first, SEM cache HTTP (no-store) p/ nunca servir versão velha; fallback cache offline
   if (url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/body-tracker/')) {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-store' })
         .then(res => {
-          caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, copy));
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match('./index.html').then(r => r || caches.match(event.request)))
     );
     return;
   }
