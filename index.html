@@ -1485,7 +1485,7 @@ function buildDashboard(){
   const sleepLabels=['','😫 Péssimo','😕 Regular','😊 Bom','🌙 Excelente'];
   const checkinCard=last4Checkins.length>=2?`
     <div class="card" style="margin-bottom:12px">
-      <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">📋 Tendência — Últimos Check-ins</div>
+      <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Tendência — Últimos Check-ins</div>
       <div style="display:grid;grid-template-columns:repeat(${Math.min(last4Checkins.length,4)},1fr);gap:6px">
         ${last4Checkins.map(c=>{
           const dt=new Date(c.date);
@@ -1687,7 +1687,7 @@ function buildMedidas(){
   const remLabel=rem>0?`faltam ${Math.abs(rem)}`:rem<0?`${Math.abs(rem)} acima`:'na meta';
   const remColor=rem===0?'var(--good)':'var(--text)';
   const heroCard=`<div class="card-accent" style="margin-bottom:16px;border-color:${ac}45">
-    <div style="font-size:8px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">🎯 Progresso rumo à meta</div>
+    <div style="font-size:8px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Progresso rumo à meta</div>
     <div style="display:flex;align-items:baseline;gap:6px">
       <span style="font-size:34px;font-weight:800;color:${ac};line-height:1">${d.curW}</span>
       <span style="font-size:13px;color:var(--muted)">kg</span>
@@ -2145,10 +2145,10 @@ function buildEvolucao(){
       <div class="sec-title" style="padding:0 0 14px">Indicadores de Saúde</div>
       ${subtabs}
       <div class="grid4" style="margin-bottom:20px">
-        <div class="card"><div style="font-size:24px;margin-bottom:6px">⚖️</div><div style="font-size:28px;font-weight:700;color:${ac}">${curW}kg</div><div class="lbl" style="margin:3px 0">Peso atual</div><div style="font-size:10px;color:var(--sub)">Meta: ${goalW}kg</div><div class="bar" style="margin-top:8px"><div class="fill" style="width:${Math.min((curW/goalW*100),100).toFixed(0)}%"></div></div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:6px">🫀</div><div style="font-size:28px;font-weight:700;color:${bmiInfo.color}">${bmi||'—'}</div><div class="lbl" style="margin:3px 0">IMC</div><div style="font-size:10px;color:${bmiInfo.color}">${bmiInfo.label}</div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:6px">🔬</div><div style="font-size:28px;font-weight:700;color:${bfColor}">${bf?`${bf}%`:'—'}</div><div class="lbl" style="margin:3px 0">% Gordura</div><div style="font-size:10px;color:var(--muted)">${leanMass?`Magra: ~${leanMass}kg`:'Medir pescoço + cintura'}</div></div>
-        <div class="card"><div style="font-size:24px;margin-bottom:6px">💪</div><div style="font-size:28px;font-weight:700;color:${ac}">${getTotalSessions()}</div><div class="lbl" style="margin:3px 0">Treinos Totais</div><div style="font-size:10px;color:var(--muted)">${getThisWeekSessions()} esta semana</div></div>
+        <div class="card"><div style="margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 9.5a4 4 0 0 1 8 0"/><path d="M12 9.5l2.4-2"/></svg></div><div style="font-size:28px;font-weight:700;color:${ac}">${curW}kg</div><div class="lbl" style="margin:3px 0">Peso atual</div><div style="font-size:10px;color:var(--sub)">Meta: ${goalW}kg</div><div class="bar" style="margin-top:8px"><div class="fill" style="width:${Math.min((curW/goalW*100),100).toFixed(0)}%"></div></div></div>
+        <div class="card"><div style="margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-6.5-4.2-6.5-9A3.5 3.5 0 0 1 12 7.2 3.5 3.5 0 0 1 18.5 11c0 4.8-6.5 9-6.5 9z"/></svg></div><div style="font-size:28px;font-weight:700;color:${bmiInfo.color}">${bmi||'—'}</div><div class="lbl" style="margin:3px 0">IMC</div><div style="font-size:10px;color:${bmiInfo.color}">${bmiInfo.label}</div></div>
+        <div class="card"><div style="margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s5 5.2 5 8.8a5 5 0 0 1-10 0c0-3.6 5-8.8 5-8.8z"/></svg></div><div style="font-size:28px;font-weight:700;color:${bfColor}">${bf?`${bf}%`:'—'}</div><div class="lbl" style="margin:3px 0">% Gordura</div><div style="font-size:10px;color:var(--muted)">${leanMass?`Magra: ~${leanMass}kg`:'Medir pescoço + cintura'}</div></div>
+        <div class="card"><div style="margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11M4 9l-1 1 4 4M20 15l1-1-4-4M9 4l-1 1M16 20l-1-1"/></svg></div><div style="font-size:28px;font-weight:700;color:${ac}">${getTotalSessions()}</div><div class="lbl" style="margin:3px 0">Treinos Totais</div><div style="font-size:10px;color:var(--muted)">${getThisWeekSessions()} esta semana</div></div>
       </div>
       <div class="grid2">
         <div class="card"><div style="font-weight:700;margin-bottom:12px;font-size:12px">IMC — Classificação</div>${[['<18,5','Abaixo do peso','var(--info)'],['18,5–24,9','Normal','var(--good)'],['25–29,9','Sobrepeso','var(--warn)'],['≥30','Obesidade','var(--bad)']].map(([r,l,c])=>`<div class="trow"><span style="font-size:10px;color:var(--sub)">${r}</span><span style="font-size:10px;color:${c}">${l}</span></div>`).join('')}</div>
@@ -2195,7 +2195,7 @@ function buildEvolucao(){
 
       <!-- PR Table -->
       <div class="card" style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">🏆 PRs Registrados</div>
+        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">PRs Registrados</div>
         ${allEx.filter(ex=>maxLoads[ex.name]).length===0
           ?'<div class="no-data">Registre treinos com carga para ver os PRs</div>'
           :allEx.filter(ex=>maxLoads[ex.name]).map(ex=>{
@@ -2217,7 +2217,7 @@ function buildEvolucao(){
 
       <!-- Percentage table -->
       <div class="card">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">📊 Tabela de Percentuais</div>
+        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Tabela de Percentuais</div>
         <div id="rm-pct-table">
           <div style="font-size:10px;color:var(--muted);text-align:center">Calcule um 1RM acima para ver a tabela</div>
         </div>
@@ -2396,7 +2396,7 @@ function buildWoLog(tabs){
         </div>
       </div>
       <div style="font-size:10px;color:var(--sub);line-height:1.5;margin-bottom:${_isRest?0:12}px">💡 ${_insight}</div>
-      ${!_isRest?`<button onclick="activeWorkoutType='${_todayPlan.type}';woSubTab='log';render()" style="width:100%;padding:12px;background:${_recColor};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">▶ ${_trainedToday?'Treinar de novo':'Iniciar '+(labels[_todayPlan.type]||'treino')}</button>`:''}
+      ${!_isRest?`<button onclick="activeWorkoutType='${_todayPlan.type}';woSubTab='log';render()" style="width:100%;padding:12px;background:${_recColor};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">${_trainedToday?'Treinar de novo':'Iniciar '+(labels[_todayPlan.type]||'treino')}</button>`:''}
     </div>`;
     // ── Feedback: treinos previstos que ainda não foram registrados ──
     const _missed=getMissedWorkouts();
@@ -2498,7 +2498,7 @@ function buildWoLog(tabs){
 
     const lastBannerFull = last ? `
       <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);border-radius:8px;padding:8px 10px;margin-bottom:8px">
-        <div style="font-size:8px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">📋 Último treino — bata ou supere!</div>
+        <div style="font-size:8px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Último treino — bata ou supere!</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;width:100%">
           ${lastWorkSets.map((st,i)=>`<div style="background:var(--bg4);border-radius:6px;padding:5px 7px;text-align:center;flex:1;min-width:0">
             <div style="font-size:7px;color:var(--muted);margin-bottom:1px">Série ${i+1}</div>
@@ -2807,7 +2807,7 @@ function showQuickEditSets(woKey, exIdx){
         </button>`).join('')}
       </div>
 
-      <button onclick="applyQuickEditSets('${woKey}',${exIdx})" style="width:100%;padding:13px;background:${ac};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:10px">💾 Salvar alteração</button>
+      <button onclick="applyQuickEditSets('${woKey}',${exIdx})" style="width:100%;padding:13px;background:${ac};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:10px">Salvar alteração</button>
       <button onclick="document.getElementById('quick-edit-sets').remove()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border2);border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer">Cancelar</button>
     </div>`;
   window._qeSets=n;
@@ -3087,10 +3087,10 @@ function buildWoProgress(tabs){
       <div style="font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.5">Comparo o ganho de carga do 1º ao último registro de cada grupo. Quem evoluiu MENOS pede mais estímulo (volume/intensidade); quem evoluiu bem, mantenha.</div>
       ${emphData.length===0?`<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px">Registre o mesmo exercício em pelo menos 2 treinos para o avaliador funcionar. Continue registrando! 💪</div>`:`
         ${focar[0]?`<div style="background:var(--bg4);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:11px"><span style="font-size:24px">🔥</span><div><div style="font-size:9px;color:var(--warn);letter-spacing:1px;text-transform:uppercase">Prioridade agora</div><div style="font-size:14px;font-weight:800;color:var(--text)">${focar[0].muscle} — evoluiu ${focar[0].gain>0?'só +':''}${focar[0].gain}%</div></div></div>`:''}
-        <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">🔺 Dar mais ênfase</div>
+        <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Dar mais ênfase</div>
         ${focar.map(emphRow).join('')}
         <div style="height:14px"></div>
-        <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">✅ Evoluindo bem</div>
+        <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Evoluindo bem</div>
         ${indoBem.map(emphRow).join('')}
       `}
     </div>`;
@@ -3770,7 +3770,7 @@ function buildMercado(subtabs){
 
   const costCard = `
     <div class="card-accent" style="margin-bottom:14px;border-color:${ac}30">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">💰 Controle de Gastos</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Controle de Gastos</div>
 
       <!-- Registrar compra da semana -->
       <div style="background:var(--bg5);border-radius:10px;padding:12px;margin-bottom:12px">
@@ -3852,7 +3852,7 @@ function buildMercado(subtabs){
 
     <!-- Seletor de opções -->
     <div class="card" style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase">📋 Cardápio selecionado</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase">Cardápio selecionado</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:10px">Escolha a opção de cada refeição — a lista e os custos atualizam automaticamente</div>
       ${selectors}
     </div>
@@ -3901,12 +3901,12 @@ function buildLembretes(subtabs){
       <div style="font-size:11px;color:var(--sub);line-height:1.6">Defina os horários das suas refeições e da água. Com o app <strong>aberto</strong>, os lembretes já usam esses horários. Com o app <strong>fechado</strong> (push), passam a usar na próxima atualização do robô.</div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">🍽️ Refeições</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Refeições</div>
       ${mealRows}
       <button onclick="_remAddMeal()" style="width:100%;margin-top:10px;padding:10px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar refeição</button>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">💧 Água</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Água</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
         <div><label class="flabel">A cada (h)</label><input id="rt_w_every" type="number" min="1" max="6" value="${wc.every}" style="width:100%;text-align:center"/></div>
         <div><label class="flabel">Das (h)</label><input id="rt_w_start" type="number" min="0" max="23" value="${wc.start}" style="width:100%;text-align:center"/></div>
@@ -3914,7 +3914,7 @@ function buildLembretes(subtabs){
       </div>
       <div style="font-size:9px;color:var(--muted);margin-top:6px">Ex.: a cada 1h, das 8h às 22h.</div>
     </div>
-    <button onclick="_remSave()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:11px;font-family:var(--font2);font-size:12px;font-weight:800;text-transform:uppercase;cursor:pointer">💾 Salvar horários</button>
+    <button onclick="_remSave()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:11px;font-family:var(--font2);font-size:12px;font-weight:800;text-transform:uppercase;cursor:pointer">Salvar horários</button>
     <button onclick="_remReset()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">↺ Restaurar padrão</button>
   </div>`;
 }
@@ -4013,16 +4013,16 @@ function buildNutricao(){
         const w2=getD().curW;
         const _adj=getDietAdj();
         const tKcal=_adj?_adj.kcal:Math.round(w2*41),tProt=_adj?_adj.prot:Math.round(w2*2.4),tCarb=_adj?_adj.carb:Math.round(tKcal*0.45/4),tGord=_adj?_adj.fat:Math.round(tKcal*0.28/9);
-        if(stats.todayDone===0) return`<div class="card" style="margin-bottom:14px;text-align:center;padding:16px"><div style="font-size:11px;color:var(--muted)">📊 Marque refeições para ver os macros consumidos</div></div>`;
+        if(stats.todayDone===0) return`<div class="card" style="margin-bottom:14px;text-align:center;padding:16px"><div style="font-size:11px;color:var(--muted)">Marque refeições para ver os macros consumidos</div></div>`;
         const mBar=(v,m,col)=>{const p=Math.min(Math.round(v/m*100),100);const over=v>m;return`<div style="height:5px;background:var(--bg5);border-radius:3px;overflow:hidden;margin-top:4px"><div style="width:${Math.max(p,v>0?3:0)}%;height:100%;background:${over?'var(--warn)':col};border-radius:3px"></div></div>`;};
         return`<div class="card" style="margin-bottom:14px;border-color:${ac2}28">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <div style="font-size:11px;font-weight:700">📊 Macros Consumidos Hoje</div>
+            <div style="font-size:11px;font-weight:700">Macros Consumidos Hoje</div>
             <div style="font-size:9px;color:var(--muted)">${stats.todayDone}/${stats.todayTotal} refeições</div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;width:100%">
-            ${[['⚡',cm.kcal,tKcal,'kcal','var(--him)'],['🥩',cm.prot,tProt,'g','var(--good)'],['🍚',cm.carb,tCarb,'g','var(--info)'],['🥑',cm.gord,tGord,'g','var(--warn)']].map(([ico,v,m,lbl,col])=>`<div style="background:var(--bg4);border-radius:8px;padding:8px 4px;text-align:center">
-              <div style="font-size:11px">${ico}</div>
+            ${[['KCAL',cm.kcal,tKcal,'','var(--him)'],['PROT',cm.prot,tProt,'g','var(--good)'],['CARB',cm.carb,tCarb,'g','var(--sub)'],['GORD',cm.gord,tGord,'g','var(--sub)']].map(([ico,v,m,lbl,col])=>`<div style="background:var(--bg4);border-radius:8px;padding:8px 4px;text-align:center">
+              <div style="font-size:8px;letter-spacing:1px;color:var(--muted);font-weight:800;margin-bottom:2px">${ico}</div>
               <div style="font-size:13px;font-weight:700;color:${v>=m?'var(--good)':col}">${v}</div>
               <div style="font-size:8px;color:var(--muted)">/${m}${lbl}</div>
               ${mBar(v,m,col)}
@@ -4128,7 +4128,7 @@ function buildNutricao(){
       ${subtabs}
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">✅ Check de Hoje</div>
+          <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">Check de Hoje</div>
           <div style="font-size:14px;font-weight:800;color:${suppList.length&&doneCnt===suppList.length?'var(--good)':ac}">${doneCnt}/${suppList.length}</div>
         </div>
         <div class="bar" style="margin-bottom:12px"><div class="fill" style="width:${Math.max(Math.round(doneCnt/Math.max(1,suppList.length)*100),2)}%"></div></div>
@@ -4146,7 +4146,7 @@ function buildNutricao(){
       <div class="sec-title" style="padding:0 0 14px">Orientações Nutricionais</div>
       ${subtabs}
       <div class="card-accent" style="margin-bottom:16px;border-color:${ac}30">
-        <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">📋 Diretrizes do seu plano</div>
+        <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">Diretrizes do seu plano</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           ${DIET_TIPS.map(t=>`<div style="padding:10px;background:var(--bg4);border-radius:8px;font-size:11px;color:var(--sub);display:flex;gap:8px;align-items:flex-start"><span style="font-size:18px;flex-shrink:0">${t.icon}</span>${t.tip}</div>`).join('')}
         </div>
@@ -4264,7 +4264,7 @@ function buildNutricao(){
       <div class="sec-title" style="padding:0 0 14px">Macros & Micros do Dia</div>
       ${subtabs}
       <div class="card-accent" style="margin-bottom:14px;border-color:${ac}30">
-        <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🎯 Metas para ${w}kg</div>
+        <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Metas para ${w}kg</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--sub)">
           <span>⚡ ${targetKcal} kcal</span>
           <span>🥩 ${targetProt}g proteína</span>
@@ -4297,8 +4297,8 @@ function buildNutricao(){
           ${[
             {label:'Calorias',val:totKcal,meta:targetKcal,unit:'kcal',color:'var(--him)'},
             {label:'Proteína',val:totProt,meta:targetProt,unit:'g',color:'var(--good)'},
-            {label:'Carboidratos',val:totCarb,meta:targetCarb,unit:'g',color:'var(--info)'},
-            {label:'Gorduras',val:totGord,meta:targetGord,unit:'g',color:'var(--warn)'},
+            {label:'Carboidratos',val:totCarb,meta:targetCarb,unit:'g',color:'var(--sub)'},
+            {label:'Gorduras',val:totGord,meta:targetGord,unit:'g',color:'var(--sub)'},
             {label:'Fibras',val:totFibra,meta:30,unit:'g',color:'var(--sub)'},
           ].map(m=>`<div style="background:var(--bg4);border-radius:8px;padding:10px">
             <div style="font-size:9px;color:var(--muted);margin-bottom:3px">${m.label}</div>
@@ -4355,7 +4355,7 @@ function buildNutricao(){
             </div>
           </div>`;
         }).join('')}
-        <button onclick="window._mealLog={};render()" style="margin-top:10px;width:100%;padding:8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">🗑️ Limpar dia</button>
+        <button onclick="window._mealLog={};render()" style="margin-top:10px;width:100%;padding:8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Limpar dia</button>
       </div>`:'<div class="card empty" style="padding:24px"><div class="empty-ico" style="font-size:36px">🍽️</div><div class="empty-txt">Adicione alimentos acima para calcular seus macros e micros do dia</div></div>'}
     </div>`;
   }
@@ -4435,7 +4435,7 @@ function buildNutricao(){
         <div style="font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">Opção ${i+1}</div>${opt}</div>`).join('')}
       <div style="margin-top:12px;padding:10px;background:var(--bg4);border-radius:10px;border-top:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-          <div style="font-size:9px;color:var(--him);letter-spacing:1px;text-transform:uppercase;font-weight:700">📊 Macros — Opção ${selOpt+1}</div>
+          <div style="font-size:9px;color:var(--him);letter-spacing:1px;text-transform:uppercase;font-weight:700">Macros — Opção ${selOpt+1}</div>
           <div style="display:flex;gap:5px">${optBtns}</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;text-align:center">
@@ -4461,7 +4461,7 @@ function buildNutricao(){
     ${subtabs}
     <div class="card-accent" style="margin-bottom:14px;border-color:${ac}30">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase">🎯 Objetivo: Hipertrofia</div>
+        <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase">Objetivo: Hipertrofia</div>
         <button onclick="toggleMealReminders();nuSubTab='plano';render()"
           style="padding:6px 14px;border-radius:20px;font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer;
                  border:1px solid ${localStorage.getItem('bt_reminders')==='off'?'var(--border2)':'var(--himl)'};
@@ -4486,7 +4486,7 @@ function buildNutricao(){
       </div>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="width:100%;font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">⚡ Montar dieta rápida por objetivo</span>
+      <span style="width:100%;font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">Montar dieta rápida por objetivo</span>
       <button onclick="_quickDiet('gain')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">💪 Ganho</button>
       <button onclick="_quickDiet('maint')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">⚖️ Manutenção</button>
       <button onclick="_quickDiet('cut')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">🔥 Definição</button>
@@ -4712,7 +4712,7 @@ function buildEstoque(){
         <div class="card"><div style="font-size:20px;font-weight:800;color:var(--info)">${hist.length}</div><div class="lbl" style="margin:3px 0">Compras</div></div>
       </div>
       ${topCats.length>0?`<div class="card" style="margin-bottom:14px">
-        <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">💰 Gasto por Categoria</div>
+        <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Gasto por Categoria</div>
         ${topCats.map(([cat,val],i)=>{
           const pct=Math.round(val/maxCat*100);
           return`<div style="margin-bottom:10px">
@@ -4725,7 +4725,7 @@ function buildEstoque(){
         }).join('')}
       </div>`:''}
       ${monthlyArr.length>0?`<div class="card">
-        <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">📅 Gasto Mensal</div>
+        <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Gasto Mensal</div>
         <div style="display:flex;align-items:flex-end;gap:6px;height:80px">
           ${(()=>{const maxM=Math.max(...monthlyArr.map(([,v])=>v),1);return monthlyArr.map(([m,v])=>{const pct=Math.round(v/maxM*100);const label=m.slice(0,7);const [year,month]=m.split('-');const mNames=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
             <div style="font-size:8px;color:${ac};font-weight:700">R$${Math.round(v)}</div>
@@ -4770,7 +4770,7 @@ function buildEstoque(){
   const _periodName=estPeriod==='dia'?'do dia':estPeriod==='mes'?'do mês':'da semana';
   const dietPanel=`<div class="card" style="margin-bottom:18px;border-color:${ac}20">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">📋 Itens do Plano Alimentar</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">Itens do Plano Alimentar</div>
       <div style="display:flex;gap:4px">
         ${['dia','semana','mes'].map(p=>`<button onclick="localStorage.setItem('bt_est_period','${p}');render()" style="padding:4px 10px;border-radius:20px;font-family:var(--font2);font-size:9px;font-weight:800;cursor:pointer;border:1px solid ${estPeriod===p?ac:'var(--border2)'};background:${estPeriod===p?`${ac}18`:'var(--bg4)'};color:${estPeriod===p?ac:'var(--muted)'}">${p==='dia'?'1 Dia':p==='semana'?'1 Semana':'1 Mês'}</button>`).join('')}
       </div>
@@ -4821,7 +4821,7 @@ function buildEstoque(){
     <div style="margin-top:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div>
-          <div style="font-size:10px;font-weight:800;color:var(--good);letter-spacing:1px;text-transform:uppercase">✅ Comprado (${done.length})</div>
+          <div style="font-size:10px;font-weight:800;color:var(--good);letter-spacing:1px;text-transform:uppercase">Comprado (${done.length})</div>
           ${doneCost>0?`<div style="font-size:12px;font-weight:700;color:${ac};margin-top:2px">R$&nbsp;${doneCost.toFixed(2)} nesta sessão</div>`:''}
         </div>
         <div style="display:flex;gap:6px">
@@ -4847,7 +4847,7 @@ function buildEstoque(){
   </div>`;
 
   const addForm=`<div class="card" style="margin-bottom:18px;border-color:${ac}30">
-    <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">➕ Adicionar Manualmente</div>
+    <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Adicionar Manualmente</div>
     <div style="display:grid;grid-template-columns:1fr 60px;gap:8px;margin-bottom:8px">
       <div><label class="flabel">Item</label><input type="text" id="est-name" placeholder="Nome do item…" onkeydown="if(event.key==='Enter')addEstoqueItem()"/></div>
       <div><label class="flabel">Qtd</label><input type="number" id="est-qty" placeholder="1" min="0" step="0.1"/></div>
@@ -4921,7 +4921,7 @@ function showWeeklyCheckin(){
 
       <!-- Pergunta 1: peso -->
       <div style="margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">⚖️ Qual seu peso esta manhã?</div>
+        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Qual seu peso esta manhã?</div>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="number" id="ci-weight" step="0.1" min="40" max="150" placeholder="${getD().curW}" style="flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:18px;font-weight:800;padding:12px 14px;outline:none"/>
           <span style="font-size:13px;color:var(--muted);font-weight:700">kg</span>
@@ -4930,7 +4930,7 @@ function showWeeklyCheckin(){
 
       <!-- Pergunta 2: treinos -->
       <div style="margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">💪 Quantos treinos fez na semana passada?</div>
+        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Quantos treinos fez na semana passada?</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           ${[0,1,2,3,4,5,6].map(n=>`<button onclick="document.querySelectorAll('.ci-wo').forEach(b=>b.style.background='var(--bg4)');this.style.background='${ac}18';this.dataset.sel='1';window._ciWo=${n}" class="ci-wo" style="flex:1;min-width:36px;padding:10px 4px;background:${n===lastWeekCount?`${ac}18`:'var(--bg4)'};border:1px solid ${n===lastWeekCount?ac:'var(--border2)'};border-radius:8px;color:var(--text);font-family:var(--font2);font-size:14px;font-weight:800;cursor:pointer">${n}</button>`).join('')}
         </div>
@@ -4939,7 +4939,7 @@ function showWeeklyCheckin(){
 
       <!-- Pergunta 3: dieta -->
       <div style="margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">🥗 Aderência à dieta na semana passada?</div>
+        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Aderência à dieta na semana passada?</div>
         <div style="display:flex;gap:6px">
           ${[['😔','Ruim',1],['😐','OK',2],['🙂','Boa',3],['😁','Ótima',4]].map(([em,lb,v])=>`<button onclick="document.querySelectorAll('.ci-diet').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';});this.style.background='rgba(74,222,128,.12)';this.style.borderColor='var(--good)';window._ciDiet=${v}" class="ci-diet" style="flex:1;padding:10px 4px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:700;color:var(--text);text-align:center">
             <div style="font-size:18px">${em}</div><div style="font-size:9px;color:var(--muted)">${lb}</div>
@@ -4949,7 +4949,7 @@ function showWeeklyCheckin(){
 
       <!-- Pergunta 4: sono -->
       <div style="margin-bottom:22px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">😴 Qualidade do sono?</div>
+        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Qualidade do sono?</div>
         <div style="display:flex;gap:6px">
           ${[['😫','Péssimo',1],['😕','Regular',2],['😊','Bom',3],['🌙','Excelente',4]].map(([em,lb,v])=>`<button onclick="document.querySelectorAll('.ci-sleep').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';});this.style.background='rgba(96,165,250,.12)';this.style.borderColor='var(--info)';window._ciSleep=${v}" class="ci-sleep" style="flex:1;padding:10px 4px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:700;color:var(--text);text-align:center">
             <div style="font-size:18px">${em}</div><div style="font-size:9px;color:var(--muted)">${lb}</div>
@@ -5147,7 +5147,7 @@ function buildSimulador(subtabs,d,ac,w){
 
     <!-- Parâmetros -->
     <div class="card" style="margin-bottom:14px;border-color:${ac}30">
-      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">🎚️ Parâmetros</div>
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Parâmetros</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div>
           <label class="flabel">Peso simulado (kg)</label>
@@ -5179,7 +5179,7 @@ function buildSimulador(subtabs,d,ac,w){
 
     <!-- Resultado: TDEE + metas -->
     <div class="card-accent" style="margin-bottom:14px;border-color:${ac}40">
-      <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">📊 Cálculo — ${simW}kg · ${simDays}x/sem · +${simGoal*1000/10}g/sem</div>
+      <div style="font-size:9px;color:${ac};letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Cálculo — ${simW}kg · ${simDays}x/sem · +${simGoal*1000/10}g/sem</div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--bg4);border-radius:10px;padding:12px;text-align:center">
@@ -5234,7 +5234,7 @@ function buildSimulador(subtabs,d,ac,w){
     <!-- Ajustes por refeição (dinâmico) -->
     ${diffKcal>0?`<div class="card" style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">🍽️ Ajustes por Refeição</div>
+        <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase">Ajustes por Refeição</div>
         <div style="font-size:10px;font-weight:700;color:${ac}">+${diffKcal} kcal/dia</div>
       </div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:12px;padding:7px 10px;background:var(--himb);border-radius:6px;border-left:2px solid ${ac}">
@@ -5265,8 +5265,7 @@ function buildSimulador(subtabs,d,ac,w){
     <!-- CTA -->
     <div style="margin-top:4px;margin-bottom:24px">
       <button onclick="applyDietAdjustment(${kcalTarget},${protTarget},${carbTarget},${fatTarget},${simW})"
-        style="width:100%;padding:15px;background:${ac};color:#08080e;border:none;border-radius:12px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px ${ac}33">
-        ⚡ Aplicar: ${kcalTarget} kcal · ${protTarget}g prot
+        style="width:100%;padding:15px;background:${ac};color:#08080e;border:none;border-radius:12px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px ${ac}33">Aplicar: ${kcalTarget} kcal · ${protTarget}g prot
       </button>
       ${getDietAdj()?`
         <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--good)">
@@ -5667,7 +5666,7 @@ function _renderScanModal(){
   }
   const footer=(!_scanState.busy&&!_scanState.error)?`<div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
       <button onclick="_scanClose()" style="padding:12px 16px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-weight:700;cursor:pointer">Cancelar</button>
-      <button onclick="_scanSave()" style="flex:1;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;text-transform:uppercase;cursor:pointer">💾 Salvar nos gastos</button>
+      <button onclick="_scanSave()" style="flex:1;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;text-transform:uppercase;cursor:pointer">Salvar nos gastos</button>
     </div>`:`<div style="padding:12px 14px;border-top:1px solid var(--border);text-align:right"><button onclick="_scanClose()" style="padding:10px 18px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-weight:700;cursor:pointer">Fechar</button></div>`;
   ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:460px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 40px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px)">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)">
@@ -5701,7 +5700,7 @@ function openExpenseManual(){
       </div>
       <label class="flabel">Data</label>
       <input id="exp-date" type="date" value="${getTodayKey()}" style="width:100%;margin-bottom:14px"/>
-      <button onclick="_saveExpenseManual()" style="width:100%;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;text-transform:uppercase;cursor:pointer">💾 Salvar</button>
+      <button onclick="_saveExpenseManual()" style="width:100%;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;text-transform:uppercase;cursor:pointer">Salvar</button>
     </div>
   </div>`;
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
@@ -6236,10 +6235,10 @@ function showEvolutionCard(period){
         ${['semanal','mensal','trimestral','semestral'].map(p=>`<button onclick="showEvolutionCard('${p}')" style="padding:6px 13px;border-radius:20px;font-family:var(--font2);font-size:9px;font-weight:800;letter-spacing:.5px;cursor:pointer;background:${p===period?'var(--himb)':'var(--bg3)'};border:1px solid ${p===period?'var(--himl)':'var(--border2)'};color:${p===period?'var(--him)':'var(--muted)'}">${{semanal:'Semana',mensal:'Mês',trimestral:'Trimestre',semestral:'Semestre'}[p]}</button>`).join('')}
       </div>
       ${report.achievements.length?`
-        <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">✅ Conquistas</div>
+        <div style="font-size:9px;color:var(--good);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Conquistas</div>
         ${report.achievements.map(a=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--good);flex-shrink:0">▶</span><span style="font-size:11px;color:var(--sub);line-height:1.6">${a}</span></div>`).join('')}`:''}
       ${report.improvements.length?`
-        <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">⚠️ Pontos de Melhora</div>
+        <div style="font-size:9px;color:var(--warn);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">Pontos de Melhora</div>
         ${report.improvements.map(a=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--warn);flex-shrink:0">▶</span><span style="font-size:11px;color:var(--sub);line-height:1.6">${a}</span></div>`).join('')}`:''}
       ${!report.achievements.length&&!report.improvements.length?'<div style="font-size:11px;color:var(--muted);text-align:center;padding:12px">Registre mais dados para ver sua evolução!</div>':''}
       <button onclick="closeEvoCard()" style="width:100%;padding:13px;margin-top:16px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Fechar</button>
@@ -6287,7 +6286,7 @@ function openSettings(onboarding){
       ${field('set_goal','Meta de peso (kg)',s.goal||'','ex: 80','0.1')}
       ${field('set_pace','Ritmo semanal alvo (kg/semana)',s.pace||0.3,'ex: 0.3','0.05')}
       <div style="font-size:9px;color:var(--muted);margin:-4px 0 14px;line-height:1.5">O ritmo é usado para estimar quantas semanas faltam para a meta. ~0,3kg/semana é sustentável.</div>
-      <button onclick="saveProfileSettings()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">💾 Salvar perfil</button>
+      <button onclick="saveProfileSettings()" style="width:100%;padding:13px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Salvar perfil</button>
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
       <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Modo do app</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Simples mostra só o essencial (menos cheio). Completo libera gráficos, indicadores, 1RM e edição de treinos.</div>
@@ -6296,7 +6295,7 @@ function openSettings(onboarding){
         <button onclick="_setMode('completo')" style="flex:1;padding:11px;border-radius:9px;border:none;cursor:pointer;font-family:var(--font2);font-size:12px;font-weight:800;background:${!_isSimple()?'var(--him)':'transparent'};color:${!_isSimple()?'#08080e':'var(--muted)'}">⚙ Completo</button>
       </div>
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
-      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">💾 Seus dados</div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Seus dados</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Baixe um backup completo (treinos, medidas, refeições, compras) ou restaure de um arquivo.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="exportData()" style="flex:1;min-width:130px;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">⬇️ Exportar backup</button>
@@ -6310,7 +6309,7 @@ function openSettings(onboarding){
         const toggleTarget=be==='supabase'?'firebase':'supabase';
         const toggleLabel=be==='supabase'?'↩️ Voltar para Firebase (plano B)':'☁️ Ativar Supabase (padrão)';
         let html='<div style="height:1px;background:var(--border);margin:18px 0"></div>';
-        html+='<div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🔧 Avançado · Backend (só você vê)</div>';
+        html+='<div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Avançado · Backend (só você vê)</div>';
         html+='<div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Atual: <strong style="color:var(--text)">'+status+'</strong></div>';
         html+='<button onclick="_setBackend(\''+toggleTarget+'\')" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;margin-bottom:8px">'+toggleLabel+'</button>';
         if(be==='firebase'){ html+='<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Antes de migrar, entre onde estão seus dados (convidado ou sua conta) e clique abaixo p/ "fotografar":</div><button onclick="_runCapture()" style="width:100%;padding:11px;background:var(--himb);border:1px solid var(--himl);border-radius:10px;color:var(--him);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">📦 Preparar meus dados p/ migração</button>'; }
@@ -6328,11 +6327,11 @@ function openSettings(onboarding){
         return html;
       })()}
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
-      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🔔 Notificações</div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Notificações</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Lembretes de refeição, água e treino. Status: <strong style="color:${ns.color}">${ns.label}</strong></div>
       ${ns.on?`<div style="font-size:10px;color:var(--good);line-height:1.5">✓ Ativas. Para receber com o app fechado no iPhone, adicione o app à Tela de Início.</div>`:`<button onclick="enableNotifications()" style="width:100%;padding:11px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🔔 Ativar notificações</button>`}
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
-      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">👤 Conta</div>
+      <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Conta</div>
       ${(window._fb&&window._fb.currentUser&&window._fb.currentUser())?`
         <div style="font-size:11px;color:var(--sub);margin-bottom:10px">Conectado como <strong style="color:var(--text)">${window._fb.currentUser().email||'usuário'}</strong></div>
         <button onclick="doSignOut()" style="width:100%;padding:11px;background:transparent;border:1px solid var(--bad);border-radius:10px;color:var(--bad);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">🚪 Sair da conta</button>
@@ -6435,7 +6434,7 @@ function _renderDietEditor(){
     </div>
     <div style="padding:14px;overflow-y:auto;flex:1">
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-        <span style="font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;width:100%">⚡ Carregar preset por objetivo</span>
+        <span style="font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;width:100%">Carregar preset por objetivo</span>
         <button onclick="_dietLoadPreset('gain')" style="flex:1;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">💪 Ganho econômico</button>
         <button onclick="_dietLoadPreset('cut')" style="flex:1;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">🔥 Definição</button>
       </div>
@@ -6444,7 +6443,7 @@ function _renderDietEditor(){
     </div>
     <div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
       <button onclick="_dietRestore()" style="padding:12px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-weight:700;cursor:pointer">Padrão</button>
-      <button onclick="saveDietEditor()" style="flex:1;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">💾 Salvar plano</button>
+      <button onclick="saveDietEditor()" style="flex:1;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">Salvar plano</button>
     </div>
   </div>`;
   ov.addEventListener('click',e=>{ if(e.target===ov) closeDietEditor(); });
@@ -6514,7 +6513,7 @@ function _renderSuppEditor(){
       <button onclick="_suppAdd()" style="width:100%;padding:11px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar suplemento</button>
     </div>
     <div style="padding:12px 14px;border-top:1px solid var(--border)">
-      <button onclick="saveSuppEditor()" style="width:100%;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">💾 Salvar suplementos</button>
+      <button onclick="saveSuppEditor()" style="width:100%;padding:12px;background:var(--him);color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer">Salvar suplementos</button>
     </div>
   </div>`;
   ov.addEventListener('click',e=>{ if(e.target===ov) closeSuppEditor(); });
