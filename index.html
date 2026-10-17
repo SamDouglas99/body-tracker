@@ -570,7 +570,7 @@ html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px rgba(78,140,0,.3)}
 <div id="main">
   <div id="topbar">
     <div><div class="tb-title" id="tb-title"><span class="tb-accent">Dashboard</span></div><div class="tb-sub" id="tb-sub"></div></div>
-    <div style="display:flex;align-items:center;gap:8px"><button onclick="openSettings()" title="Perfil e ajustes" aria-label="Ajustes" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙️</button><button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🌙</button><button class="tb-evo-btn" onclick="showEvolutionCard('semanal')" style="background:var(--himb);border:1px solid var(--himl);color:var(--him);border-radius:20px;padding:5px 12px;font-family:var(--font);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">📈 Evolução</button><div class="tb-badge" id="tb-badge">—</div></div>
+    <div style="display:flex;align-items:center;gap:8px"><button onclick="openSettings()" title="Perfil e ajustes" aria-label="Ajustes" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙️</button><button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:20px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🌙</button><div class="tb-badge" id="tb-badge">—</div></div>
   </div>
   <div id="content"></div>
 </div>
@@ -1373,6 +1373,9 @@ function render(){
   const _tb=document.getElementById('topbar');
   const _hideTb=(CT==='dashboard')||(CT==='treinos'&&woSubTab==='log'&&activeWorkoutType&&activeWorkoutType!=='rest');
   if(_tb) _tb.style.display = _hideTb ? 'none' : '';
+  // Sem a barra de cima, garante respiro p/ o notch/status bar (não sobrepor)
+  const _ct=document.getElementById('content');
+  if(_ct) _ct.style.paddingTop = _hideTb ? 'calc(env(safe-area-inset-top) + 8px)' : '';
   const builders={dashboard:buildDashboard,medidas:buildMedidas,registrar:buildRegistrar,evolucao:buildEvolucao,treinos:buildTreinos,nutricao:buildNutricao,estoque:buildEstoque,gastos:buildGastos,guia:buildGuia};
   document.getElementById('content').innerHTML=(builders[CT]||buildDashboard)();
   // Force mobile nav and prog-bar visible on small screens
@@ -1645,19 +1648,11 @@ function buildDashboard(){
         `:`<div style="font-size:10px;color:var(--muted)">Nenhuma refeição marcada</div>`}
       </div>
 
-      <!-- Água + Suplementos -->
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="card" onclick="go('nutricao');nuSubTab='dieta';render()" style="cursor:pointer;flex:1">
-          <div style="font-size:10px;font-weight:800;color:var(--sub);margin-bottom:6px">💧 Água</div>
-          <div style="font-size:18px;font-weight:800;color:${waterPct>=100?'var(--good)':'var(--info)'}">${waterL}<span style="font-size:10px;color:var(--muted)">L</span></div>
-          <div class="bar sm" style="margin-top:6px"><div style="width:${Math.max(waterPct,2)}%;height:100%;background:${waterPct>=100?'var(--good)':'var(--info)'};border-radius:3px"></div></div>
-          <div style="font-size:9px;color:var(--muted);margin-top:3px">meta: 4L</div>
-        </div>
-        <div class="card" onclick="go('nutricao');nuSubTab='suplementos';render()" style="cursor:pointer;flex:1">
-          <div style="font-size:10px;font-weight:800;color:var(--sub);margin-bottom:6px">💊 Supls</div>
-          <div style="font-size:18px;font-weight:800;color:${suppDone===suppTotal?'var(--good)':ac}">${suppDone}<span style="font-size:10px;color:var(--muted)">/${suppTotal}</span></div>
-          <div class="bar sm" style="margin-top:6px"><div style="width:${Math.max(Math.round(suppDone/suppTotal*100),2)}%;height:100%;background:${suppDone===suppTotal?'var(--good)':ac};border-radius:3px"></div></div>
-        </div>
+      <!-- Suplementos (Água já está nos tiles acima) -->
+      <div class="card" onclick="go('nutricao');nuSubTab='suplementos';render()" style="cursor:pointer">
+        <div style="font-size:10px;font-weight:800;color:var(--sub);margin-bottom:6px">💊 Suplementos hoje</div>
+        <div style="font-size:18px;font-weight:800;color:${suppDone===suppTotal?'var(--good)':ac}">${suppDone}<span style="font-size:10px;color:var(--muted)">/${suppTotal}</span></div>
+        <div class="bar sm" style="margin-top:6px"><div style="width:${Math.max(Math.round(suppDone/suppTotal*100),2)}%;height:100%;background:${suppDone===suppTotal?'var(--good)':ac};border-radius:3px"></div></div>
       </div>
     </div>
   </div>
@@ -5987,10 +5982,10 @@ function removeFoodFromLog(food){
 function showSyncStatus(msg,color='var(--muted)'){
   let el=document.getElementById('sync-status');
   if(!el){el=document.createElement('div');el.id='sync-status';
-    el.style.cssText='position:fixed;top:8px;right:12px;font-size:9px;letter-spacing:1px;z-index:999;padding:4px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);transition:opacity .5s;font-family:var(--font)';
+    el.style.cssText='position:fixed;bottom:calc(94px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.3px;z-index:640;padding:7px 14px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);transition:opacity .4s;font-family:var(--font2);font-weight:700;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.3);white-space:nowrap';
     document.body.appendChild(el);}
   el.textContent=msg;el.style.color=color;el.style.opacity='1';
-  setTimeout(()=>el.style.opacity='0',3000);
+  setTimeout(()=>el.style.opacity='0',2600);
 }
 
 // ══════════════════════════════════════
