@@ -129,7 +129,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font2);min-he
 .sn{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;transition:all .15s;border-left:3px solid transparent;background:none;border-top:none;border-right:none;border-bottom:none;width:100%;font-family:var(--font2)}
 .sn:hover{color:var(--text);background:var(--bg3)}
 .him-mode .sn.active{color:var(--him);border-left-color:var(--him);background:var(--himb)}
-.sn .si{font-size:15px;width:18px;text-align:center}
+.sn .si{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .sb-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);letter-spacing:1px}
 #topbar{padding:16px 24px;border-bottom:1px solid var(--border);background:var(--bg);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;overflow:hidden}
 .meal-check-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--border2);background:var(--bg4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .2s}
@@ -554,16 +554,16 @@ html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px rgba(78,140,0,.3)}
     <div class="sb-logo">Body<span>Tracker</span></div>
   </div>
   <nav class="sb-nav">
-    <button class="sn active"  onclick="go('dashboard')"><span class="si">🏠</span>Início</button>
-    <button class="sn"         onclick="go('treinos')"><span class="si">💪</span>Treino</button>
-    <button class="sn"         onclick="go('nutricao')"><span class="si">🥗</span>Nutrição</button>
-    <button class="sn"         onclick="go('evolucao')"><span class="si">🫀</span>Corpo</button>
+    <button class="sn active"  onclick="go('dashboard')"><svg class="si" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/></svg>Início</button>
+    <button class="sn"         onclick="go('treinos')"><svg class="si" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M4 9l-1 1 4 4M20 15l1-1-4-4M9 4l-1 1M16 20l-1-1"/></svg>Treino</button>
+    <button class="sn"         onclick="go('nutricao')"><svg class="si" viewBox="0 0 24 24"><path d="M12 7c-2-3-7-3-7 2 0 4 7 8 7 8s7-4 7-8c0-5-5-5-7-2Z"/></svg>Nutrição</button>
+    <button class="sn"         onclick="go('evolucao')"><svg class="si" viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.4"/><path d="M12 9v7M8 12l4-2 4 2M9 20l3-4 3 4"/></svg>Corpo</button>
     <div class="sb-div"></div>
-    <button class="sn"         onclick="go('registrar')"><span class="si">➕</span>Registrar</button>
-    <button class="sn"         onclick="go('medidas')"><span class="si">📏</span>Medidas</button>
-    <button class="sn"         onclick="go('estoque')"><span class="si">🛒</span>Estoque</button>
-    <button class="sn"         onclick="go('gastos')"><span class="si">💰</span>Gastos</button>
-    <button class="sn"         onclick="go('guia')"><span class="si">💡</span>Guia</button>
+    <button class="sn"         onclick="go('registrar')"><svg class="si" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Registrar</button>
+    <button class="sn"         onclick="go('medidas')"><svg class="si" viewBox="0 0 24 24"><path d="M4 8h16v8H4zM8 8v3.5M12 8v4M16 8v3.5"/></svg>Medidas</button>
+    <button class="sn"         onclick="go('estoque')"><svg class="si" viewBox="0 0 24 24"><path d="M4 5h2l1.8 9.5h9L19 8H7M9 20a1 1 0 1 0 0-.01M17 20a1 1 0 1 0 0-.01"/></svg>Estoque</button>
+    <button class="sn"         onclick="go('gastos')"><svg class="si" viewBox="0 0 24 24"><path d="M3 8h15a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h12M16.5 12.5h.01"/></svg>Gastos</button>
+    <button class="sn"         onclick="go('guia')"><svg class="si" viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 1 3.5 10.9c-.6.5-.9 1.2-1 2.1H9.5c-.1-.9-.4-1.6-1-2.1A6 6 0 0 1 12 3Z"/></svg>Guia</button>
   </nav>
 
 </div>
