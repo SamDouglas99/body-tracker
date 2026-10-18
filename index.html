@@ -65,7 +65,9 @@ window._fb={
     return s.exists()?s.data():{photos:[]};
   },
   async savePushSub(uid,sub){ await setDoc(doc(db,'push_subs',uid),sub); },
-  async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} }
+  async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} },
+  async getExpensesMeta(profile){ const s=await getDoc(doc(db,'expenses',profile)); return (s.exists()&&Array.isArray(s.data().items))?s.data().items:[]; },
+  async saveExpensesMeta(profile,arr){ await setDoc(doc(db,'expenses',profile),{items:arr,updatedAt:Date.now()}); }
 };
 // Escolhe o backend: Supabase (PADRÃO) ou Firebase (plano B: localStorage bt_backend='firebase').
 async function _bootBackend(){
@@ -1169,6 +1171,7 @@ const UNIT_OPTIONS = ['g','kg','ml','L','un','fatia','cx','pct','saco','dose','c
 let CP='him', CT='dashboard';
 let charts={}, woSubTab='log', nuSubTab='plano', evSubTab='chart';
 let _photoMeta={photos:[]}, _photoLoading=false, _compareA=null, _compareB=null;
+let _expensesCache=null; // Gastos em memória (sincronizados com a nuvem); null = ainda não carregado
 let nuMealOpt={}; // selected option per meal in plano view (0-based index)
 let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0;
@@ -5488,8 +5491,26 @@ function addWater(ml){
 const EXPENSE_CATS=['Mercado','Alimentação','Suplementos','Academia','Saúde','Transporte','Outros'];
 const CAT_ICON={Mercado:'🛒',Alimentação:'🍽️',Suplementos:'💊',Academia:'🏋️',Saúde:'🩺',Transporte:'🚗',Outros:'📦'};
 function brl(v){ return 'R$ '+(Number(v)||0).toFixed(2).replace('.',','); }
-function getExpenses(){ try{ return JSON.parse(localStorage.getItem('bt_expenses_'+CP)||'[]'); }catch{ return []; } }
-function saveExpenses(arr){ try{ localStorage.setItem('bt_expenses_'+CP,JSON.stringify(arr)); }catch(e){} }
+function getExpenses(){ if(Array.isArray(_expensesCache)) return _expensesCache; try{ return JSON.parse(localStorage.getItem('bt_expenses_'+CP)||'[]'); }catch{ return []; } }
+function saveExpenses(arr){
+  _expensesCache=Array.isArray(arr)?arr:[];
+  try{ localStorage.setItem('bt_expenses_'+CP,JSON.stringify(_expensesCache)); }catch(e){} // backup local/offline
+  if(window._fb && window._fb.saveExpensesMeta){ window._fb.saveExpensesMeta(CP,_expensesCache).catch(e=>console.warn('Gasto salvo localmente (nuvem falhou):',e)); }
+}
+// Carrega os gastos da nuvem (migra os locais na 1ª vez). Nuvem é a fonte; se indisponível, mantém o local.
+async function loadExpenses(){
+  try{
+    let cloud=null;
+    if(window._fb && window._fb.getExpensesMeta){ try{ cloud=await window._fb.getExpensesMeta(CP)||[]; }catch(e){ cloud=null; } }
+    const local=(()=>{ try{ return JSON.parse(localStorage.getItem('bt_expenses_'+CP)||'[]'); }catch{ return []; } })();
+    if(cloud===null){ _expensesCache=Array.isArray(local)?local:[]; return; } // nuvem indisponível → usa local, não sobrescreve
+    if(cloud.length){ _expensesCache=cloud; }
+    else if(local.length){ _expensesCache=local; if(window._fb&&window._fb.saveExpensesMeta){ try{ await window._fb.saveExpensesMeta(CP, local); }catch(e){} } } // migração idempotente local→nuvem
+    else { _expensesCache=[]; }
+    try{ localStorage.setItem('bt_expenses_'+CP,JSON.stringify(_expensesCache)); }catch(e){}
+    if(CT==='gastos') render();
+  }catch(e){ /* mantém o que estiver em memória/local */ }
+}
 function expenseTotal(e){ if(e.total!=null&&!e.items?.length) return Number(e.total)||0; if(e.items&&e.items.length) return e.items.reduce((t,i)=>t+(parseFloat(i.price)||0)*(parseFloat(i.qty)||1),0); return Number(e.total)||0; }
 function addExpense(exp){ const a=getExpenses(); exp.id=exp.id||('e'+Date.now()+Math.random().toString(36).slice(2,6)); exp.date=exp.date||new Date().toISOString(); a.push(exp); saveExpenses(a); }
 function deleteExpense(id){ if(!confirm('Excluir este gasto?'))return; saveExpenses(getExpenses().filter(e=>e.id!==id)); render(); }
@@ -5826,6 +5847,8 @@ window._buildSupabaseAdapter = async function(){
     async getPhotos(){ return []; }, // lista vem do photoMeta (settings)
     async getPhotoMeta(){ const u=await ensureUid(); if(!u) return {photos:[]}; const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s=(r.data&&r.data.settings)||{}; return (s.photoMeta&&Array.isArray(s.photoMeta.photos))?s.photoMeta:{photos:[]}; },
     async savePhotoMeta(_p, meta){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s={...((r.data&&r.data.settings)||{}), photoMeta:meta}; const up=await sb.from('profiles').update({settings:s}).eq('user_id',u); if(up.error) throw up.error; },
+    async getExpensesMeta(){ const u=await ensureUid(); if(!u) return []; const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s=(r.data&&r.data.settings)||{}; return Array.isArray(s.expenses)?s.expenses:[]; },
+    async saveExpensesMeta(_p, arr){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s={...((r.data&&r.data.settings)||{}), expenses:arr}; const up=await sb.from('profiles').update({settings:s}).eq('user_id',u); if(up.error) throw up.error; },
     async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'endpoint'})); },
     async deletePushSub(_uid,endpoint){ const u=await ensureUid(); if(endpoint){ chk(await sb.from('push_subs').update({disabled:true}).eq('endpoint',endpoint)); } else if(u){ chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); } },
   };
@@ -6028,11 +6051,17 @@ function _syncReminderCfg(){ try{ const s={...(getSettings()||{})}; s.reminders=
 function saveMealTimes(arr){ try{ localStorage.setItem('bt_meal_times',JSON.stringify(arr)); }catch(e){} _syncReminderCfg(); }
 function saveWaterCfg(cfg){ try{ localStorage.setItem('bt_water_cfg',JSON.stringify(cfg)); }catch(e){} _syncReminderCfg(); }
 
+// Push do servidor (Vercel + pg_cron) é a fonte confiável. Se este aparelho está inscrito,
+// os lembretes LOCAIS (setTimeout) só duplicam quando o app está aberto → desligados.
+// Sem inscrição (push não configurado/negado), os locais continuam como reserva.
+function _serverPushActive(){ try{ return !!localStorage.getItem('bt_push_sub'); }catch(e){ return false; } }
+
 function scheduleWaterReminders(){
   if(localStorage.getItem('bt_water_reminders')==='off') return;
   _waterTimers.forEach(t=>clearTimeout(t));
   _waterTimers=[];
   if(!('Notification' in window)||Notification.permission!=='granted') return;
+  if(_serverPushActive()) return; // push do servidor cobre → evita notificação dupla
   const now=new Date();
   const waterMessages=[
     'Beba 500ml agora — meta: 4L/dia',
@@ -6080,6 +6109,7 @@ function scheduleMealReminders(){
   _mealTimers.forEach(t=>clearTimeout(t));
   _mealTimers=[];
   if(!('Notification' in window)||Notification.permission!=='granted') return;
+  if(_serverPushActive()){ _waterTimers.forEach(t=>clearTimeout(t)); _waterTimers=[]; return; } // push do servidor cobre → evita dupla
   const now=new Date();
 
   getMealTimes().forEach(({meal,hour,min,icon})=>{
@@ -6735,6 +6765,7 @@ async function loadUserData(){
   if(!localStorage.getItem('bt_onboarded') && getEntries().length===0 && localStorage.getItem('bt_pending_guest_import')!=='1'){ setTimeout(()=>openSettings(true),700); }
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
+  loadExpenses();
   if(_authUser) _resubscribePushIfGranted();
 }
 window._btInit = function(){
@@ -6786,6 +6817,9 @@ async function subscribePush(){
     return sub;
   }catch(e){
     console.warn('Push subscribe failed:',e);
+    // Sem inscrição confiável neste aparelho → libera os lembretes locais de reserva
+    try{ localStorage.removeItem('bt_push_sub'); }catch(_){}
+    try{ scheduleMealReminders(); }catch(_){}
   }
 }
 // Salva a inscrição de push do usuário logado no Firestore (para o enviador usar)
