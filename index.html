@@ -1471,7 +1471,7 @@ function buildDashboard(){
     return`<div style="flex:1;text-align:center;padding:8px 2px;border-radius:10px;border:1px solid ${isToday?ac:'var(--border)'};background:${isToday?`${ac}18`:'var(--bg4)'};min-width:0">
       <div style="font-size:8px;color:${isToday?ac:'var(--muted)'};font-weight:700;margin-bottom:3px">${DAYS_SHORT[i]}</div>
       <div style="font-size:9px;font-weight:800;color:${d.type==='rest'?'var(--muted)':color}">${label}</div>
-      <div style="font-size:14px;margin-top:3px">${d.type==='rest'?'😴':isDone?'✅':'○'}</div>
+      <div style="margin-top:5px;display:flex;justify-content:center">${d.type==='rest'?'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13A8 8 0 1 1 11 4a6 6 0 0 0 9 9z"/></svg>':isDone?'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--good)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>':'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--border2)" stroke-width="1.8"><circle cx="12" cy="12" r="7"/></svg>'}</div>
     </div>`;
   }).join('');
 
@@ -1490,8 +1490,8 @@ function buildDashboard(){
   // ── Check-in semanal: últimas tendências ──
   const checkinHist=JSON.parse(localStorage.getItem('bt_checkin_hist')||'[]');
   const last4Checkins=checkinHist.slice(-4);
-  const dietLabels=['','😔 Ruim','😐 OK','🙂 Boa','😁 Ótima'];
-  const sleepLabels=['','😫 Péssimo','😕 Regular','😊 Bom','🌙 Excelente'];
+  const dietLabels=['','Ruim','OK','Boa','Ótima'];
+  const sleepLabels=['','Péssimo','Regular','Bom','Excelente'];
   const checkinCard=last4Checkins.length>=2?`
     <div class="card" style="margin-bottom:12px">
       <div style="font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Tendência — Últimos Check-ins</div>
@@ -1505,9 +1505,9 @@ function buildDashboard(){
             <div style="font-size:8px;color:var(--muted);margin-bottom:5px">${wk}</div>
             <div style="font-size:13px;font-weight:800;color:${ac}">${c.weight}kg</div>
             <div style="display:flex;justify-content:center;gap:4px;margin-top:5px">
-              <span title="Treinos" style="font-size:9px;background:var(--bg5);border-radius:4px;padding:1px 5px;color:var(--info)">💪${c.workouts}</span>
+              <span title="Treinos" style="font-size:9px;background:var(--bg5);border-radius:4px;padding:1px 5px;color:var(--info)">${c.workouts}×</span>
               <span title="Dieta" style="font-size:9px;background:var(--bg5);border-radius:4px;padding:1px 5px;color:${dietColor}">${c.diet>=3?'✓':'!'}</span>
-              <span title="Sono" style="font-size:9px;background:var(--bg5);border-radius:4px;padding:1px 5px;color:${sleepColor}">${c.sleep>=3?'🌙':'😕'}</span>
+              <span title="Sono" style="font-size:9px;background:var(--bg5);border-radius:4px;padding:1px 5px;color:${sleepColor}">${c.sleep>=3?'✓':'!'}</span>
             </div>
           </div>`;
         }).join('')}
@@ -1562,7 +1562,7 @@ function buildDashboard(){
         <div style="font-size:12px;color:var(--sub);font-weight:600">Bom treino,</div>
         <div class="big-num" style="font-size:19px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name||'Você'}</div>
       </div>
-      ${_streak>0?`<span style="display:inline-flex;align-items:center;gap:3px;background:${ac}1e;color:${ac};border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;flex-shrink:0">🔥 ${_streak}d</span>`:''}
+      ${_streak>0?`<span style="display:inline-flex;align-items:center;gap:4px;background:${ac}1e;color:${ac};border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;flex-shrink:0"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 2.5 3.5 4 3.5 7.5a3.5 3.5 0 0 1-7 0c0-1 .4-1.8.9-2.4C9.7 9.5 11 7 12 3z"/><path d="M12 21a5 5 0 0 0 5-5c0-2-1.2-3.4-2.2-4.3"/></svg>${_streak}d</span>`:''}
       <button onclick="openSettings()" aria-label="Ajustes" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⚙️</button>
       <button onclick="toggleTheme()" aria-label="Tema" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🌙</button>
     </div>
@@ -1630,7 +1630,7 @@ function buildDashboard(){
       <svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:#0A0B0F;fill:#0A0B0F;stroke-width:1;flex-shrink:0"><path d="M8 5l11 7-11 7V5Z"/></svg>
     </a>`:`
     <div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:15px 16px;margin-top:2px">
-      <div style="font-size:26px">😴</div>
+      <svg viewBox="0 0 24 24" style="width:24px;height:24px;flex-shrink:0;fill:none;stroke:var(--him);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M20 13A8 8 0 1 1 11 4a6 6 0 0 0 9 9z"/></svg>
       <div style="font-size:12px;color:var(--sub);line-height:1.4">Hoje é dia de descanso — recuperação é onde o músculo cresce.</div>
     </div>`}
   </div>
@@ -1997,12 +1997,32 @@ function buildFotos(subtabs){
       </button>`).join('')}
   </div>`;
   const selectTip=catPhotos.length>=2&&!(_compareA&&_compareB)?
-    `<div style="font-size:10px;color:var(--info);text-align:center;margin-bottom:10px;padding:8px;background:rgba(96,165,250,.1);border-radius:8px">
-      💡 Toque em 2 fotos para comparar lado a lado
+    `<div style="font-size:10px;color:var(--info);text-align:center;margin-bottom:10px;padding:8px;background:color-mix(in srgb, var(--info) 10%, transparent);border-radius:8px">
+      Toque em 2 fotos para comparar lado a lado
     </div>`:'';
 
+  // Antes · Depois — comparação automática (1ª vs mais recente da categoria ativa)
+  const beforeAfter=(catPhotos.length>=2 && !(photoA&&photoB))?(()=>{
+    const first=catPhotos[0], last=catPhotos[catPhotos.length-1];
+    const dw=(parseFloat(last.weight)||0)-(parseFloat(first.weight)||0);
+    const days=Math.max(0,Math.round((new Date(last.date)-new Date(first.date))/86400000));
+    const cell=(p,badge)=>`<div style="position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);aspect-ratio:3/4;background:var(--bg4)">
+        <img src="${p.url}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"/>
+        ${badge?`<div style="position:absolute;top:9px;right:9px;background:${ac};color:#0A0B0F;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px">${badge}</div>`:''}
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:10px;background:linear-gradient(0deg,rgba(10,11,15,.88),transparent)">
+          <div style="font-size:11px;color:#C8CDD6;font-weight:700">${new Date(p.date).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</div>
+          <div style="font-family:var(--fontd);font-size:16px;font-weight:700;color:#fff">${p.weight?p.weight+'kg':''}</div>
+        </div>
+      </div>`;
+    return`<div style="display:flex;align-items:center;justify-content:space-between;margin:2px 2px 10px">
+        <div class="sec-title" style="padding:0">Antes · Depois</div>
+        <div style="font-size:11px;color:${ac};font-weight:800">${dw>=0?'+':''}${dw.toFixed(1)} kg · ${days} dias</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">${cell(first,'')}${cell(last,'HOJE')}</div>`;
+  })():'';
+
   const photoGrid=photos.length===0
-    ?`<div class="card empty"><div class="empty-ico">📸</div><div class="empty-txt">Nenhuma foto ${CAT_LABELS[activeCat]?.label||''} ainda.<br>Adicione acima!</div></div>`
+    ?`<div class="card empty"><div class="empty-ico"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.4"/><path d="M8 7l1.5-2h5L16 7"/></svg></div><div class="empty-txt">Nenhuma foto ${CAT_LABELS[activeCat]?.label||''} ainda.<br>Adicione acima!</div></div>`
     :`${selectTip}<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       ${catPhotos.map(p=>{
         const isA=_compareA===p.id, isB=_compareB===p.id;
@@ -2022,8 +2042,8 @@ function buildFotos(subtabs){
             <div style="font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.label||'Sem rótulo'}</div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
               <div style="font-size:9px;color:var(--muted)">${new Date(p.date).toLocaleDateString('pt-BR')} · ${p.weight}kg</div>
-              <button onclick="event.stopPropagation();deletePhoto('${p.id}')"
-                style="background:none;border:none;color:var(--bad);cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0">🗑️</button>
+              <button onclick="event.stopPropagation();deletePhoto('${p.id}')" aria-label="Excluir foto"
+                style="background:none;border:none;color:var(--bad);cursor:pointer;padding:2px 4px;flex-shrink:0;display:flex"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
             </div>
           </div>
         </div>`;
@@ -2035,8 +2055,9 @@ function buildFotos(subtabs){
     ${subtabs}
     ${compareSection}
     ${uploadSection}
-    <div class="sec-title" style="padding:0 0 12px">Histórico de Fotos (${photos.length})</div>
     ${catTabs}
+    ${beforeAfter}
+    <div class="sec-title" style="padding:0 0 12px">Histórico de Fotos (${photos.length})</div>
     ${photoGrid}
   </div>`;
 }
@@ -4448,12 +4469,12 @@ function buildNutricao(){
           <div style="display:flex;gap:5px">${optBtns}</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;text-align:center">
-          ${[['⚡',mm.kcal,'kcal','var(--him)'],['🥩',mm.prot+'g','prot','var(--good)'],['🍚',mm.carb+'g','carb','var(--info)'],['🥑',mm.gord+'g','gord','var(--warn)']].map(([icon,val,lab,col])=>`<div style="background:var(--bg3);border-radius:8px;padding:7px 4px"><div style="font-size:12px">${icon}</div><div style="font-size:12px;font-weight:800;color:${col}">${val}</div><div style="font-size:8px;color:var(--muted)">${lab}</div></div>`).join('')}
+          ${[[mm.kcal,'kcal','var(--him)'],[mm.prot+'g','prot','var(--good)'],[mm.carb+'g','carb','var(--sub)'],[mm.gord+'g','gord','var(--sub)']].map(([val,lab,col])=>`<div style="background:var(--bg3);border-radius:8px;padding:9px 4px"><div style="font-size:13px;font-weight:800;color:${col}">${val}</div><div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">${lab}</div></div>`).join('')}
         </div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px;font-weight:700">Distribuição calórica:</div>
         ${macroBar(mm.prot*4,mm.kcal,'var(--good)')}
-        ${macroBar(mm.carb*4,mm.kcal,'var(--info)')}
-        ${macroBar(mm.gord*9,mm.kcal,'var(--warn)')}
+        ${macroBar(mm.carb*4,mm.kcal,'var(--sub)')}
+        ${macroBar(mm.gord*9,mm.kcal,'var(--sub)')}
         <div style="font-size:10px;color:var(--sub);margin-top:6px;font-weight:700">🌾 Fibras: ${mm.fibra}g</div>
       </div>
     </div>`;
@@ -4925,7 +4946,7 @@ function showWeeklyCheckin(){
   overlay.innerHTML=`
     <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:24px 20px;width:100%;max-width:460px;max-height:85vh;overflow-y:auto">
       <div style="text-align:center;width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px"></div>
-      <div style="font-size:18px;font-weight:800;margin-bottom:4px">📋 Check-in Semanal</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">Check-in Semanal</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:22px">Leva 30 segundos. Ajuda o app a te dar melhores alertas.</div>
 
       <!-- Pergunta 1: peso -->
@@ -4950,9 +4971,7 @@ function showWeeklyCheckin(){
       <div style="margin-bottom:18px">
         <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Aderência à dieta na semana passada?</div>
         <div style="display:flex;gap:6px">
-          ${[['😔','Ruim',1],['😐','OK',2],['🙂','Boa',3],['😁','Ótima',4]].map(([em,lb,v])=>`<button onclick="document.querySelectorAll('.ci-diet').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';});this.style.background='rgba(74,222,128,.12)';this.style.borderColor='var(--good)';window._ciDiet=${v}" class="ci-diet" style="flex:1;padding:10px 4px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:700;color:var(--text);text-align:center">
-            <div style="font-size:18px">${em}</div><div style="font-size:9px;color:var(--muted)">${lb}</div>
-          </button>`).join('')}
+          ${[['Ruim',1],['OK',2],['Boa',3],['Ótima',4]].map(([lb,v])=>`<button onclick="document.querySelectorAll('.ci-diet').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';b.style.color='var(--text)';});this.style.background='rgba(74,222,128,.14)';this.style.borderColor='var(--good)';this.style.color='var(--good)';window._ciDiet=${v}" class="ci-diet" style="flex:1;padding:13px 4px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:12px;font-weight:800;color:var(--text);text-align:center">${lb}</button>`).join('')}
         </div>
       </div>
 
@@ -4960,9 +4979,7 @@ function showWeeklyCheckin(){
       <div style="margin-bottom:22px">
         <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Qualidade do sono?</div>
         <div style="display:flex;gap:6px">
-          ${[['😫','Péssimo',1],['😕','Regular',2],['😊','Bom',3],['🌙','Excelente',4]].map(([em,lb,v])=>`<button onclick="document.querySelectorAll('.ci-sleep').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';});this.style.background='rgba(96,165,250,.12)';this.style.borderColor='var(--info)';window._ciSleep=${v}" class="ci-sleep" style="flex:1;padding:10px 4px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:700;color:var(--text);text-align:center">
-            <div style="font-size:18px">${em}</div><div style="font-size:9px;color:var(--muted)">${lb}</div>
-          </button>`).join('')}
+          ${[['Péssimo',1],['Regular',2],['Bom',3],['Excelente',4]].map(([lb,v])=>`<button onclick="document.querySelectorAll('.ci-sleep').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';b.style.color='var(--text)';});this.style.background='rgba(96,165,250,.14)';this.style.borderColor='var(--info)';this.style.color='var(--info)';window._ciSleep=${v}" class="ci-sleep" style="flex:1;padding:13px 3px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:800;color:var(--text);text-align:center">${lb}</button>`).join('')}
         </div>
       </div>
 
