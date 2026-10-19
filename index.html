@@ -67,7 +67,9 @@ window._fb={
   async savePushSub(uid,sub){ await setDoc(doc(db,'push_subs',uid),sub); },
   async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} },
   async getExpensesMeta(profile){ const s=await getDoc(doc(db,'expenses',profile)); return (s.exists()&&Array.isArray(s.data().items))?s.data().items:[]; },
-  async saveExpensesMeta(profile,arr){ await setDoc(doc(db,'expenses',profile),{items:arr,updatedAt:Date.now()}); }
+  async saveExpensesMeta(profile,arr){ await setDoc(doc(db,'expenses',profile),{items:arr,updatedAt:Date.now()}); },
+  async getDailyLogs(profile){ const s=await getDocs(collection(db,'daily_'+profile)); return s.docs.map(d=>({day:d.id, water_ml:(d.data().water_ml|0), meals:(d.data().meals||{})})); },
+  async upsertDailyLog(profile,day,water_ml,meals){ await setDoc(doc(db,'daily_'+profile,day),{water_ml:water_ml|0, meals:meals||{}, updatedAt:Date.now()}); }
 };
 // Escolhe o backend: Supabase (PADRÃO) ou Firebase (plano B: localStorage bt_backend='firebase').
 async function _bootBackend(){
@@ -1172,6 +1174,7 @@ let CP='him', CT='dashboard';
 let charts={}, woSubTab='log', nuSubTab='plano', evSubTab='chart';
 let _photoMeta={photos:[]}, _photoLoading=false, _compareA=null, _compareB=null;
 let _expensesCache=null; // Gastos em memória (sincronizados com a nuvem); null = ainda não carregado
+let _dailyCache={}; // Registros diários (água/refeições) por dia 'YYYY-MM-DD' — fonte é o banco; local = cache
 let nuMealOpt={}; // selected option per meal in plano view (0-based index)
 let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0;
@@ -1455,7 +1458,7 @@ function buildDashboard(){
   const suppTotal=5;
 
   // ── Semana: água hoje ──
-  const waterMl=parseInt(localStorage.getItem('bt_water_'+getTodayKey())||'0');
+  const waterMl=getWaterMl();
   const waterL=(waterMl/1000).toFixed(1);
   const waterPct=Math.min((waterMl/4000)*100,100);
 
@@ -4086,7 +4089,7 @@ function buildNutricao(){
             <div class="bar"><div class="fill" style="width:${Math.max(waterPct,2)}%;background:var(--info)"></div></div>
             <div style="display:flex;gap:6px;margin-top:8px">
               ${[['+ 250ml',250],['+ 500ml',500],['+ 1L',1000]].map(([l,ml])=>`<button onclick="addWater(${ml})" style="flex:1;padding:6px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--info);font-family:var(--font);font-size:9px;cursor:pointer">${l}</button>`).join('')}
-              <button onclick="localStorage.setItem('bt_water_'+getTodayKey(),'0');render()" style="padding:6px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;cursor:pointer">↺</button>
+              <button onclick="resetWaterToday()" style="padding:6px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;cursor:pointer">↺</button>
             </div>
           </div>
         </div>
@@ -5397,13 +5400,42 @@ function getTodayKey(){ return localDayKey(); }
 function getWeekKey(d=new Date()){
   const mon=new Date(d); mon.setDate(d.getDate()-((d.getDay()+6)%7)); return localDayKey(mon);
 }
-function getMealLog(date){
-  try{ return JSON.parse(localStorage.getItem('bt_meals_'+date)||'{}'); }catch{ return {}; }
+// ── Registros diários (água + refeições) — fonte é o banco (daily_logs); local = cache ──
+function _dayCell(day){
+  if(!_dailyCache[day]){
+    let w=0,m={};
+    try{ w=parseInt(localStorage.getItem('bt_water_'+day)||'0')||0; }catch(e){}
+    try{ m=JSON.parse(localStorage.getItem('bt_meals_'+day)||'{}')||{}; }catch(e){}
+    _dailyCache[day]={water_ml:w, meals:m};
+  }
+  return _dailyCache[day];
 }
-function saveMealLog(date,log){
-  // Registro diário de refeições fica local no aparelho (privacidade por usuário)
-  try{ localStorage.setItem('bt_meals_'+date, JSON.stringify(log)); }
-  catch(e){ console.warn('Falha ao salvar refeição localmente:',e); }
+function _persistDay(day){
+  const c=_dayCell(day);
+  try{ localStorage.setItem('bt_water_'+day, String(c.water_ml|0)); }catch(e){}
+  try{ localStorage.setItem('bt_meals_'+day, JSON.stringify(c.meals||{})); }catch(e){}
+  if(window._fb && window._fb.upsertDailyLog){ window._fb.upsertDailyLog(CP, day, c.water_ml|0, c.meals||{}).catch(e=>console.warn('Dia salvo localmente (nuvem falhou):',e)); }
+}
+function getWaterMl(day){ return _dayCell(day||getTodayKey()).water_ml|0; }
+function getMealLog(date){ return _dayCell(date).meals||{}; }
+function saveMealLog(date,log){ _dayCell(date).meals=log||{}; _persistDay(date); }
+// Carrega os registros diários da nuvem (últimos 14 dias) e migra os que só existem local.
+async function loadDailyLogs(){
+  try{
+    if(!(window._fb && window._fb.getDailyLogs)) return;
+    const from=localDayKey(new Date(Date.now()-14*86400000));
+    let rows=null; try{ rows=await window._fb.getDailyLogs(CP, from); }catch(e){ rows=null; }
+    if(rows===null) return; // nuvem indisponível → mantém o cache local, não apaga
+    const cloudDays=new Set();
+    rows.forEach(r=>{ if(r&&r.day){ _dailyCache[r.day]={water_ml:(r.water_ml|0), meals:(r.meals||{})}; cloudDays.add(r.day);
+      try{ localStorage.setItem('bt_water_'+r.day,String(r.water_ml|0)); localStorage.setItem('bt_meals_'+r.day,JSON.stringify(r.meals||{})); }catch(e){} } });
+    // Migração idempotente: sobe os últimos 30 dias que existem só localmente.
+    if(window._fb.upsertDailyLog){
+      for(let i=0;i<30;i++){ const day=localDayKey(new Date(Date.now()-i*86400000)); if(cloudDays.has(day)) continue;
+        const c=_dayCell(day); if((c.water_ml|0)>0 || Object.keys(c.meals||{}).length){ try{ await window._fb.upsertDailyLog(CP, day, c.water_ml|0, c.meals||{}); }catch(e){} } }
+    }
+    try{ render(); }catch(e){}
+  }catch(e){}
 }
 function toggleMealCheck(mealIdx, option){
   const today=getTodayKey();
@@ -5492,14 +5524,17 @@ function getMealStats(){
   }
   const mostSkippedIdx=skipCount.indexOf(Math.max(...skipCount));
   // Water today
-  const water=parseInt(localStorage.getItem('bt_water_'+getTodayKey())||'0');
+  const water=getWaterMl();
   return{todayDone,todayTotal:totalMeals,weekDone,weekTotal,streak,mostSkippedIdx,skipCount,water};
 }
 function addWater(ml){
-  const key='bt_water_'+getTodayKey();
-  const cur=parseInt(localStorage.getItem(key)||'0');
-  localStorage.setItem(key, Math.max(0,cur+ml));
+  const day=getTodayKey(); const c=_dayCell(day);
+  c.water_ml=Math.max(0,(c.water_ml|0)+(parseInt(ml)||0));
+  _persistDay(day);
   render();
+}
+function resetWaterToday(){
+  const day=getTodayKey(); _dayCell(day).water_ml=0; _persistDay(day); render();
 }
 
 // ══════════════════════════════════════
@@ -5866,6 +5901,8 @@ window._buildSupabaseAdapter = async function(){
     async savePhotoMeta(_p, meta){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s={...((r.data&&r.data.settings)||{}), photoMeta:meta}; const up=await sb.from('profiles').update({settings:s}).eq('user_id',u); if(up.error) throw up.error; },
     async getExpensesMeta(){ const u=await ensureUid(); if(!u) return []; const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s=(r.data&&r.data.settings)||{}; return Array.isArray(s.expenses)?s.expenses:[]; },
     async saveExpensesMeta(_p, arr){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s={...((r.data&&r.data.settings)||{}), expenses:arr}; const up=await sb.from('profiles').update({settings:s}).eq('user_id',u); if(up.error) throw up.error; },
+    async getDailyLogs(_p, fromDay){ const u=await ensureUid(); if(!u) return []; let q=sb.from('daily_logs').select('*').eq('user_id',u); if(fromDay) q=q.gte('day',fromDay); const r=await q; if(r.error) throw r.error; return r.data||[]; },
+    async upsertDailyLog(_p, day, water_ml, meals){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('daily_logs').upsert({user_id:u, day, water_ml:water_ml|0, meals:meals||{}, updated_at:new Date().toISOString()},{onConflict:'user_id,day'}); if(r.error) throw r.error; },
     async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'endpoint'})); },
     async deletePushSub(_uid,endpoint){ const u=await ensureUid(); if(endpoint){ chk(await sb.from('push_subs').update({disabled:true}).eq('endpoint',endpoint)); } else if(u){ chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); } },
   };
@@ -6095,7 +6132,7 @@ function scheduleWaterReminders(){
     if(target-now <= 0) target.setDate(target.getDate()+1);
     const diff=target-now;
     const t=setTimeout(()=>{
-      const taken=(parseInt(localStorage.getItem('bt_water_'+getTodayKey())||'0')/1000).toFixed(1);
+      const taken=(getWaterMl()/1000).toFixed(1);
       if(parseFloat(taken)>=4) return;
       const msg=waterMessages[i%waterMessages.length];
       fireNotif('💧 Hora da água!', `${msg} (${taken}L tomados)`, 'water_reminder', {type:'water'});
@@ -6137,7 +6174,7 @@ function _btQueueDB(){
     }catch(e){ rej(e); }
   });
 }
-function _applyWaterQuiet(ml){ const key='bt_water_'+getTodayKey(); const cur=parseInt(localStorage.getItem(key)||'0'); localStorage.setItem(key, Math.max(0,cur+(parseInt(ml)||0))); }
+function _applyWaterQuiet(ml){ const day=getTodayKey(); const c=_dayCell(day); c.water_ml=Math.max(0,(c.water_ml|0)+(parseInt(ml)||0)); _persistDay(day); }
 function _applyMealQuiet(idx){
   const today=getTodayKey(); const log=getMealLog(today);
   let i=(typeof idx==='number')?idx:-1;
@@ -6827,7 +6864,8 @@ async function loadUserData(){
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
   loadExpenses();
-  _drainNotifQueue(); // aplica registros feitos pela notificação enquanto o app estava fechado
+  // Carrega os dias da nuvem e SÓ DEPOIS aplica a fila de notificações (soma por cima do valor da nuvem)
+  loadDailyLogs().then(()=>_drainNotifQueue());
   if(_authUser) _resubscribePushIfGranted();
 }
 window._btInit = function(){
