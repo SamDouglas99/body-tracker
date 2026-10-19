@@ -44,10 +44,10 @@ function slotsFor(reminders) {
   const out = [];
   const hasCustom = reminders && (Array.isArray(reminders.meals) || reminders.water);
   if (hasCustom) {
-    (Array.isArray(reminders.meals) ? reminders.meals : []).forEach(m => {
+    (Array.isArray(reminders.meals) ? reminders.meals : []).forEach((m, mi) => {
       if (m && Number.isFinite(+m.hour)) {
         const min = Number.isFinite(+m.min) ? +m.min : 0;
-        out.push({ key: 'm' + (+m.hour) + ':' + min, mod: (+m.hour) * 60 + min, prio: 2,
+        out.push({ key: 'm' + (+m.hour) + ':' + min, mod: (+m.hour) * 60 + min, prio: 2, type: 'meal', mealIdx: mi,
           title: (m.icon || '🍽️') + ' ' + (m.meal || 'Refeição'), body: 'Hora da refeição — confira seu plano alimentar. 💪' });
       }
     });
@@ -57,12 +57,12 @@ function slotsFor(reminders) {
       const start = parseInt(w.start), end = parseInt(w.end);
       if (Number.isFinite(start) && Number.isFinite(end)) {
         for (let h = start; h <= end; h += every) {
-          out.push({ key: 'w' + h, mod: h * 60, prio: 1, title: '💧 Hora da água', body: 'Bora manter a meta de água de hoje! 💧' });
+          out.push({ key: 'w' + h, mod: h * 60, prio: 1, type: 'water', title: '💧 Hora da água', body: 'Bora manter a meta de água de hoje! 💧' });
         }
       }
     }
   } else {
-    Object.keys(SLOTS).forEach(h => { out.push({ key: 's' + h, mod: (+h) * 60, prio: 1, title: SLOTS[h].title, body: SLOTS[h].body }); });
+    Object.keys(SLOTS).forEach(h => { out.push({ key: 's' + h, mod: (+h) * 60, prio: 1, type: /água|💧/.test(SLOTS[h].title) ? 'water' : 'meal', title: SLOTS[h].title, body: SLOTS[h].body }); });
   }
   return out;
 }
@@ -115,7 +115,7 @@ async function sendDueReminders({ webpush, SUPABASE_URL, SERVICE_ROLE, TEST = fa
       if (s.last_sent === dedupeKey) { deduped++; continue; } // já avisou esse slot hoje
       slot = due;
     }
-    const payload = JSON.stringify({ title: slot.title, body: slot.body, tag: 'reminder', url: './' });
+    const payload = JSON.stringify({ title: slot.title, body: slot.body, tag: 'reminder', url: './', type: slot.type || null, mealIdx: (typeof slot.mealIdx === 'number' ? slot.mealIdx : null) });
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload);
       sent++;

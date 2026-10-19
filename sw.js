@@ -1,5 +1,5 @@
 // Body Tracker Pro — Service Worker v2
-const CACHE_NAME = 'bodytracker-v5';
+const CACHE_NAME = 'bodytracker-v6';
 
 const STATIC_ASSETS = [
   './',
@@ -74,30 +74,64 @@ self.addEventListener('fetch', event => {
   }
 });
 
-// ── PUSH (server-side push, futuro) ──
+const ICON = 'https://em-content.zobj.net/source/apple/354/flexed-biceps_1f4aa.png';
+
+// Enfileira um registro rápido no IndexedDB (o app aplica ao abrir / ao receber 'bt-drain')
+function swQueueAdd(item) {
+  return new Promise(res => {
+    try {
+      const r = indexedDB.open('bt-sync', 1);
+      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('queue')) db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true }); };
+      r.onsuccess = () => { try { const db = r.result; const tx = db.transaction('queue', 'readwrite'); tx.objectStore('queue').add(Object.assign({ ts: Date.now() }, item)); tx.oncomplete = () => res(true); tx.onerror = () => res(false); } catch (e) { res(false); } };
+      r.onerror = () => res(false);
+    } catch (e) { res(false); }
+  });
+}
+
+// ── PUSH (servidor) — com botões de ação p/ registrar água/refeição sem abrir o app ──
 self.addEventListener('push', event => {
   const data = event.data?.json() || {};
+  const actions = [];
+  if (data.type === 'water') actions.push({ action: 'water+250', title: '+250 ml' }, { action: 'water+500', title: '+500 ml' });
+  else if (data.type === 'meal') actions.push({ action: 'meal-done', title: 'Marcar feita' });
   event.waitUntil(
     self.registration.showNotification(data.title || '💪 Body Tracker', {
       body: data.body || '',
-      icon: 'https://em-content.zobj.net/source/apple/354/flexed-biceps_1f4aa.png',
-      badge: 'https://em-content.zobj.net/source/apple/354/flexed-biceps_1f4aa.png',
+      icon: ICON,
+      badge: ICON,
       tag: data.tag || 'bodytracker',
       renotify: true,
-      data: { url: data.url || './' }
+      actions,
+      data: { url: data.url || './', type: data.type || null, mealIdx: (typeof data.mealIdx === 'number' ? data.mealIdx : null) }
     })
   );
 });
 
 // ── NOTIFICATION CLICK ──
 self.addEventListener('notificationclick', event => {
+  const act = event.action;
+  const d = event.notification.data || {};
   event.notification.close();
+  // Botões de registro rápido → enfileira + confirma, SEM abrir o app
+  if (act && (act.indexOf('water+') === 0 || act === 'meal-done')) {
+    event.waitUntil((async () => {
+      let item, confirmBody;
+      if (act.indexOf('water+') === 0) { const ml = parseInt(act.split('+')[1]) || 0; item = { type: 'water', ml }; confirmBody = '+' + ml + ' ml de água registrados'; }
+      else { item = { type: 'meal', idx: (typeof d.mealIdx === 'number' ? d.mealIdx : null) }; confirmBody = 'Refeição marcada como feita'; }
+      await swQueueAdd(item);
+      const list = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+      list.forEach(c => { try { c.postMessage({ type: 'bt-drain' }); } catch (e) {} });
+      try { await self.registration.showNotification('✓ Registrado', { body: confirmBody, tag: 'bt-confirm', icon: ICON, badge: ICON }); } catch (e) {}
+    })());
+    return;
+  }
+  // Toque normal → abre/foca o app
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       const focused = list.find(c => c.focused);
       if (focused) return focused.focus();
       if (list.length > 0) return list[0].focus();
-      return clients.openWindow('./');
+      return clients.openWindow(d.url || './');
     })
   );
 });

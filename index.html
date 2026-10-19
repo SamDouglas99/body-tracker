@@ -6098,28 +6098,72 @@ function scheduleWaterReminders(){
       const taken=(parseInt(localStorage.getItem('bt_water_'+getTodayKey())||'0')/1000).toFixed(1);
       if(parseFloat(taken)>=4) return;
       const msg=waterMessages[i%waterMessages.length];
-      fireNotif('💧 Hora da água!', `${msg} (${taken}L tomados)`, 'water_reminder');
+      fireNotif('💧 Hora da água!', `${msg} (${taken}L tomados)`, 'water_reminder', {type:'water'});
     }, diff);
     _waterTimers.push(t);
   });
 }
 
-async function fireNotif(title, body, tag){
+async function fireNotif(title, body, tag, opts){
+  opts=opts||{};
+  const actions=[];
+  if(opts.type==='water'){ actions.push({action:'water+250',title:'+250 ml'},{action:'water+500',title:'+500 ml'}); }
+  else if(opts.type==='meal'){ actions.push({action:'meal-done',title:'Marcar feita'}); }
   // Try SW first (works in background), fallback to Notification API
   if('serviceWorker' in navigator){
     try{
       const reg=await navigator.serviceWorker.ready;
       await reg.showNotification(title,{
-        body, tag, renotify:true,
+        body, tag, renotify:true, actions,
         icon:'https://em-content.zobj.net/source/apple/354/flexed-biceps_1f4aa.png',
         badge:'https://em-content.zobj.net/source/apple/354/flexed-biceps_1f4aa.png',
-        data:{url:'./'}
+        data:{url:'./', type:opts.type||null, mealIdx:(typeof opts.mealIdx==='number'?opts.mealIdx:null)}
       });
       return;
     }catch(e){}
   }
   sendNotif(title, body, tag);
 }
+
+// ── Registro rápido pela NOTIFICAÇÃO (fila durável no IndexedDB, escrita pelo SW) ──
+// O SW não acessa o localStorage; ele enfileira {type,ml|idx} e o app aplica aqui ao abrir
+// (ou na hora, se estiver aberto e receber o aviso 'bt-drain').
+function _btQueueDB(){
+  return new Promise((res,rej)=>{
+    try{
+      const r=indexedDB.open('bt-sync',1);
+      r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains('queue')) db.createObjectStore('queue',{keyPath:'id',autoIncrement:true}); };
+      r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+    }catch(e){ rej(e); }
+  });
+}
+function _applyWaterQuiet(ml){ const key='bt_water_'+getTodayKey(); const cur=parseInt(localStorage.getItem(key)||'0'); localStorage.setItem(key, Math.max(0,cur+(parseInt(ml)||0))); }
+function _applyMealQuiet(idx){
+  const today=getTodayKey(); const log=getMealLog(today);
+  let i=(typeof idx==='number')?idx:-1;
+  if(i<0){ // sem índice (slot padrão): marca a refeição mais recente cujo horário já passou e ainda não foi marcada
+    try{ const times=getMealTimes(); const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes(); let bestMin=-1; times.forEach((t,ti)=>{ const tm=(t.hour*60+((t.min||0))); if(tm<=nowMin && !log['meal_'+ti] && tm>bestMin){ i=ti; bestMin=tm; } }); }catch(e){}
+  }
+  if(i<0) return;
+  if(!log['meal_'+i]){ log['meal_'+i]={option:0, time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), ts:Date.now()}; saveMealLog(today, log); }
+}
+let _draining=false;
+async function _drainNotifQueue(){
+  if(_draining) return; _draining=true;
+  try{
+    let db; try{ db=await _btQueueDB(); }catch(e){ _draining=false; return; }
+    const items=await new Promise(res=>{ try{ const tx=db.transaction('queue','readonly'); const g=tx.objectStore('queue').getAll(); g.onsuccess=()=>res(g.result||[]); g.onerror=()=>res([]); }catch(e){ res([]); } });
+    if(items.length){
+      let n=0;
+      for(const it of items){ try{ if(it.type==='water'&&it.ml){ _applyWaterQuiet(it.ml); n++; } else if(it.type==='meal'){ _applyMealQuiet(it.idx); n++; } }catch(e){} }
+      await new Promise(res=>{ try{ const tx=db.transaction('queue','readwrite'); tx.objectStore('queue').clear(); tx.oncomplete=()=>res(); tx.onerror=()=>res(); }catch(e){ res(); } });
+      if(n){ try{ render(); }catch(e){} try{ showSyncStatus&&showSyncStatus('✓ Registrado pela notificação','var(--good)'); }catch(e){} }
+    }
+  }finally{ _draining=false; }
+}
+// Aplica a fila assim que o SW avisa (app aberto) e ao voltar pro app
+try{ if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e=>{ if(e&&e.data&&e.data.type==='bt-drain') _drainNotifQueue(); }); }catch(e){}
+try{ document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') _drainNotifQueue(); }); }catch(e){}
 
 function scheduleMealReminders(){
   if(localStorage.getItem('bt_reminders')==='off') return;
@@ -6129,7 +6173,7 @@ function scheduleMealReminders(){
   if(_serverPushActive()){ _waterTimers.forEach(t=>clearTimeout(t)); _waterTimers=[]; return; } // push do servidor cobre → evita dupla
   const now=new Date();
 
-  getMealTimes().forEach(({meal,hour,min,icon})=>{
+  getMealTimes().forEach(({meal,hour,min,icon},mi)=>{
     // Try today first, then tomorrow if already passed
     let target=new Date();
     target.setHours(hour,min,0,0);
@@ -6139,7 +6183,7 @@ function scheduleMealReminders(){
     }
     const diff=target-now;
     const t=setTimeout(()=>{
-      fireNotif(`${icon} Hora da refeição!`,`${meal} — confira seu plano alimentar`,`meal_${meal}`);
+      fireNotif(`${icon} Hora da refeição!`,`${meal} — confira seu plano alimentar`,`meal_${meal}`,{type:'meal',mealIdx:mi});
       // Re-schedule for next day
       setTimeout(()=>scheduleMealReminders(), 60*1000);
     }, diff);
@@ -6783,6 +6827,7 @@ async function loadUserData(){
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
   loadExpenses();
+  _drainNotifQueue(); // aplica registros feitos pela notificação enquanto o app estava fechado
   if(_authUser) _resubscribePushIfGranted();
 }
 window._btInit = function(){
