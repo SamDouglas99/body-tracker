@@ -5437,6 +5437,20 @@ async function loadDailyLogs(){
     try{ render(); }catch(e){}
   }catch(e){}
 }
+// Tempo real: aplica na hora o que mudou em OUTRO aparelho (sem precisar recarregar)
+let _rtUnsub=null;
+async function _setupRealtime(){
+  try{
+    if(_rtUnsub){ try{ _rtUnsub(); }catch(e){} _rtUnsub=null; }
+    if(!(window._fb && window._fb.subscribeRealtime)) return;
+    _rtUnsub=await window._fb.subscribeRealtime(
+      (row)=>{ if(row&&row.day){ _dailyCache[row.day]={water_ml:(row.water_ml|0), meals:(row.meals||{})};
+        try{ localStorage.setItem('bt_water_'+row.day,String(row.water_ml|0)); localStorage.setItem('bt_meals_'+row.day,JSON.stringify(row.meals||{})); }catch(e){}
+        try{ render(); }catch(e){} } },
+      (row)=>{ if(row&&row.settings){ try{ if(Array.isArray(row.settings.expenses)) _expensesCache=row.settings.expenses; }catch(e){} try{ const s=getSettings(); if(s) Object.assign(s,row.settings); }catch(e){} try{ render(); }catch(e){} } }
+    );
+  }catch(e){}
+}
 function toggleMealCheck(mealIdx, option){
   const today=getTodayKey();
   const log=getMealLog(today);
@@ -5870,6 +5884,17 @@ window._buildSupabaseAdapter = async function(){
   return {
     _sb: sb,
     onAuth(cb){ const s=sb.auth.onAuthStateChange((_e,session)=>{ _user=(session&&session.user)||null; cb(_sbMapUser(_user)); }); return ()=>{ try{ s.data.subscription.unsubscribe(); }catch(e){} }; },
+    // Tempo real: avisa quando daily_logs/profiles do usuário mudam (outro aparelho) → sync ao vivo
+    async subscribeRealtime(onDaily, onProfile){
+      const u=await ensureUid(); if(!u) return null;
+      try{
+        const ch=sb.channel('bt-rt-'+u)
+          .on('postgres_changes',{event:'*',schema:'public',table:'daily_logs',filter:'user_id=eq.'+u},(p)=>{ try{ onDaily&&onDaily(p.new||p.old); }catch(e){} })
+          .on('postgres_changes',{event:'*',schema:'public',table:'profiles',filter:'user_id=eq.'+u},(p)=>{ try{ onProfile&&onProfile(p.new||p.old); }catch(e){} })
+          .subscribe();
+        return ()=>{ try{ sb.removeChannel(ch); }catch(e){} };
+      }catch(e){ return null; }
+    },
     currentUser(){ return _sbMapUser(_user); },
     async signUp(email,pass,name){ const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name:name||''}}}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
     async signIn(email,pass){ const {data,error}=await sb.auth.signInWithPassword({email,password:pass}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
@@ -6866,6 +6891,7 @@ async function loadUserData(){
   loadExpenses();
   // Carrega os dias da nuvem e SÓ DEPOIS aplica a fila de notificações (soma por cima do valor da nuvem)
   loadDailyLogs().then(()=>_drainNotifQueue());
+  _setupRealtime(); // sync ao vivo entre aparelhos (sem recarregar)
   if(_authUser) _resubscribePushIfGranted();
 }
 window._btInit = function(){
