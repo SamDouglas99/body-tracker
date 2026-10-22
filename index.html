@@ -5926,6 +5926,7 @@ window._buildSupabaseAdapter = async function(){
       }catch(e){ return null; }
     },
     currentUser(){ return _sbMapUser(_user); },
+    async getAccessToken(){ try{ const r=await sb.auth.getSession(); return (r.data&&r.data.session&&r.data.session.access_token)||null; }catch(e){ return null; } },
     async signUp(email,pass,name){ const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name:name||''}}}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
     async signIn(email,pass){ const {data,error}=await sb.auth.signInWithPassword({email,password:pass}); if(error) throw error; _user=data.user||null; return _sbMapUser(_user); },
     async signInGoogle(){ const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); if(error) throw error; return null; },
@@ -6232,11 +6233,21 @@ async function fireNotif(title, body, tag, opts){
 function _btQueueDB(){
   return new Promise((res,rej)=>{
     try{
-      const r=indexedDB.open('bt-sync',1);
-      r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains('queue')) db.createObjectStore('queue',{keyPath:'id',autoIncrement:true}); };
+      const r=indexedDB.open('bt-sync',2);
+      r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains('queue')) db.createObjectStore('queue',{keyPath:'id',autoIncrement:true}); if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv',{keyPath:'k'}); };
       r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
     }catch(e){ rej(e); }
   });
+}
+// kv store (compartilhado com o SW): guarda {url,anon,token} da sessão p/ o SW gravar direto no Supabase.
+async function _btKvPut(k, v){ try{ const db=await _btQueueDB(); await new Promise(res=>{ const tx=db.transaction('kv','readwrite'); tx.objectStore('kv').put({k, v}); tx.oncomplete=()=>res(); tx.onerror=()=>res(); }); }catch(e){} }
+// Escreve a sessão atual (url+anon+access_token) p/ o SW usar quando o app estiver fechado (Fase 2).
+async function _syncSwAuth(){
+  try{
+    if(!(window._fb && window._fb.getAccessToken)) return;
+    const token=await window._fb.getAccessToken().catch(()=>null);
+    if(token) await _btKvPut('auth', {url:SUPA_URL, anon:SUPA_ANON, token});
+  }catch(e){}
 }
 function _applyWaterQuiet(ml){ const day=getTodayKey(); const c=_dayCell(day); c.water_ml=Math.max(0,(c.water_ml|0)+(parseInt(ml)||0)); _persistDay(day); }
 function _applyMealQuiet(idx){
@@ -6262,8 +6273,18 @@ async function _drainNotifQueue(){
     }
   }finally{ _draining=false; }
 }
-// Aplica a fila assim que o SW avisa (app aberto) e ao voltar pro app
-try{ if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e=>{ if(e&&e.data&&e.data.type==='bt-drain') _drainNotifQueue(); }); }catch(e){}
+// Registro ao TOCAR na notificação (abre o app já registrando — reserva universal, inclui iOS)
+let _pendingBtreg=null;
+function _applyBtreg(intent){
+  try{
+    if(!intent) return;
+    if(intent==='water'){ _applyWaterQuiet(500); try{ render(); }catch(e){} try{ showSyncStatus&&showSyncStatus('✓ 500 ml de água registrados','var(--good)'); }catch(e){} }
+    else if(intent.indexOf('meal:')===0){ const n=parseInt(intent.slice(5)); _applyMealQuiet(isNaN(n)?-1:n); try{ render(); }catch(e){} try{ showSyncStatus&&showSyncStatus('✓ Refeição marcada','var(--good)'); }catch(e){} }
+  }catch(e){}
+}
+try{ const m=(location.search||'').match(/[?&]btreg=([^&]+)/); if(m){ _pendingBtreg=decodeURIComponent(m[1]); try{ history.replaceState(null,'',location.pathname); }catch(e){} } }catch(e){}
+// Aplica a fila/registro assim que o SW avisa (app aberto) e ao voltar pro app
+try{ if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e=>{ if(e&&e.data){ if(e.data.type==='bt-drain') _drainNotifQueue(); else if(e.data.type==='btreg') _applyBtreg(e.data.intent); } }); }catch(e){}
 try{ document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') _drainNotifQueue(); }); }catch(e){}
 
 function scheduleMealReminders(){
@@ -6929,9 +6950,10 @@ async function loadUserData(){
   loadPhotoMeta();
   loadExpenses();
   _migrateLocalSettings(); // sobe check-in/mercado/estoque/metas que só existiam local
-  // Carrega os dias da nuvem e SÓ DEPOIS aplica a fila de notificações (soma por cima do valor da nuvem)
-  loadDailyLogs().then(()=>_drainNotifQueue());
+  // Carrega os dias da nuvem e SÓ DEPOIS aplica a fila/registro da notificação (soma por cima do valor da nuvem)
+  loadDailyLogs().then(()=>{ _drainNotifQueue(); if(_pendingBtreg){ _applyBtreg(_pendingBtreg); _pendingBtreg=null; } });
   _setupRealtime(); // sync ao vivo entre aparelhos (sem recarregar)
+  _syncSwAuth(); // dá ao SW a sessão p/ gravar direto no banco com o app fechado (Fase 2)
   if(_authUser) _resubscribePushIfGranted();
 }
 window._btInit = function(){
@@ -6940,6 +6962,7 @@ window._btInit = function(){
     if(user){
       CP=user.uid; _authUser=user;
       try{localStorage.removeItem('bt_guest');}catch(_){}
+      try{ _syncSwAuth(); }catch(e){} // atualiza a sessão do SW (login/refresh de token)
       hideAuthScreen(); _enterApp(); loadUserData();
     } else if(localStorage.getItem('bt_guest')==='1'){
       CP='him'; _authUser=null;

@@ -1,5 +1,5 @@
 // Body Tracker Pro — Service Worker v2
-const CACHE_NAME = 'bodytracker-v6';
+const CACHE_NAME = 'bodytracker-v7';
 
 const STATIC_ASSETS = [
   './',
@@ -76,16 +76,36 @@ self.addEventListener('fetch', event => {
 
 const ICON = 'https://em-content.zobj.net/source/apple/354/flexed-biceps_1f4aa.png';
 
+function swDbOpen() {
+  return new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open('bt-sync', 2);
+      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('queue')) db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true }); if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv', { keyPath: 'k' }); };
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  });
+}
 // Enfileira um registro rápido no IndexedDB (o app aplica ao abrir / ao receber 'bt-drain')
 function swQueueAdd(item) {
-  return new Promise(res => {
-    try {
-      const r = indexedDB.open('bt-sync', 1);
-      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('queue')) db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true }); };
-      r.onsuccess = () => { try { const db = r.result; const tx = db.transaction('queue', 'readwrite'); tx.objectStore('queue').add(Object.assign({ ts: Date.now() }, item)); tx.oncomplete = () => res(true); tx.onerror = () => res(false); } catch (e) { res(false); } };
-      r.onerror = () => res(false);
-    } catch (e) { res(false); }
-  });
+  return swDbOpen().then(db => new Promise(res => { try { const tx = db.transaction('queue', 'readwrite'); tx.objectStore('queue').add(Object.assign({ ts: Date.now() }, item)); tx.oncomplete = () => res(true); tx.onerror = () => res(false); } catch (e) { res(false); } })).catch(() => false);
+}
+function swKvGet(k) {
+  return swDbOpen().then(db => new Promise(res => { try { const g = db.transaction('kv', 'readonly').objectStore('kv').get(k); g.onsuccess = () => res(g.result && g.result.v); g.onerror = () => res(null); } catch (e) { res(null); } })).catch(() => null);
+}
+// Fase 2: grava DIRETO no Supabase (RPC), usando a sessão que o app salvou no kv. Retorna true se gravou.
+async function swRestWrite(item) {
+  try {
+    const auth = await swKvGet('auth');
+    if (!auth || !auth.url || !auth.token) return false;
+    const n = new Date();
+    const today = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+    let fn, body;
+    if (item.type === 'water') { fn = 'bt_add_water'; body = { p_day: today, p_ml: (parseInt(item.ml) || 0) }; }
+    else if (item.type === 'meal') { if (typeof item.idx !== 'number' || item.idx < 0) return false; fn = 'bt_set_meal'; body = { p_day: today, p_key: 'meal_' + item.idx }; }
+    else return false;
+    const r = await fetch(auth.url + '/rest/v1/rpc/' + fn, { method: 'POST', headers: { 'apikey': auth.anon, 'Authorization': 'Bearer ' + auth.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    return r.ok;
+  } catch (e) { return false; }
 }
 
 // ── PUSH (servidor) — com botões de ação p/ registrar água/refeição sem abrir o app ──
@@ -112,26 +132,28 @@ self.addEventListener('notificationclick', event => {
   const act = event.action;
   const d = event.notification.data || {};
   event.notification.close();
-  // Botões de registro rápido → enfileira + confirma, SEM abrir o app
+  // Botões de registro rápido → grava no banco (app fechado); reserva: enfileira p/ aplicar ao abrir
   if (act && (act.indexOf('water+') === 0 || act === 'meal-done')) {
     event.waitUntil((async () => {
       let item, confirmBody;
       if (act.indexOf('water+') === 0) { const ml = parseInt(act.split('+')[1]) || 0; item = { type: 'water', ml }; confirmBody = '+' + ml + ' ml de água registrados'; }
       else { item = { type: 'meal', idx: (typeof d.mealIdx === 'number' ? d.mealIdx : null) }; confirmBody = 'Refeição marcada como feita'; }
-      await swQueueAdd(item);
+      const wrote = await swRestWrite(item);      // Fase 2: grava direto no banco
+      if (!wrote) await swQueueAdd(item);          // reserva: app aplica ao abrir
       const list = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-      list.forEach(c => { try { c.postMessage({ type: 'bt-drain' }); } catch (e) {} });
+      list.forEach(c => { try { c.postMessage({ type: 'bt-drain' }); } catch (e) {} }); // fila vazia se já gravou (no-op)
       try { await self.registration.showNotification('✓ Registrado', { body: confirmBody, tag: 'bt-confirm', icon: ICON, badge: ICON }); } catch (e) {}
     })());
     return;
   }
-  // Toque normal → abre/foca o app
+  // Toque no corpo (ou iOS, sem botões) → abre/foca o app JÁ registrando
+  const intent = d.type === 'water' ? 'water' : (d.type === 'meal' ? ('meal:' + (typeof d.mealIdx === 'number' ? d.mealIdx : '')) : '');
+  const url = (d.url || './') + (intent ? ('?btreg=' + encodeURIComponent(intent)) : '');
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      const focused = list.find(c => c.focused);
-      if (focused) return focused.focus();
-      if (list.length > 0) return list[0].focus();
-      return clients.openWindow(d.url || './');
+      const c = list.find(x => x.focused) || list[0];
+      if (c) { try { if (intent) c.postMessage({ type: 'btreg', intent }); } catch (e) {} return c.focus(); }
+      return clients.openWindow(url);
     })
   );
 });
