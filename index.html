@@ -68,8 +68,8 @@ window._fb={
   async deletePushSub(uid){ try{ await setDoc(doc(db,'push_subs',uid),{disabled:true,updatedAt:Date.now()}); }catch(e){} },
   async getExpensesMeta(profile){ const s=await getDoc(doc(db,'expenses',profile)); return (s.exists()&&Array.isArray(s.data().items))?s.data().items:[]; },
   async saveExpensesMeta(profile,arr){ await setDoc(doc(db,'expenses',profile),{items:arr,updatedAt:Date.now()}); },
-  async getDailyLogs(profile){ const s=await getDocs(collection(db,'daily_'+profile)); return s.docs.map(d=>({day:d.id, water_ml:(d.data().water_ml|0), meals:(d.data().meals||{})})); },
-  async upsertDailyLog(profile,day,water_ml,meals){ await setDoc(doc(db,'daily_'+profile,day),{water_ml:water_ml|0, meals:meals||{}, updatedAt:Date.now()}); }
+  async getDailyLogs(profile){ const s=await getDocs(collection(db,'daily_'+profile)); return s.docs.map(d=>({day:d.id, water_ml:(d.data().water_ml|0), meals:(d.data().meals||{}), supps:(d.data().supps||{})})); },
+  async upsertDailyLog(profile,day,water_ml,meals,supps){ await setDoc(doc(db,'daily_'+profile,day),{water_ml:water_ml|0, meals:meals||{}, supps:supps||{}, updatedAt:Date.now()}); }
 };
 // Escolhe o backend: Supabase (PADRÃO) ou Firebase (plano B: localStorage bt_backend='firebase').
 async function _bootBackend(){
@@ -1186,6 +1186,34 @@ const _cache={entries:{him:[]},settings:{him:null},workouts:[]};
 const getEntries=()=>_cache.entries[CP]||[];
 const getSettings=()=>_cache.settings[CP];
 function saveSettings(d){_cache.settings[CP]=d;try{localStorage.setItem('bt_settings_'+CP,JSON.stringify(d));}catch(e){}if(window._fb)window._fb.saveSettings(CP,d).catch(e=>console.error('Ajustes mantidos no backup local:',e));}
+// Dados de lista/objeto que passam a viver dentro de profiles.settings (nuvem) + backup local.
+function _settingGet(key, localKey, dflt){
+  try{ const s=getSettings(); if(s && s[key]!==undefined && s[key]!==null) return s[key]; }catch(e){}
+  try{ const v=JSON.parse(localStorage.getItem(localKey)||'null'); if(v!=null) return v; }catch(e){}
+  return dflt;
+}
+function _settingSet(key, value, localKey){
+  let s=getSettings();
+  if(!s){ try{ s=JSON.parse(localStorage.getItem('bt_settings_'+CP)||'null'); }catch(e){} s=s||{}; try{ _cache.settings[CP]=s; }catch(e){} } // evita clobber se o cache ainda não carregou
+  s[key]=value;
+  try{ localStorage.setItem(localKey, JSON.stringify(value)); }catch(e){} // backup local/offline
+  saveSettings(s); // persiste no banco (merge no jsonb) + cache
+}
+// Migração 1x: sobe p/ o banco os dados que só existiam no localStorage (check-in, mercado, estoque, metas).
+function _migrateLocalSettings(){
+  try{
+    const s=getSettings(); if(!s) return;
+    const pairs=[['customTargets','bt_custom_targets'],['marketWeeks','bt_mkt_weeks'],['estoque','bt_estoque'],['estoqueHist','bt_estoque_hist'],['checkinHist','bt_checkin_hist']];
+    let changed=false;
+    pairs.forEach(([key,lk])=>{
+      if(s[key]===undefined || s[key]===null){
+        let v=null; try{ v=JSON.parse(localStorage.getItem(lk)||'null'); }catch(e){}
+        if(v!=null && (Array.isArray(v)?v.length:Object.keys(v).length)){ s[key]=v; changed=true; }
+      }
+    });
+    if(changed) saveSettings(s);
+  }catch(e){}
+}
 const getWorkouts=()=>_cache.workouts||[];
 const getLastWorkout=(type)=>[..._cache.workouts].reverse().find(s=>s.type===type)||null;
 // ── Treinos: gravação DURÁVEL (backup local + re-sync) — evita perder treino se o Firebase falhar ──
@@ -1453,7 +1481,7 @@ function buildDashboard(){
   const targetProt=_dietAdj?_dietAdj.prot:Math.round(curW*2.4);
 
   // ── Semana: suplementos hoje ──
-  const suppLog=JSON.parse(localStorage.getItem('bt_supps_'+getTodayKey())||'{}');
+  const suppLog=getSuppLog();
   const suppDone=Object.keys(suppLog).length;
   const suppTotal=5;
 
@@ -1491,7 +1519,7 @@ function buildDashboard(){
   }).join('');
 
   // ── Check-in semanal: últimas tendências ──
-  const checkinHist=JSON.parse(localStorage.getItem('bt_checkin_hist')||'[]');
+  const checkinHist=_settingGet('checkinHist','bt_checkin_hist',[])||[];
   const last4Checkins=checkinHist.slice(-4);
   const dietLabels=['','Ruim','OK','Boa','Ótima'];
   const sleepLabels=['','Péssimo','Regular','Bom','Excelente'];
@@ -2068,19 +2096,17 @@ function buildFotos(subtabs){
 // ══════════════════════════════════════
 // METAS EDITÁVEIS
 // ══════════════════════════════════════
-function getCustomTargets(){
-  try{ return JSON.parse(localStorage.getItem('bt_custom_targets')||'{}'); }catch{ return {}; }
-}
+function getCustomTargets(){ return _settingGet('customTargets','bt_custom_targets',{})||{}; }
 function saveCustomTarget(key, val){
   if(key==='weight'){ // meta de peso é fonte ÚNICA (settings.goal) — sincroniza dashboard/topbar/indicadores
     const g=parseFloat(val);
     if(g>0){ const s={...(getSettings()||{})}; s.goal=g; saveSettings(s); }
     return;
   }
-  const t=getCustomTargets();
+  const t={...getCustomTargets()};
   if(val===''||isNaN(parseFloat(val))) delete t[key];
   else t[key]=parseFloat(val);
-  localStorage.setItem('bt_custom_targets',JSON.stringify(t));
+  _settingSet('customTargets', t, 'bt_custom_targets');
 }
 function getTarget(measurement){
   if(measurement.key==='weight'){ const s=getSettings(); return (s&&s.goal)?s.goal:measurement.target; }
@@ -2089,7 +2115,7 @@ function getTarget(measurement){
 }
 function resetAllTargets(){
   if(!confirm('Redefinir todas as metas para os valores padrão?')) return;
-  localStorage.removeItem('bt_custom_targets');
+  _settingSet('customTargets', {}, 'bt_custom_targets');
   render();
 }
 
@@ -3713,15 +3739,13 @@ function fmtQty(qty, unit){
   return `${qty} ${unit}`;
 }
 
-function getMktWeeks(){
-  try{ return JSON.parse(localStorage.getItem('bt_mkt_weeks')||'[]'); }catch{ return []; }
-}
+function getMktWeeks(){ return _settingGet('marketWeeks','bt_mkt_weeks',[])||[]; }
 function saveMktWeek(spent){
-  const w=getMktWeeks();
+  const w=[...getMktWeeks()];
   w.push({date:localDayKey(),spent:parseFloat(spent)});
   // keep last 12 weeks
   if(w.length>12) w.splice(0,w.length-12);
-  localStorage.setItem('bt_mkt_weeks',JSON.stringify(w));
+  _settingSet('marketWeeks', w, 'bt_mkt_weeks');
 }
 
 function buildMercado(subtabs){
@@ -3872,7 +3896,7 @@ function buildMercado(subtabs){
             </div>
           </div>`;
         }).join('')}
-        <button onclick="if(confirm('Apagar histórico de gastos?')){localStorage.removeItem('bt_mkt_weeks');nuSubTab='mercado';render();}"
+        <button onclick="if(confirm('Apagar histórico de gastos?')){_settingSet('marketWeeks',[],'bt_mkt_weeks');nuSubTab='mercado';render();}"
           style="margin-top:10px;width:100%;padding:8px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">
           🗑️ Limpar histórico
         </button>
@@ -4132,11 +4156,11 @@ function buildNutricao(){
   if(nuSubTab==='mercado') return buildMercado(subtabs);
   if(nuSubTab==='suplementos'){
     // Supplement tracking
-    const todaySuppLog=JSON.parse(localStorage.getItem('bt_supps_'+getTodayKey())||'{}');
+    const todaySuppLog=getSuppLog();
     window.toggleSupp=(name)=>{
-      const log=JSON.parse(localStorage.getItem('bt_supps_'+getTodayKey())||'{}');
+      const log={...getSuppLog()};
       if(log[name]) delete log[name]; else log[name]={time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
-      localStorage.setItem('bt_supps_'+getTodayKey(),JSON.stringify(log));
+      saveSuppLog(getTodayKey(), log);
       render();
     };
     const suppList=getSupps();
@@ -4567,10 +4591,10 @@ function markDeloadDone(){
 const ESTOQUE_CATS = ['🥩 Proteína','🍚 Carboidrato','🥦 Vegetal/Fruta','🥛 Laticínio','🧴 Suplemento','🧂 Tempero/Condimento','🛢️ Óleo/Gordura','🍞 Grão/Cereal','🥤 Bebida','📦 Outro'];
 let estoqueSubTab='lista';
 
-function getEstoque(){try{return JSON.parse(localStorage.getItem('bt_estoque')||'[]');}catch{return [];}}
-function saveEstoque(d){localStorage.setItem('bt_estoque',JSON.stringify(d));}
-function getEstoqueHistory(){try{return JSON.parse(localStorage.getItem('bt_estoque_hist')||'[]');}catch{return [];}}
-function saveEstoqueHistory(d){localStorage.setItem('bt_estoque_hist',JSON.stringify(d));}
+function getEstoque(){return _settingGet('estoque','bt_estoque',[])||[];}
+function saveEstoque(d){_settingSet('estoque', d||[], 'bt_estoque');}
+function getEstoqueHistory(){return _settingGet('estoqueHist','bt_estoque_hist',[])||[];}
+function saveEstoqueHistory(d){_settingSet('estoqueHist', d||[], 'bt_estoque_hist');}
 
 function addEstoqueItem(prefill){
   const name=(prefill?.name||document.getElementById('est-name')?.value||'').trim();
@@ -5006,10 +5030,10 @@ function saveWeeklyCheckin(){
     diet:window._ciDiet||0,
     sleep:window._ciSleep||0,
   };
-  // Save checkin history
-  const history=JSON.parse(localStorage.getItem('bt_checkin_hist')||'[]');
+  // Save checkin history (vai pro banco via settings)
+  const history=[..._settingGet('checkinHist','bt_checkin_hist',[])];
   history.push(checkin);
-  localStorage.setItem('bt_checkin_hist',JSON.stringify(history));
+  _settingSet('checkinHist', history, 'bt_checkin_hist');
   localStorage.setItem('bt_last_checkin',new Date().toISOString());
   // Update weight if provided
   if(weight&&weight!==getD().curW){
@@ -5403,10 +5427,11 @@ function getWeekKey(d=new Date()){
 // ── Registros diários (água + refeições) — fonte é o banco (daily_logs); local = cache ──
 function _dayCell(day){
   if(!_dailyCache[day]){
-    let w=0,m={};
+    let w=0,m={},sp={};
     try{ w=parseInt(localStorage.getItem('bt_water_'+day)||'0')||0; }catch(e){}
     try{ m=JSON.parse(localStorage.getItem('bt_meals_'+day)||'{}')||{}; }catch(e){}
-    _dailyCache[day]={water_ml:w, meals:m};
+    try{ sp=JSON.parse(localStorage.getItem('bt_supps_'+day)||'{}')||{}; }catch(e){}
+    _dailyCache[day]={water_ml:w, meals:m, supps:sp};
   }
   return _dailyCache[day];
 }
@@ -5414,11 +5439,14 @@ function _persistDay(day){
   const c=_dayCell(day);
   try{ localStorage.setItem('bt_water_'+day, String(c.water_ml|0)); }catch(e){}
   try{ localStorage.setItem('bt_meals_'+day, JSON.stringify(c.meals||{})); }catch(e){}
-  if(window._fb && window._fb.upsertDailyLog){ window._fb.upsertDailyLog(CP, day, c.water_ml|0, c.meals||{}).catch(e=>console.warn('Dia salvo localmente (nuvem falhou):',e)); }
+  try{ localStorage.setItem('bt_supps_'+day, JSON.stringify(c.supps||{})); }catch(e){}
+  if(window._fb && window._fb.upsertDailyLog){ window._fb.upsertDailyLog(CP, day, c.water_ml|0, c.meals||{}, c.supps||{}).catch(e=>console.warn('Dia salvo localmente (nuvem falhou):',e)); }
 }
 function getWaterMl(day){ return _dayCell(day||getTodayKey()).water_ml|0; }
 function getMealLog(date){ return _dayCell(date).meals||{}; }
 function saveMealLog(date,log){ _dayCell(date).meals=log||{}; _persistDay(date); }
+function getSuppLog(day){ return _dayCell(day||getTodayKey()).supps||{}; }
+function saveSuppLog(day,log){ _dayCell(day).supps=log||{}; _persistDay(day); }
 // Carrega os registros diários da nuvem (últimos 14 dias) e migra os que só existem local.
 async function loadDailyLogs(){
   try{
@@ -5427,12 +5455,12 @@ async function loadDailyLogs(){
     let rows=null; try{ rows=await window._fb.getDailyLogs(CP, from); }catch(e){ rows=null; }
     if(rows===null) return; // nuvem indisponível → mantém o cache local, não apaga
     const cloudDays=new Set();
-    rows.forEach(r=>{ if(r&&r.day){ _dailyCache[r.day]={water_ml:(r.water_ml|0), meals:(r.meals||{})}; cloudDays.add(r.day);
-      try{ localStorage.setItem('bt_water_'+r.day,String(r.water_ml|0)); localStorage.setItem('bt_meals_'+r.day,JSON.stringify(r.meals||{})); }catch(e){} } });
+    rows.forEach(r=>{ if(r&&r.day){ _dailyCache[r.day]={water_ml:(r.water_ml|0), meals:(r.meals||{}), supps:(r.supps||{})}; cloudDays.add(r.day);
+      try{ localStorage.setItem('bt_water_'+r.day,String(r.water_ml|0)); localStorage.setItem('bt_meals_'+r.day,JSON.stringify(r.meals||{})); localStorage.setItem('bt_supps_'+r.day,JSON.stringify(r.supps||{})); }catch(e){} } });
     // Migração idempotente: sobe os últimos 30 dias que existem só localmente.
     if(window._fb.upsertDailyLog){
       for(let i=0;i<30;i++){ const day=localDayKey(new Date(Date.now()-i*86400000)); if(cloudDays.has(day)) continue;
-        const c=_dayCell(day); if((c.water_ml|0)>0 || Object.keys(c.meals||{}).length){ try{ await window._fb.upsertDailyLog(CP, day, c.water_ml|0, c.meals||{}); }catch(e){} } }
+        const c=_dayCell(day); if((c.water_ml|0)>0 || Object.keys(c.meals||{}).length || Object.keys(c.supps||{}).length){ try{ await window._fb.upsertDailyLog(CP, day, c.water_ml|0, c.meals||{}, c.supps||{}); }catch(e){} } }
     }
     try{ render(); }catch(e){}
   }catch(e){}
@@ -5444,8 +5472,8 @@ async function _setupRealtime(){
     if(_rtUnsub){ try{ _rtUnsub(); }catch(e){} _rtUnsub=null; }
     if(!(window._fb && window._fb.subscribeRealtime)) return;
     _rtUnsub=await window._fb.subscribeRealtime(
-      (row)=>{ if(row&&row.day){ _dailyCache[row.day]={water_ml:(row.water_ml|0), meals:(row.meals||{})};
-        try{ localStorage.setItem('bt_water_'+row.day,String(row.water_ml|0)); localStorage.setItem('bt_meals_'+row.day,JSON.stringify(row.meals||{})); }catch(e){}
+      (row)=>{ if(row&&row.day){ _dailyCache[row.day]={water_ml:(row.water_ml|0), meals:(row.meals||{}), supps:(row.supps||{})};
+        try{ localStorage.setItem('bt_water_'+row.day,String(row.water_ml|0)); localStorage.setItem('bt_meals_'+row.day,JSON.stringify(row.meals||{})); localStorage.setItem('bt_supps_'+row.day,JSON.stringify(row.supps||{})); }catch(e){}
         try{ render(); }catch(e){} } },
       (row)=>{ if(row&&row.settings){ try{ if(Array.isArray(row.settings.expenses)) _expensesCache=row.settings.expenses; }catch(e){} try{ const s=getSettings(); if(s) Object.assign(s,row.settings); }catch(e){} try{ render(); }catch(e){} } }
     );
@@ -5560,6 +5588,7 @@ function brl(v){ return 'R$ '+(Number(v)||0).toFixed(2).replace('.',','); }
 function getExpenses(){ if(Array.isArray(_expensesCache)) return _expensesCache; try{ return JSON.parse(localStorage.getItem('bt_expenses_'+CP)||'[]'); }catch{ return []; } }
 function saveExpenses(arr){
   _expensesCache=Array.isArray(arr)?arr:[];
+  try{ const s=getSettings(); if(s) s.expenses=_expensesCache; }catch(e){} // mantém no settings p/ saveSettings não gravar valor velho
   try{ localStorage.setItem('bt_expenses_'+CP,JSON.stringify(_expensesCache)); }catch(e){} // backup local/offline
   if(window._fb && window._fb.saveExpensesMeta){ window._fb.saveExpensesMeta(CP,_expensesCache).catch(e=>console.warn('Gasto salvo localmente (nuvem falhou):',e)); }
 }
@@ -5573,6 +5602,7 @@ async function loadExpenses(){
     if(cloud.length){ _expensesCache=cloud; }
     else if(local.length){ _expensesCache=local; if(window._fb&&window._fb.saveExpensesMeta){ try{ await window._fb.saveExpensesMeta(CP, local); }catch(e){} } } // migração idempotente local→nuvem
     else { _expensesCache=[]; }
+    try{ const s=getSettings(); if(s) s.expenses=_expensesCache; }catch(e){}
     try{ localStorage.setItem('bt_expenses_'+CP,JSON.stringify(_expensesCache)); }catch(e){}
     if(CT==='gastos') render();
   }catch(e){ /* mantém o que estiver em memória/local */ }
@@ -5902,7 +5932,12 @@ window._buildSupabaseAdapter = async function(){
     async signOutUser(){ await sb.auth.signOut(); _user=null; },
     async sendReset(email){ const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}); if(error) throw error; },
     async getSettings(){ const u=await ensureUid(); if(!u) return null; const r=chk(await sb.from('profiles').select('*').eq('user_id',u).maybeSingle()); return _sbRowToSettings(r.data); },
-    async saveSettings(_p,d){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); chk(await sb.from('profiles').upsert(_sbSettingsToRow(u,d),{onConflict:'user_id'})); },
+    async saveSettings(_p,d){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase');
+      const row=_sbSettingsToRow(u,d);
+      // MERGE o jsonb settings: preserva chaves que não vieram em d (photoMeta, expenses, checkinHist, etc.)
+      // — sem isso, um saveSettings parcial (ex.: só peso/meta) apagava o resto do jsonb no banco.
+      try{ const cur=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(!cur.error){ row.settings={...((cur.data&&cur.data.settings)||{}), ...(row.settings||{})}; } }catch(e){}
+      chk(await sb.from('profiles').upsert(row,{onConflict:'user_id'})); },
     async getEntries(){ const u=await ensureUid(); if(!u) return []; const r=chk(await sb.from('entries').select('*').eq('user_id',u).order('date')); return (r.data||[]).map(_sbRowToEntry); },
     async saveEntry(_p,e){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); chk(await sb.from('entries').insert(_sbEntryToRow(u,e))); },
     async getWorkouts(){ const u=await ensureUid(); if(!u) return []; const r=chk(await sb.from('workouts').select('*').eq('user_id',u).order('date')); return (r.data||[]).map(_sbRowToWorkout); },
@@ -5927,7 +5962,11 @@ window._buildSupabaseAdapter = async function(){
     async getExpensesMeta(){ const u=await ensureUid(); if(!u) return []; const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s=(r.data&&r.data.settings)||{}; return Array.isArray(s.expenses)?s.expenses:[]; },
     async saveExpensesMeta(_p, arr){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('profiles').select('settings').eq('user_id',u).maybeSingle(); if(r.error) throw r.error; const s={...((r.data&&r.data.settings)||{}), expenses:arr}; const up=await sb.from('profiles').update({settings:s}).eq('user_id',u); if(up.error) throw up.error; },
     async getDailyLogs(_p, fromDay){ const u=await ensureUid(); if(!u) return []; let q=sb.from('daily_logs').select('*').eq('user_id',u); if(fromDay) q=q.gte('day',fromDay); const r=await q; if(r.error) throw r.error; return r.data||[]; },
-    async upsertDailyLog(_p, day, water_ml, meals){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase'); const r=await sb.from('daily_logs').upsert({user_id:u, day, water_ml:water_ml|0, meals:meals||{}, updated_at:new Date().toISOString()},{onConflict:'user_id,day'}); if(r.error) throw r.error; },
+    async upsertDailyLog(_p, day, water_ml, meals, supps){ const u=await ensureUid(); if(!u) throw new Error('Sem sessão Supabase');
+      const base={user_id:u, day, water_ml:water_ml|0, meals:meals||{}, updated_at:new Date().toISOString()};
+      let r=await sb.from('daily_logs').upsert({...base, supps:supps||{}},{onConflict:'user_id,day'});
+      if(r.error){ r=await sb.from('daily_logs').upsert(base,{onConflict:'user_id,day'}); } // fallback: coluna supps ainda não existe (schema-09)
+      if(r.error) throw r.error; },
     async savePushSub(uid2,sub){ const u=await ensureUid(); chk(await sb.from('push_subs').upsert({user_id:u||uid2, endpoint:sub.endpoint, keys:sub.keys, tz_offset:sub.tzOffset, disabled:false, updated_at:new Date().toISOString()},{onConflict:'endpoint'})); },
     async deletePushSub(_uid,endpoint){ const u=await ensureUid(); if(endpoint){ chk(await sb.from('push_subs').update({disabled:true}).eq('endpoint',endpoint)); } else if(u){ chk(await sb.from('push_subs').update({disabled:true}).eq('user_id',u)); } },
   };
@@ -6889,6 +6928,7 @@ async function loadUserData(){
   setTimeout(checkAndShowEvolutionReport,3000);
   loadPhotoMeta();
   loadExpenses();
+  _migrateLocalSettings(); // sobe check-in/mercado/estoque/metas que só existiam local
   // Carrega os dias da nuvem e SÓ DEPOIS aplica a fila de notificações (soma por cima do valor da nuvem)
   loadDailyLogs().then(()=>_drainNotifQueue());
   _setupRealtime(); // sync ao vivo entre aparelhos (sem recarregar)
