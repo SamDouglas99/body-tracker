@@ -1118,6 +1118,162 @@ function getMeals(){ return getDietData().meals; }
 function getSupps(){ return getDietData().supps; }
 function saveDiet(meals,supps){ const s={...(getSettings()||{})}; s.diet={meals,supps}; saveSettings(s); }
 
+// ══════════════════════════════════════
+// MONTADOR DE DIETA INTELIGENTE — distribui os macros do dia pelas refeições e calcula as porções
+// ══════════════════════════════════════
+// Macros por 100g (u:'g'), por 100ml (u:'ml') ou por unidade (u:'un').
+const NUTRI_FOODS = {
+  frango:   {n:'frango grelhado',    u:'g',  k:165, p:31,  c:0,   f:3.6, fib:0},
+  patinho:  {n:'patinho moído',      u:'g',  k:187, p:26,  c:0,   f:9,   fib:0},
+  tilapia:  {n:'tilápia',            u:'g',  k:96,  p:20,  c:0,   f:2,   fib:0},
+  ovo:      {n:'ovo inteiro',        u:'un', k:72,  p:6,   c:0.4, f:5,   fib:0},
+  clara:    {n:'clara de ovo',       u:'un', k:17,  p:3.6, c:0.2, f:0,   fib:0},
+  whey:     {n:'scoop de whey',      u:'un', k:120, p:25,  c:3,   f:1.5, fib:0},
+  arroz:    {n:'arroz cozido',       u:'g',  k:130, p:2.5, c:28,  f:0.3, fib:0.4},
+  feijao:   {n:'feijão cozido',      u:'g',  k:87,  p:6,   c:15,  f:0.5, fib:4},
+  batata:   {n:'batata-doce',        u:'g',  k:86,  p:1.6, c:20,  f:0.1, fib:3},
+  aveia:    {n:'aveia',              u:'g',  k:380, p:14,  c:66,  f:7,   fib:10},
+  banana:   {n:'banana',             u:'un', k:89,  p:1.1, c:23,  f:0.3, fib:2.6},
+  pao:      {n:'pão francês',        u:'un', k:135, p:4.5, c:27,  f:1.2, fib:1.2},
+  tapioca:  {n:'tapioca (goma)',     u:'g',  k:240, p:0,   c:59,  f:0,   fib:0},
+  leite:    {n:'leite',              u:'ml', k:61,  p:3.2, c:4.8, f:3.3, fib:0},
+  acai:     {n:'polpa de açaí',      u:'g',  k:80,  p:1,   c:6,   f:5.5, fib:3},
+  granola:  {n:'granola',            u:'g',  k:450, p:10,  c:64,  f:13,  fib:7},
+  pamend:   {n:'pasta de amendoim',  u:'g',  k:590, p:25,  c:20,  f:50,  fib:6},
+  azeite:   {n:'azeite',             u:'ml', k:884, p:0,   c:0,   f:100, fib:0},
+  salada:   {n:'salada + legumes',   u:'g',  k:30,  p:2,   c:5,   f:0.3, fib:3},
+  fruta:    {n:'fruta',              u:'un', k:70,  p:1,   c:18,  f:0.2, fib:2.5},
+};
+// macro por 1 unidade de medida (1g, 1ml ou 1 item)
+function _foodUnit(key, macro){ const f=NUTRI_FOODS[key]; if(!f) return 0; return (f.u==='un') ? (f[macro]||0) : ((f[macro]||0)/100); }
+// arredonda a quantidade p/ algo prático
+function _roundQty(key, q){ const f=NUTRI_FOODS[key]; if(f.u==='un'){ return Math.max(0, Math.round(q*2)/2); } return Math.max(0, Math.round(q/5)*5); }
+function _unitLabel(key){ const u=NUTRI_FOODS[key].u; return u==='un'?'': (u==='ml'?'ml':'g'); }
+
+// Resolve as porções de UMA refeição p/ bater um alvo {p,c,f}. plan = {prot,carb,fat, base:[{key,qty}]}
+function _solveMeal(tgt, plan){
+  const items=[]; let tot={k:0,p:0,c:0,f:0,fib:0};
+  const add=(key, q)=>{ q=_roundQty(key,q); if(q<=0) return; items.push({key,q}); tot.k+=_foodUnit(key,'k')*q; tot.p+=_foodUnit(key,'p')*q; tot.c+=_foodUnit(key,'c')*q; tot.f+=_foodUnit(key,'f')*q; tot.fib+=_foodUnit(key,'fib')*q; };
+  (plan.base||[]).forEach(b=> add(b.key, b.qty));
+  if(plan.prot){ const need=Math.max(0, tgt.p - tot.p); add(plan.prot, need/_foodUnit(plan.prot,'p')); }
+  if(plan.carb){ const need=Math.max(0, tgt.c - tot.c); add(plan.carb, need/_foodUnit(plan.carb,'c')); }
+  if(plan.fat){ const need=Math.max(0, tgt.f - tot.f); add(plan.fat, need/_foodUnit(plan.fat,'f')); }
+  const txt=items.map(it=>{ const f=NUTRI_FOODS[it.key]; const u=_unitLabel(it.key); return u ? `${it.q}${u} de ${f.n}` : `${it.q%1===0?it.q:it.q.toFixed(1)}× ${f.n}`; }).join(' + ');
+  return { items, txt, macros:{kcal:Math.round(tot.k), prot:Math.round(tot.p), carb:Math.round(tot.c), gord:Math.round(tot.f), fibra:Math.round(tot.fib)} };
+}
+
+// Metas diárias por objetivo (proteína primeiro; resto dividido ~58% carbo / 42% gordura)
+function _dietTargets(w, obj){
+  const K={ganho:44, manut:37, defin:31}[obj]||41;
+  const P={ganho:2.2, manut:2.0, defin:2.5}[obj]||2.2;
+  const kcal=Math.round(w*K), prot=Math.round(w*P);
+  const rem=Math.max(0, kcal - prot*4);
+  const carb=Math.round(rem*0.58/4), fat=Math.round(rem*0.42/9);
+  return {kcal, prot, carb, fat};
+}
+
+// Modelos de refeição por papel. foods diferem em casa vs empresa (praticidade).
+function _mealBlueprint(key, local){
+  const B={
+    pre:    {name:'Pré-treino (shake)', icon:'⚡', w:0.08, home:{carb:'banana', base:[{key:'whey',qty:0}]}, work:{carb:'banana'} },
+    cafe:   {name:'Café da manhã', icon:'🍳', w:0.22, home:{prot:'ovo', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]}, work:{prot:'ovo', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]} },
+    almoco: {name:'Almoço', icon:'🍛', w:0.28, home:{prot:'frango', carb:'arroz', fat:'azeite', base:[{key:'feijao',qty:80},{key:'salada',qty:100}]}, work:{prot:'frango', carb:'arroz', fat:'azeite', base:[{key:'feijao',qty:80},{key:'salada',qty:100}]} },
+    jantar: {name:'Jantar', icon:'🌙', w:0.24, home:{prot:'patinho', carb:'batata', fat:'azeite', base:[{key:'salada',qty:120}]}, work:{prot:'frango', carb:'batata', fat:'azeite', base:[{key:'salada',qty:120}]} },
+    acai:   {name:'Ceia — shake de açaí', icon:'🫐', w:0.18, home:{prot:'whey', carb:'granola', fat:'pamend', base:[{key:'acai',qty:150},{key:'banana',qty:1}]}, work:{prot:'whey', carb:'granola', fat:'pamend', base:[{key:'acai',qty:150},{key:'banana',qty:1}]} },
+    ceia:   {name:'Ceia', icon:'🌛', w:0.18, home:{prot:'whey', carb:'aveia', fat:'pamend', base:[{key:'leite',qty:200}]}, work:{prot:'whey', carb:'aveia', fat:'pamend', base:[{key:'leite',qty:200}]} },
+    lanche: {name:'Lanche', icon:'🥪', w:0.16, home:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]}, work:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]} },
+  };
+  const bp=B[key]; if(!bp) return null; const pick=(local==='work'&&bp.work)?bp.work:bp.home;
+  return {key, name:bp.name, icon:bp.icon, w:bp.w, plan:{prot:pick.prot, carb:pick.carb, fat:pick.fat, base:(pick.base||[]).map(b=>({...b}))}};
+}
+
+// Monta o plano: cfg = {w, obj, slots:[{key, local}]}. Distribui macros por peso da refeição.
+function montarDietaInteligente(cfg){
+  const w=cfg.w||70, obj=cfg.obj||'ganho';
+  const T=_dietTargets(w, obj);
+  const bps=(cfg.slots||[]).map(s=>_mealBlueprint(s.key, s.local)).filter(Boolean);
+  const wsum=bps.reduce((a,b)=>a+b.w,0)||1;
+  const meals=bps.map(bp=>{
+    const share=bp.w/wsum;
+    const tgt={ p: T.prot*share, c: T.carb*share, f: T.fat*share };
+    // pré-treino: mais carbo, menos gordura
+    if(bp.key==='pre'){ tgt.c*=1.3; tgt.f*=0.3; tgt.p*=0.6; }
+    const sol=_solveMeal(tgt, bp.plan);
+    return { meal: bp.name, icon: bp.icon, options:[sol.txt], macros: sol.macros };
+  });
+  const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.macros.kcal, prot:a.prot+m.macros.prot, carb:a.carb+m.macros.carb, gord:a.gord+m.macros.gord, fibra:a.fibra+m.macros.fibra}), {kcal:0,prot:0,carb:0,gord:0,fibra:0});
+  return { meals, totals, target:T };
+}
+
+// ── UI do montador ──
+let _dbCfg=null, _dbPlan=null;
+const _DB_SLOT_LABEL={pre:'Pré-treino',cafe:'Café da manhã',almoco:'Almoço',jantar:'Jantar',acai:'Ceia — shake de açaí',lanche:'Lanche',ceia:'Ceia (leite/aveia)'};
+function openDietBuilder(){
+  const w=getD().curW||75;
+  if(!_dbCfg){ _dbCfg={ obj:'ganho', keepPre:true, slots:[
+    {key:'pre',on:true,local:'home'},{key:'cafe',on:true,local:'work'},{key:'almoco',on:true,local:'work'},
+    {key:'jantar',on:true,local:'home'},{key:'acai',on:true,local:'home'},{key:'lanche',on:false,local:'work'},{key:'ceia',on:false,local:'home'} ]}; }
+  _dbCfg.w=w; _dbPlan=null; _dbShow();
+}
+function closeDietBuilder(){ const e=document.getElementById('diet-builder'); if(e) e.remove(); }
+function _dbSet(k,v){ _dbCfg[k]=v; _dbPlan=null; _dbShow(); }
+function _dbSetKeepPre(v){ _dbCfg.keepPre=!!v; }
+function _dbSlot(key,prop,val){ const s=_dbCfg.slots.find(x=>x.key===key); if(s) s[prop]=val; _dbPlan=null; _dbShow(); }
+function _dbGen(){
+  const slots=_dbCfg.slots.filter(s=>s.on).map(s=>({key:s.key,local:s.local}));
+  _dbPlan=montarDietaInteligente({w:_dbCfg.w,obj:_dbCfg.obj,slots});
+  if(_dbCfg.keepPre){ const cur=getMeals().find(m=>/pr[ée]-?\s*treino/i.test(m.meal)); if(cur) _dbPlan.meals=_dbPlan.meals.map(m=>/pr[ée]-?treino/i.test(m.meal)?{meal:cur.meal,icon:cur.icon||'⚡',options:(cur.options||[]).slice(),macros:{...(cur.macros||{})}}:m); }
+  _dbPlan.totals=_dbPlan.meals.reduce((a,m)=>({kcal:a.kcal+(m.macros.kcal||0),prot:a.prot+(m.macros.prot||0),carb:a.carb+(m.macros.carb||0),gord:a.gord+(m.macros.gord||0),fibra:a.fibra+(m.macros.fibra||0)}),{kcal:0,prot:0,carb:0,gord:0,fibra:0});
+  _dbShow();
+}
+function _dbSave(){
+  if(!_dbPlan) _dbGen();
+  saveDiet(_dbPlan.meals.slice(), getSupps());
+  closeDietBuilder(); nuSubTab='plano'; render(); try{ showSyncStatus&&showSyncStatus('✓ Dieta montada e salva','var(--good)'); }catch(e){}
+}
+function _dbShow(){
+  closeDietBuilder();
+  const ac=PROFILES[CP].accentHex;
+  const objBtn=(k,l)=>`<button onclick="_dbSet('obj','${k}')" style="flex:1;padding:9px 4px;border-radius:9px;border:1px solid ${_dbCfg.obj===k?ac:'var(--border2)'};background:${_dbCfg.obj===k?ac+'1e':'var(--bg4)'};color:${_dbCfg.obj===k?ac:'var(--text)'};font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">${l}</button>`;
+  const slotRow=(s)=>{ const canLocal=s.key!=='pre'&&s.key!=='acai'; return `<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--bg4);border-radius:10px;margin-bottom:7px">
+      <button onclick="_dbSlot('${s.key}','on',${!s.on})" style="width:22px;height:22px;border-radius:6px;border:1px solid ${s.on?ac:'var(--border2)'};background:${s.on?ac:'transparent'};color:#08080e;cursor:pointer;flex-shrink:0;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">${s.on?'✓':''}</button>
+      <div style="flex:1;font-size:12px;font-weight:700;color:${s.on?'var(--text)':'var(--muted)'}">${_DB_SLOT_LABEL[s.key]}</div>
+      ${s.on&&canLocal?`<div style="display:flex;gap:4px">${[['home','Casa'],['work','Empresa']].map(([l,lb])=>`<button onclick="_dbSlot('${s.key}','local','${l}')" style="padding:4px 9px;border-radius:7px;border:1px solid ${s.local===l?ac:'var(--border2)'};background:${s.local===l?ac+'1e':'transparent'};color:${s.local===l?ac:'var(--muted)'};font-size:9px;font-weight:800;cursor:pointer">${lb}</button>`).join('')}</div>`:''}
+    </div>`; };
+  let planHtml='';
+  if(_dbPlan){
+    const t=_dbPlan.totals, g=_dbPlan.target;
+    const cell=(lb,v,m,u)=>`<div style="flex:1;text-align:center"><div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">${lb}</div><div style="font-size:15px;font-weight:800;color:${Math.abs(v-m)<=Math.max(m*0.12,5)?'var(--good)':'var(--warn)'}">${v}</div><div style="font-size:8px;color:var(--muted)">meta ${m}${u}</div></div>`;
+    planHtml=`<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Resultado — dia inteiro</div>
+      <div style="display:flex;gap:6px;background:var(--bg4);border-radius:10px;padding:11px;margin-bottom:12px">${cell('Kcal',t.kcal,g.kcal,'')}${cell('Prot',t.prot,g.prot,'g')}${cell('Carb',t.carb,g.carb,'g')}${cell('Gord',t.gord,g.fat,'g')}</div>
+      ${_dbPlan.meals.map(m=>`<div style="background:var(--bg4);border-radius:10px;padding:10px 11px;margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:12px;font-weight:800">${m.icon} ${m.meal}</div><div style="font-size:10px;color:${ac};font-weight:800">${m.macros.kcal} kcal</div></div>
+        <div style="font-size:11px;color:var(--sub);line-height:1.5">${m.options[0]}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px">P ${m.macros.prot}g · C ${m.macros.carb}g · G ${m.macros.gord}g · Fibra ${m.macros.fibra}g</div>
+      </div>`).join('')}
+      <button onclick="_dbSave()" style="width:100%;padding:13px;background:${ac};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-top:6px">Salvar no meu plano</button>
+    </div>`;
+  }
+  const ov=document.createElement('div'); ov.id='diet-builder';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(8,8,14,.92);z-index:650;display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom))';
+  ov.onclick=(e)=>{ if(e.target===ov) closeDietBuilder(); };
+  ov.innerHTML=`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:20px 18px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto">
+    <div style="width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-size:17px;font-weight:800;margin-bottom:3px">Montar dieta por refeições</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Marque as refeições do seu dia. O app distribui seus macros e calcula as quantidades (peso ${_dbCfg.w}kg).</div>
+    <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Objetivo</div>
+    <div style="display:flex;gap:7px;margin-bottom:16px">${objBtn('ganho','Ganho')}${objBtn('manut','Manutenção')}${objBtn('defin','Definição')}</div>
+    <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Refeições do dia (Casa/Empresa)</div>
+    ${_dbCfg.slots.map(slotRow).join('')}
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 2px 4px;font-size:11px;color:var(--sub);cursor:pointer"><input type="checkbox" ${_dbCfg.keepPre?'checked':''} onchange="_dbSetKeepPre(this.checked)"/> Manter meu pré-treino atual (não recalcular)</label>
+    <button onclick="_dbGen()" style="width:100%;padding:13px;background:var(--bg5);border:1px solid ${ac};border-radius:10px;color:${ac};font-family:var(--font2);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;margin-top:12px">Gerar quantidades</button>
+    ${planHtml}
+    <button onclick="closeDietBuilder()" style="width:100%;padding:10px;background:transparent;border:none;color:var(--muted);font-family:var(--font2);font-size:11px;font-weight:700;cursor:pointer;margin-top:8px">Fechar</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
 const DIET_TIPS = [
   {icon:'💧',tip:'Beba bastante água ao longo do dia, inclusive durante o treino. Hidratação impacta desempenho e recuperação.'},
   {icon:'🥩',tip:'Proteína 1,8–2,2g/kg por dia: ovos, frango, peixe, carne e laticínios distribuídos entre as refeições.'},
@@ -4548,6 +4704,7 @@ function buildNutricao(){
       <button onclick="_quickDiet('maint')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">⚖️ Manutenção</button>
       <button onclick="_quickDiet('cut')" style="flex:1;min-width:90px;padding:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font2);font-size:10px;font-weight:800;cursor:pointer">🔥 Definição</button>
     </div>
+    <button onclick="openDietBuilder()" style="width:100%;padding:13px;margin-bottom:9px;background:${ac}1e;border:1px solid ${ac};border-radius:10px;color:${ac};font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"/></svg>Montar por nº de refeições (calcula as porções)</button>
     <button onclick="openDietEditor()" style="width:100%;padding:12px;margin-bottom:12px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer">✏️ Editar meu plano alimentar</button>
     <div style="display:flex;flex-direction:column;gap:12px">${mealCards}</div>
   </div>`;
