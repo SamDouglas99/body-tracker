@@ -1137,6 +1137,9 @@ const NUTRI_FOODS = {
   pao:      {n:'pão francês',        u:'un', k:135, p:4.5, c:27,  f:1.2, fib:1.2},
   tapioca:  {n:'tapioca (goma)',     u:'g',  k:240, p:0,   c:59,  f:0,   fib:0},
   leite:    {n:'leite',              u:'ml', k:61,  p:3.2, c:4.8, f:3.3, fib:0},
+  mussarela:{n:'fatia de mussarela', u:'un', k:72,  p:7,   c:1,   f:4.5, fib:0},
+  presunto: {n:'fatia de presunto',  u:'un', k:25,  p:4,   c:0.5, f:1,   fib:0},
+  iogurte:  {n:'iogurte natural',    u:'g',  k:60,  p:4,   c:5,   f:3,   fib:0},
   acai:     {n:'polpa de açaí',      u:'g',  k:80,  p:1,   c:6,   f:5.5, fib:3},
   granola:  {n:'granola',            u:'g',  k:450, p:10,  c:64,  f:13,  fib:7},
   pamend:   {n:'pasta de amendoim',  u:'g',  k:590, p:25,  c:20,  f:50,  fib:6},
@@ -1150,14 +1153,17 @@ function _foodUnit(key, macro){ const f=NUTRI_FOODS[key]; if(!f) return 0; retur
 function _roundQty(key, q){ const f=NUTRI_FOODS[key]; if(f.u==='un'){ return Math.max(0, Math.round(q*2)/2); } return Math.max(0, Math.round(q/5)*5); }
 function _unitLabel(key){ const u=NUTRI_FOODS[key].u; return u==='un'?'': (u==='ml'?'ml':'g'); }
 
-// Resolve as porções de UMA refeição p/ bater um alvo {p,c,f}. plan = {prot,carb,fat, base:[{key,qty}]}
-function _solveMeal(tgt, plan){
-  const items=[]; let tot={k:0,p:0,c:0,f:0,fib:0};
-  const add=(key, q)=>{ q=_roundQty(key,q); if(q<=0) return; items.push({key,q}); tot.k+=_foodUnit(key,'k')*q; tot.p+=_foodUnit(key,'p')*q; tot.c+=_foodUnit(key,'c')*q; tot.f+=_foodUnit(key,'f')*q; tot.fib+=_foodUnit(key,'fib')*q; };
-  (plan.base||[]).forEach(b=> add(b.key, b.qty));
-  if(plan.prot){ const need=Math.max(0, tgt.p - tot.p); add(plan.prot, need/_foodUnit(plan.prot,'p')); }
-  if(plan.carb){ const need=Math.max(0, tgt.c - tot.c); add(plan.carb, need/_foodUnit(plan.carb,'c')); }
-  if(plan.fat){ const need=Math.max(0, tgt.f - tot.f); add(plan.fat, need/_foodUnit(plan.fat,'f')); }
+// Macros dos alimentos FIXOS (base) de uma refeição.
+function _baseMacros(plan){ let m={k:0,p:0,c:0,f:0}; (plan.base||[]).forEach(b=>{ m.k+=_foodUnit(b.key,'k')*b.qty; m.p+=_foodUnit(b.key,'p')*b.qty; m.c+=_foodUnit(b.key,'c')*b.qty; m.f+=_foodUnit(b.key,'f')*b.qty; }); return m; }
+// Resolve UMA refeição: alimentos fixos (base) + variáveis preenchendo a FATIA RESTANTE do dia (varTgt {p,c,f}).
+function _solveMeal(varTgt, plan){
+  const items=[]; let tot={k:0,p:0,c:0,f:0,fib:0}, v={p:0,c:0,f:0};
+  const add=(key,q,isVar)=>{ q=_roundQty(key,q); if(q<=0) return; items.push({key,q}); const K=_foodUnit(key,'k')*q,P=_foodUnit(key,'p')*q,C=_foodUnit(key,'c')*q,F=_foodUnit(key,'f')*q,Fi=_foodUnit(key,'fib')*q; tot.k+=K;tot.p+=P;tot.c+=C;tot.f+=F;tot.fib+=Fi; if(isVar){ v.p+=P;v.c+=C;v.f+=F; } };
+  (plan.base||[]).forEach(b=> add(b.key, b.qty, false));
+  // Variáveis fornecem ~varTgt. Carbo, depois gordura (desconta gordura do carbo), depois proteína (desconta a "de brinde").
+  if(plan.carb){ add(plan.carb, Math.max(0,varTgt.c)/_foodUnit(plan.carb,'c'), true); }
+  if(plan.fat){ const need=Math.max(0, varTgt.f - v.f); add(plan.fat, need/_foodUnit(plan.fat,'f'), true); }
+  if(plan.prot){ const need=Math.max(0, varTgt.p - v.p); add(plan.prot, need/_foodUnit(plan.prot,'p'), true); }
   const txt=items.map(it=>{ const f=NUTRI_FOODS[it.key]; const u=_unitLabel(it.key); return u ? `${it.q}${u} de ${f.n}` : `${it.q%1===0?it.q:it.q.toFixed(1)}× ${f.n}`; }).join(' + ');
   return { items, txt, macros:{kcal:Math.round(tot.k), prot:Math.round(tot.p), carb:Math.round(tot.c), gord:Math.round(tot.f), fibra:Math.round(tot.fib)} };
 }
@@ -1165,7 +1171,7 @@ function _solveMeal(tgt, plan){
 // Metas diárias por objetivo (proteína primeiro; resto dividido ~58% carbo / 42% gordura)
 function _dietTargets(w, obj){
   const K={ganho:44, manut:37, defin:31}[obj]||41;
-  const P={ganho:2.2, manut:2.0, defin:2.5}[obj]||2.2;
+  const P={ganho:2.4, manut:2.0, defin:2.6}[obj]||2.4;
   const kcal=Math.round(w*K), prot=Math.round(w*P);
   const rem=Math.max(0, kcal - prot*4);
   const carb=Math.round(rem*0.58/4), fat=Math.round(rem*0.42/9);
@@ -1174,14 +1180,18 @@ function _dietTargets(w, obj){
 
 // Modelos de refeição por papel. foods diferem em casa vs empresa (praticidade).
 function _mealBlueprint(key, local){
+  const _cafe={carb:'pao', base:[{key:'ovo',qty:2},{key:'mussarela',qty:3},{key:'presunto',qty:1},{key:'fruta',qty:1}]};
   const B={
-    pre:    {name:'Pré-treino (shake)', icon:'⚡', w:0.08, home:{carb:'banana', base:[{key:'whey',qty:0}]}, work:{carb:'banana'} },
-    cafe:   {name:'Café da manhã', icon:'🍳', w:0.22, home:{prot:'ovo', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]}, work:{prot:'ovo', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]} },
-    almoco: {name:'Almoço', icon:'🍛', w:0.28, home:{prot:'frango', carb:'arroz', fat:'azeite', base:[{key:'feijao',qty:80},{key:'salada',qty:100}]}, work:{prot:'frango', carb:'arroz', fat:'azeite', base:[{key:'feijao',qty:80},{key:'salada',qty:100}]} },
-    jantar: {name:'Jantar', icon:'🌙', w:0.24, home:{prot:'patinho', carb:'batata', fat:'azeite', base:[{key:'salada',qty:120}]}, work:{prot:'frango', carb:'batata', fat:'azeite', base:[{key:'salada',qty:120}]} },
-    acai:   {name:'Ceia — shake de açaí', icon:'🫐', w:0.18, home:{prot:'whey', carb:'granola', fat:'pamend', base:[{key:'acai',qty:150},{key:'banana',qty:1}]}, work:{prot:'whey', carb:'granola', fat:'pamend', base:[{key:'acai',qty:150},{key:'banana',qty:1}]} },
-    ceia:   {name:'Ceia', icon:'🌛', w:0.18, home:{prot:'whey', carb:'aveia', fat:'pamend', base:[{key:'leite',qty:200}]}, work:{prot:'whey', carb:'aveia', fat:'pamend', base:[{key:'leite',qty:200}]} },
-    lanche: {name:'Lanche', icon:'🥪', w:0.16, home:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]}, work:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]} },
+    // pré-treino: normalmente mantido (checkbox). Fallback: shake leve.
+    pre:    {name:'Pré-treino (shake)', icon:'⚡', w:0.07, home:{carb:'banana', base:[{key:'whey',qty:1}]}, work:{carb:'banana', base:[{key:'whey',qty:1}]} },
+    // café: pão + mussarela + presunto + ovos + fruta (ovos ajustam a proteína, pão ajusta o carbo)
+    cafe:   {name:'Café da manhã', icon:'🍳', w:0.20, home:_cafe, work:_cafe },
+    almoco: {name:'Almoço', icon:'🍛', w:0.26, home:{prot:'frango', carb:'arroz', fat:'azeite', base:[{key:'feijao',qty:100},{key:'salada',qty:100}]}, work:{prot:'frango', carb:'arroz', fat:'azeite', base:[{key:'feijao',qty:100},{key:'salada',qty:100}]} },
+    jantar: {name:'Jantar', icon:'🌙', w:0.22, home:{prot:'patinho', carb:'batata', fat:'azeite', base:[{key:'salada',qty:120}]}, work:{prot:'frango', carb:'batata', fat:'azeite', base:[{key:'salada',qty:120}]} },
+    // ceia robusta (sustenta o jejum até as 8h + treino 5h): açaí + whey + banana + aveia + granola + pasta de amendoim
+    acai:   {name:'Ceia — shake de açaí', icon:'🫐', w:0.25, home:{carb:'granola', fat:'pamend', base:[{key:'acai',qty:200},{key:'banana',qty:1},{key:'aveia',qty:30},{key:'whey',qty:1}]}, work:{carb:'granola', fat:'pamend', base:[{key:'acai',qty:200},{key:'banana',qty:1},{key:'aveia',qty:30},{key:'whey',qty:1}]} },
+    ceia:   {name:'Ceia', icon:'🌛', w:0.25, home:{carb:'aveia', fat:'pamend', base:[{key:'leite',qty:200},{key:'banana',qty:1},{key:'whey',qty:1}]}, work:{carb:'aveia', fat:'pamend', base:[{key:'leite',qty:200},{key:'banana',qty:1},{key:'whey',qty:1}]} },
+    lanche: {name:'Lanche', icon:'🥪', w:0.14, home:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]}, work:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]} },
   };
   const bp=B[key]; if(!bp) return null; const pick=(local==='work'&&bp.work)?bp.work:bp.home;
   return {key, name:bp.name, icon:bp.icon, w:bp.w, plan:{prot:pick.prot, carb:pick.carb, fat:pick.fat, base:(pick.base||[]).map(b=>({...b}))}};
@@ -1192,13 +1202,17 @@ function montarDietaInteligente(cfg){
   const w=cfg.w||70, obj=cfg.obj||'ganho';
   const T=_dietTargets(w, obj);
   const bps=(cfg.slots||[]).map(s=>_mealBlueprint(s.key, s.local)).filter(Boolean);
+  // 1) Macros FIXOS (alimentos base de todas as refeições)
+  let fixed={p:0,c:0,f:0}; bps.forEach(bp=>{ const bm=_baseMacros(bp.plan); fixed.p+=bm.p; fixed.c+=bm.c; fixed.f+=bm.f; });
+  // 2) O que falta distribuir entre os alimentos variáveis (nunca negativo)
+  const rem={ p:Math.max(0,T.prot-fixed.p), c:Math.max(0,T.carb-fixed.c), f:Math.max(0,T.fat-fixed.f) };
   const wsum=bps.reduce((a,b)=>a+b.w,0)||1;
   const meals=bps.map(bp=>{
     const share=bp.w/wsum;
-    const tgt={ p: T.prot*share, c: T.carb*share, f: T.fat*share };
-    // pré-treino: mais carbo, menos gordura
-    if(bp.key==='pre'){ tgt.c*=1.3; tgt.f*=0.3; tgt.p*=0.6; }
-    const sol=_solveMeal(tgt, bp.plan);
+    const varTgt={ p: rem.p*share, c: rem.c*share, f: rem.f*share };
+    // pré-treino: variáveis puxam mais carbo, quase nada de gordura
+    if(bp.key==='pre'){ varTgt.c*=1.4; varTgt.f*=0.3; varTgt.p*=0.5; }
+    const sol=_solveMeal(varTgt, bp.plan);
     return { meal: bp.name, icon: bp.icon, options:[sol.txt], macros: sol.macros };
   });
   const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.macros.kcal, prot:a.prot+m.macros.prot, carb:a.carb+m.macros.carb, gord:a.gord+m.macros.gord, fibra:a.fibra+m.macros.fibra}), {kcal:0,prot:0,carb:0,gord:0,fibra:0});
