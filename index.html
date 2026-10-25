@@ -1194,7 +1194,9 @@ function _mealBlueprint(key, local){
     lanche: {name:'Lanche', icon:'🥪', w:0.14, home:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]}, work:{prot:'whey', carb:'pao', fat:'pamend', base:[{key:'fruta',qty:1}]} },
   };
   const bp=B[key]; if(!bp) return null; const pick=(local==='work'&&bp.work)?bp.work:bp.home;
-  return {key, name:bp.name, icon:bp.icon, w:bp.w, plan:{prot:pick.prot, carb:pick.carb, fat:pick.fat, base:(pick.base||[]).map(b=>({...b}))}};
+  // peso da PROTEÍNA restante: concentra nos pratos principais (almoço/jantar), não nos shakes
+  const PW={pre:0.04, cafe:0.10, almoco:0.32, jantar:0.30, acai:0.12, ceia:0.12, lanche:0.14};
+  return {key, name:bp.name, icon:bp.icon, w:bp.w, pw:(PW[key]!=null?PW[key]:bp.w), plan:{prot:pick.prot, carb:pick.carb, fat:pick.fat, base:(pick.base||[]).map(b=>({...b}))}};
 }
 
 // Monta o plano: cfg = {w, obj, slots:[{key, local}]}. Distribui macros por peso da refeição.
@@ -1207,11 +1209,12 @@ function montarDietaInteligente(cfg){
   // 2) O que falta distribuir entre os alimentos variáveis (nunca negativo)
   const rem={ p:Math.max(0,T.prot-fixed.p), c:Math.max(0,T.carb-fixed.c), f:Math.max(0,T.fat-fixed.f) };
   const wsum=bps.reduce((a,b)=>a+b.w,0)||1;
+  const pwsum=bps.reduce((a,b)=>a+(b.pw||b.w),0)||1;
   const meals=bps.map(bp=>{
-    const share=bp.w/wsum;
-    const varTgt={ p: rem.p*share, c: rem.c*share, f: rem.f*share };
+    const share=bp.w/wsum, pShare=(bp.pw||bp.w)/pwsum;
+    const varTgt={ p: rem.p*pShare, c: rem.c*share, f: rem.f*share };
     // pré-treino: variáveis puxam mais carbo, quase nada de gordura
-    if(bp.key==='pre'){ varTgt.c*=1.4; varTgt.f*=0.3; varTgt.p*=0.5; }
+    if(bp.key==='pre'){ varTgt.c*=1.4; varTgt.f*=0.3; }
     const sol=_solveMeal(varTgt, bp.plan);
     return { meal: bp.name, icon: bp.icon, options:[sol.txt], macros: sol.macros };
   });
