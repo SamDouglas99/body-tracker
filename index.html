@@ -1196,7 +1196,9 @@ function _mealBlueprint(key, local){
   const bp=B[key]; if(!bp) return null; const pick=(local==='work'&&bp.work)?bp.work:bp.home;
   // peso da PROTEÍNA restante: concentra nos pratos principais (almoço/jantar), não nos shakes
   const PW={pre:0.04, cafe:0.10, almoco:0.32, jantar:0.30, acai:0.12, ceia:0.12, lanche:0.14};
-  return {key, name:bp.name, icon:bp.icon, w:bp.w, pw:(PW[key]!=null?PW[key]:bp.w), plan:{prot:pick.prot, carb:pick.carb, fat:pick.fat, base:(pick.base||[]).map(b=>({...b}))}};
+  // ordem CRONOLÓGICA (lanche fica entre almoço e jantar; ceia por último)
+  const ORD={pre:0, cafe:1, almoco:3, lanche:4, jantar:5, acai:7, ceia:7};
+  return {key, name:bp.name, icon:bp.icon, w:bp.w, pw:(PW[key]!=null?PW[key]:bp.w), order:(ORD[key]!=null?ORD[key]:5), plan:{prot:pick.prot, carb:pick.carb, fat:pick.fat, base:(pick.base||[]).map(b=>({...b}))}};
 }
 
 // Monta o plano: cfg = {w, obj, slots:[{key, local}]}. Distribui macros por peso da refeição.
@@ -1204,21 +1206,26 @@ function montarDietaInteligente(cfg){
   const w=cfg.w||70, obj=cfg.obj||'ganho';
   const T=_dietTargets(w, obj);
   const bps=(cfg.slots||[]).map(s=>_mealBlueprint(s.key, s.local)).filter(Boolean);
-  // 1) Macros FIXOS (alimentos base de todas as refeições)
-  let fixed={p:0,c:0,f:0}; bps.forEach(bp=>{ const bm=_baseMacros(bp.plan); fixed.p+=bm.p; fixed.c+=bm.c; fixed.f+=bm.f; });
+  const fixedMeals=(cfg.fixedMeals||[]); // refeições já prontas (ex.: pré/intra mantido) — contam nos macros
+  // 1) Macros FIXOS (alimentos base das refeições automáticas + refeições mantidas)
+  let fixed={p:0,c:0,f:0};
+  bps.forEach(bp=>{ const bm=_baseMacros(bp.plan); fixed.p+=bm.p; fixed.c+=bm.c; fixed.f+=bm.f; });
+  fixedMeals.forEach(fm=>{ fixed.p+=((fm.macros&&fm.macros.prot)||0); fixed.c+=((fm.macros&&fm.macros.carb)||0); fixed.f+=((fm.macros&&fm.macros.gord)||0); });
   // 2) O que falta distribuir entre os alimentos variáveis (nunca negativo)
   const rem={ p:Math.max(0,T.prot-fixed.p), c:Math.max(0,T.carb-fixed.c), f:Math.max(0,T.fat-fixed.f) };
   const wsum=bps.reduce((a,b)=>a+b.w,0)||1;
   const pwsum=bps.reduce((a,b)=>a+(b.pw||b.w),0)||1;
-  const meals=bps.map(bp=>{
+  const autoMeals=bps.map(bp=>{
     const share=bp.w/wsum, pShare=(bp.pw||bp.w)/pwsum;
     const varTgt={ p: rem.p*pShare, c: rem.c*share, f: rem.f*share };
-    // pré-treino: variáveis puxam mais carbo, quase nada de gordura
-    if(bp.key==='pre'){ varTgt.c*=1.4; varTgt.f*=0.3; }
+    if(bp.key==='pre'){ varTgt.c*=1.4; varTgt.f*=0.3; } // pré: mais carbo, quase nada de gordura
     const sol=_solveMeal(varTgt, bp.plan);
-    return { meal: bp.name, icon: bp.icon, options:[sol.txt], macros: sol.macros };
+    return { meal: bp.name, icon: bp.icon, options:[sol.txt], macros: sol.macros, order: bp.order };
   });
-  const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.macros.kcal, prot:a.prot+m.macros.prot, carb:a.carb+m.macros.carb, gord:a.gord+m.macros.gord, fibra:a.fibra+m.macros.fibra}), {kcal:0,prot:0,carb:0,gord:0,fibra:0});
+  const fixedOut=fixedMeals.map(fm=>({ meal:fm.meal, icon:fm.icon||'⚡', options:(fm.options||[]).slice(), macros:{...(fm.macros||{})}, order:(fm._order!=null?fm._order:0) }));
+  // 3) Junta e ordena por horário (pré→café→almoço→lanche→jantar→ceia); remove o campo auxiliar order
+  const meals=[...autoMeals, ...fixedOut].sort((a,b)=>(a.order||0)-(b.order||0)).map(({order,...m})=>m);
+  const totals=meals.reduce((a,m)=>({kcal:a.kcal+(m.macros.kcal||0), prot:a.prot+(m.macros.prot||0), carb:a.carb+(m.macros.carb||0), gord:a.gord+(m.macros.gord||0), fibra:a.fibra+(m.macros.fibra||0)}), {kcal:0,prot:0,carb:0,gord:0,fibra:0});
   return { meals, totals, target:T };
 }
 
@@ -1237,10 +1244,15 @@ function _dbSet(k,v){ _dbCfg[k]=v; _dbPlan=null; _dbShow(); }
 function _dbSetKeepPre(v){ _dbCfg.keepPre=!!v; }
 function _dbSlot(key,prop,val){ const s=_dbCfg.slots.find(x=>x.key===key); if(s) s[prop]=val; _dbPlan=null; _dbShow(); }
 function _dbGen(){
-  const slots=_dbCfg.slots.filter(s=>s.on).map(s=>({key:s.key,local:s.local}));
-  _dbPlan=montarDietaInteligente({w:_dbCfg.w,obj:_dbCfg.obj,slots});
-  if(_dbCfg.keepPre){ const cur=getMeals().find(m=>/pr[ée]-?\s*treino/i.test(m.meal)); if(cur) _dbPlan.meals=_dbPlan.meals.map(m=>/pr[ée]-?treino/i.test(m.meal)?{meal:cur.meal,icon:cur.icon||'⚡',options:(cur.options||[]).slice(),macros:{...(cur.macros||{})}}:m); }
-  _dbPlan.totals=_dbPlan.meals.reduce((a,m)=>({kcal:a.kcal+(m.macros.kcal||0),prot:a.prot+(m.macros.prot||0),carb:a.carb+(m.macros.carb||0),gord:a.gord+(m.macros.gord||0),fibra:a.fibra+(m.macros.fibra||0)}),{kcal:0,prot:0,carb:0,gord:0,fibra:0});
+  let slots=_dbCfg.slots.filter(s=>s.on).map(s=>({key:s.key,local:s.local}));
+  let fixedMeals=[];
+  if(_dbCfg.keepPre){
+    const RE=/(pr[ée]|intra)[\s\/.\-]*treino/i; // reconhece "Pré-treino", "Pré/Intra-treino", "Intra-treino" (não "Pós-treino")
+    const cur=getMeals().find(m=>RE.test(m.meal));
+    if(cur){ slots=slots.filter(s=>s.key!=='pre'); // NÃO gera pré automático — mantém o SEU, intacto
+      fixedMeals.push({meal:cur.meal, icon:cur.icon||'⚡', options:(cur.options||[]).slice(), macros:{...(cur.macros||{})}, _order:0}); }
+  }
+  _dbPlan=montarDietaInteligente({w:_dbCfg.w, obj:_dbCfg.obj, slots, fixedMeals});
   _dbShow();
 }
 function _dbSave(){
