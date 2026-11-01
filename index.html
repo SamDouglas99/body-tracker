@@ -268,6 +268,76 @@ input:focus,select:focus{border-color:var(--muted)}
 .stp2-go{grid-column:1/-1;height:46px;border:none;border-radius:12px;background:var(--him);color:#08080e;font-family:var(--font2);font-size:14px;font-weight:800;cursor:pointer}
 html[data-theme="light"] .stp2-go{color:#fff}
 .theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* ── Nutrição nova (Hoje · Plano · Semana) ── */
+.nu-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px;margin-bottom:8px}
+.nu-seg button{min-height:40px;border:none;border-radius:10px;background:transparent;color:var(--sub);font-family:var(--font2);font-size:13px;font-weight:800;cursor:pointer}
+.nu-seg button.on{background:var(--him);color:#08080e}
+html[data-theme="light"] .nu-seg button.on{color:#fff}
+.nu-more{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.nu-more::-webkit-scrollbar{display:none}
+.nu-more button{flex-shrink:0;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--sub);font-family:var(--font2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.nu-more button.on{border-color:var(--him);color:var(--him)}
+.nu-card{margin-bottom:12px}
+.nu-big{font-family:var(--font2);font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.nu-h2{font-family:var(--font2);font-size:17px;font-weight:800;margin-top:4px;line-height:1.3}
+.nu-h3{font-size:14px;font-weight:800;line-height:1.4}
+.nu-sub{font-size:13px;color:var(--sub);line-height:1.45;margin-top:4px}
+.nu-mini{font-size:12px;color:var(--muted);margin-top:4px}
+.nu-val{font-family:var(--font2);font-size:15px;font-weight:800}
+.nu-row-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nu-mrow-h{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+.nu-mrow-h span:last-child{color:var(--sub);font-weight:600}
+.nu-track{height:6px;background:var(--bg5);border-radius:9px;overflow:hidden;margin-top:5px}
+.nu-track>div{height:100%;border-radius:9px;transition:width .3s}
+.nu-2btn{display:flex;gap:8px;margin-top:12px}
+.nu-pri,.nu-sec{min-height:44px;border-radius:12px;font-family:var(--font2);font-size:13px;font-weight:800;cursor:pointer;padding:0 14px}
+.nu-pri{flex:1;background:var(--him);color:#08080e;border:none}
+html[data-theme="light"] .nu-pri{color:#fff}
+.nu-sec{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.nu-3btn{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.nu-3btn button{min-height:44px;border-radius:11px;border:1px solid color-mix(in srgb,var(--info) 35%,transparent);background:color-mix(in srgb,var(--info) 9%,transparent);color:var(--info);font-family:var(--font2);font-size:13px;font-weight:800;cursor:pointer}
+.nu-ins{border-color:var(--himl);background:var(--himb)}
+.nu-ask{border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.nu-opt{width:100%;min-height:48px;border-radius:12px;background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;text-align:left;margin-top:8px}
+.nu-opt small{color:var(--sub);font-weight:700;flex-shrink:0}
+.nu-link{min-height:44px;border:none;background:none;color:var(--sub);font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer;padding:0 4px}
+.nu-tl{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;border:none;border-top:1px solid var(--border);background:none;color:var(--text);text-align:left;cursor:pointer;padding:6px 0;font-family:var(--font)}
+.nu-tl-t{width:42px;flex-shrink:0;font-family:var(--font2);font-size:12px;color:var(--sub);font-weight:700}
+.nu-tl-m{flex:1;min-width:0;display:flex;flex-direction:column}
+.nu-tl-m b{font-size:13px}
+.nu-tl-m small{font-size:11px;color:var(--muted);margin-top:1px}
+.nu-tl-b{font-size:11px;font-weight:800;flex-shrink:0}
+.nu-ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nu-snack{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:700;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 24px);width:max-content;background:var(--text);color:var(--bg);border-radius:12px;padding:4px 4px 4px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:13px;font-weight:700}
+.nu-snack button{min-height:40px;border:none;background:none;color:inherit;text-decoration:underline;font-family:var(--font2);font-size:13px;font-weight:800;cursor:pointer;padding:0 12px}
+@media(min-width:641px){.nu-snack{bottom:24px}}
+.nu-sheet-ov{position:fixed;inset:0;z-index:690;background:rgba(8,8,14,.6);display:flex;align-items:flex-end;justify-content:center}
+.nu-sheet{position:relative;background:var(--bg3);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:10px 18px calc(18px + env(safe-area-inset-bottom))}
+.nu-grab{width:42px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 12px}
+.nu-x{position:absolute;top:6px;right:6px;width:44px;height:44px;border:none;background:none;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nu-x svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.nu-diff{background:var(--bg4);border-radius:12px;padding:10px 12px;margin-top:10px}
+.nu-diff-h{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.nu-diff-h span{color:var(--sub);white-space:nowrap}
+.nu-diff-h span b{color:var(--him)}
+.nu-diff-t{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.45}
+.nu-ok{font-size:13px;font-weight:700;margin-top:12px;line-height:1.45}
+.nu-fine{font-size:11px;color:var(--muted);margin-top:6px}
+.nu-custom{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.nu-custom input{width:100%;min-height:44px}
+.nu-strip{display:flex;gap:4px;margin-top:12px}
+.nu-day{flex:1;min-width:0;min-height:74px;border:none;border-radius:12px;background:transparent;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:800;padding:4px 0}
+.nu-day.on{background:var(--bg4);outline:1px solid var(--border2)}
+.nu-day i{width:6px;height:6px;border-radius:50%;display:block}
+.nu-sel{background:var(--bg4);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px}
+.nu-3col{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.nu-3col b{display:block;font-family:var(--font2);font-size:15px}
+.nu-3col small{font-size:11px;color:var(--muted)}
+.nu-key{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;box-sizing:border-box}
+.nu-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.nu-legend span{display:flex;align-items:center;gap:6px}
+.nu-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.nu-why{font-size:12px;color:var(--sub);line-height:1.55;background:var(--bg4);border-radius:10px;padding:10px 12px}
 .set-delta{font-size:8px;font-weight:800;text-align:center;margin-top:4px;line-height:1.15;letter-spacing:.2px;min-height:10px}
 /* ── Editar Treinos ── */
 .edit-ex-row{padding:12px 0;border-bottom:1px solid var(--border)}
@@ -1396,7 +1466,7 @@ const UNIT_OPTIONS = ['g','kg','ml','L','un','fatia','cx','pct','saco','dose','c
 
 
 let CP='him', CT='dashboard';
-let charts={}, woSubTab='log', nuSubTab='plano', evSubTab='chart';
+let charts={}, woSubTab='log', nuSubTab='hoje', evSubTab='chart';
 let _photoMeta={photos:[]}, _photoLoading=false, _compareA=null, _compareB=null;
 let _expensesCache=null; // Gastos em memória (sincronizados com a nuvem); null = ainda não carregado
 let _dailyCache={}; // Registros diários (água/refeições) por dia 'YYYY-MM-DD' — fonte é o banco; local = cache
@@ -1405,7 +1475,7 @@ let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0, timerTotal=0;
 let woPrgExercise=null;
 // Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
-const APP_VERSION='31/10 · 3';
+const APP_VERSION='01/11 · 1';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -1874,7 +1944,7 @@ function buildDashboard(){
         <div class="lbl" style="margin:2px 0 0">Água</div>
         <div class="bar" style="margin-top:7px;height:4px"><div class="fill" style="width:${Math.max(waterPct,2)}%;background:var(--info)"></div></div>
       </div>
-      <div class="card" onclick="go('nutricao');nuSubTab='dieta';render()" style="padding:13px;cursor:pointer">
+      <div class="card" onclick="go('nutricao');nuSubTab='hoje';render()" style="padding:13px;cursor:pointer">
         <svg viewBox="0 0 24 24" style="width:21px;height:21px;stroke:var(--him);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px"><path d="M5 11h14M7 11a5 5 0 0 1 10 0M9 11v8m6-8v8"/><path d="M9 7l3-3 3 3"/></svg>
         <div class="big-num" style="font-size:19px">${ms.todayDone}<span style="font-size:11px;color:var(--muted)">/${ms.todayTotal}</span></div>
         <div class="lbl" style="margin:2px 0 0">Refeições</div>
@@ -4302,138 +4372,473 @@ async function _remSave(){
 }
 function _remReset(){ if(!confirm('Restaurar os horários padrão?'))return; try{ localStorage.removeItem('bt_meal_times'); localStorage.removeItem('bt_water_cfg'); }catch(e){} _syncReminderCfg(); try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){} render(); }
 
+// ══════════════════════════════════════
+// NUTRIÇÃO NOVA · Hoje / Ajuste inteligente / Semana
+// O registro continua em daily_logs.meals: 'meal_<i>' = refeição feita (mesmo formato de
+// sempre — notificações e contadores antigos seguem iguais). Chaves novas começam com 'x_'
+// e NÃO contam como refeição feita:
+//   x_skip_<i>  {ts, replaced?}            refeição pulada (ou trocada por outra comida)
+//   x_extra     [{name,kcal,p,c,g,for,ts}] comido fora do plano (conta nos macros do dia)
+//   x_add       [{to,name,kcal,p,c,g,ts}]  item somado a uma refeição (conta quando ela é feita)
+//   x_adj       {f,from,meals,at}          ajuste do resto do dia (porções × f, limite ±35%)
+// ══════════════════════════════════════
+let _nuHideIns='', _nuAskDismiss={}, _nuSemSel=null, _nuSemWhy=false, _nuSemHide='', _nuPending=null, _nuUndoT=null;
+const _NU_PROT_ADDS=[
+  {name:'2 ovos cozidos',kcal:140,p:12,c:1,g:10},
+  {name:'1 scoop de whey (30 g)',kcal:120,p:24,c:3,g:2},
+  {name:'100 g de frango grelhado',kcal:165,p:31,c:0,g:4},
+  {name:'150 g de frango grelhado',kcal:248,p:46,c:0,g:5},
+];
+const _NU_OTHER=[
+  {name:'Prato feito (arroz, feijão e carne)',kcal:750,p:38,c:85,g:24},
+  {name:'Lanche de padaria (pão de queijo + café com leite)',kcal:380,p:9,c:45,g:17},
+  {name:'Açaí 500 ml',kcal:570,p:6,c:90,g:20},
+  {name:'Sanduíche natural',kcal:350,p:20,c:38,g:12},
+  {name:'Fruta',kcal:90,p:1,c:22,g:0},
+];
+function _nuEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function _num(n){ return Math.round(+n||0).toLocaleString('pt-BR'); }
+function _hm(min){ min=Math.max(0,Math.round(min)); return String(Math.floor(min/60)%24).padStart(2,'0')+':'+String(min%60).padStart(2,'0'); }
+function getWaterGoalMl(){ const s=getSettings()||{}; const v=parseInt(s.waterGoalMl); return v>0?v:4000; }
+
+// Horário de cada refeição do plano: lembrete com o mesmo nome → mesma posição → espalhado 07–22h.
+function _mealSchedule(){
+  const meals=getMeals()||[]; const times=getMealTimes()||[];
+  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase();
+  const used=new Set();
+  const out=meals.map((m,i)=>{
+    let ti=times.findIndex((x,k)=>!used.has(k)&&norm(x.meal)===norm(m.meal));
+    if(ti<0&&times.length===meals.length&&!used.has(i)) ti=i;
+    const t=ti>=0?times[ti]:null; if(ti>=0) used.add(ti);
+    const clock=(t&&Number.isFinite(+t.hour))?(+t.hour)*60+(+t.min||0):null;
+    return {i, meal:m.meal||('Refeição '+(i+1)), icon:m.icon||'', macros:m.macros||{}, options:Array.isArray(m.options)?m.options:[], clock};
+  });
+  const n=out.length;
+  out.forEach((m,k)=>{ if(m.clock==null){ m.clock=n>1?Math.round(420+k*(900/(n-1))):720; m.clockGuess=true; } });
+  return out.sort((a,b)=>a.clock-b.clock);
+}
+// Estado do dia: status de cada refeição (feita/planejada/atrasada/pulada/trocada) e a próxima.
+function _nuDayState(dk){
+  dk=dk||getTodayKey();
+  const log=getMealLog(dk); const isToday=dk===getTodayKey();
+  const now=new Date(); const nowMin=isToday?now.getHours()*60+now.getMinutes():24*60;
+  const adj=(log.x_adj&&Array.isArray(log.x_adj.meals))?log.x_adj:null;
+  const adds=Array.isArray(log.x_add)?log.x_add:[];
+  const items=_mealSchedule().map(m=>{
+    const e=log['meal_'+m.i]||null, sk=log['x_skip_'+m.i]||null;
+    const f=e?(+e.scale||1):(adj&&adj.meals.includes(m.i)?(+adj.f||1):1);
+    const add=adds.filter(a=>a.to===m.i);
+    const kcal=(+m.macros.kcal||0)*f+add.reduce((s,a)=>s+(+a.kcal||0),0);
+    const prot=(+m.macros.prot||0)*f+add.reduce((s,a)=>s+(+a.p||0),0);
+    let status='planejada';
+    if(e) status='feita'; else if(sk) status=sk.replaced?'trocada':'pulada'; else if(nowMin>m.clock+60) status='atrasada';
+    return {...m, entry:e, skip:sk, f, add, kcal, prot, status};
+  });
+  return {dk, log, isToday, nowMin, adj, items, next:items.find(x=>x.status==='planejada')||null};
+}
+// Registro de refeição (mesmo formato de sempre) + escala do ajuste do dia, se cobrir essa refeição.
+function _mealEntryFor(log, idx, option){
+  const e={option, time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), ts:Date.now()};
+  const adj=log&&log.x_adj;
+  if(adj&&Array.isArray(adj.meals)&&adj.meals.includes(idx)&&+adj.f&&+adj.f!==1) e.scale=+adj.f;
+  return e;
+}
+// Porções escritas no plano ("150g arroz") escaladas pelo ajuste — arredonda p/ medidas reais.
+function _nuScaleText(txt,f){
+  if(!txt||Math.abs(f-1)<0.01) return txt||'';
+  return String(txt).replace(/(\d+(?:[.,]\d+)?)\s?(g|ml)\b/gi,(m,n,u)=>{
+    const v=parseFloat(n.replace(',','.'))*f; const r=v>=100?Math.round(v/10)*10:Math.max(5,Math.round(v/5)*5);
+    return r+u;
+  });
+}
+
+// ── Desfazer: guarda o dia antes da ação e restaura se pedir ──
+function _nuSnapshot(){ const dk=getTodayKey(); const c=_dayCell(dk); return {dk, meals:JSON.parse(JSON.stringify(c.meals||{})), water:c.water_ml|0}; }
+function _nuRestore(s){ const c=_dayCell(s.dk); c.meals=s.meals; c.water_ml=s.water; _persistDay(s.dk); }
+function _nuSnack(msg, undoFn){
+  try{ document.getElementById('nu-snack')?.remove(); }catch(e){} clearTimeout(_nuUndoT);
+  const el=document.createElement('div'); el.id='nu-snack'; el.className='nu-snack'; el.setAttribute('role','status');
+  const sp=document.createElement('span'); sp.textContent=msg; el.appendChild(sp);
+  if(undoFn){ const b=document.createElement('button'); b.type='button'; b.textContent='Desfazer';
+    b.onclick=()=>{ el.remove(); clearTimeout(_nuUndoT); try{ undoFn(); }catch(e){ console.warn('Desfazer falhou:',e); } render(); };
+    el.appendChild(b); }
+  document.body.appendChild(el);
+  _nuUndoT=setTimeout(()=>{ try{ el.remove(); }catch(e){} },6000);
+}
+
+// ── Ações do Hoje ──
+function nuRegisterPlanned(i){
+  const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
+  log['meal_'+i]=_mealEntryFor(log,i,1); delete log['x_skip_'+i];
+  saveMealLog(dk,log); render();
+  _nuSnack((getMeals()[i]?.meal||'Refeição')+' registrada',()=>_nuRestore(s));
+}
+function nuAddWater(ml){ const s=_nuSnapshot(); addWater(ml); _nuSnack('+'+_num(ml)+' ml de água',()=>_nuRestore(s)); }
+function nuAddToMeal(to,k){
+  const it=_NU_PROT_ADDS[k]; if(!it) return;
+  const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
+  log.x_add=(Array.isArray(log.x_add)?log.x_add:[]).concat([{to,...it,ts:Date.now()}]);
+  saveMealLog(dk,log); render();
+  _nuSnack(it.name+' somado ao '+(getMeals()[to]?.meal||'plano'),()=>_nuRestore(s));
+}
+function nuHideInsight(){ _nuHideIns=getTodayKey(); render(); }
+function nuAskLater(i){ _nuAskDismiss[getTodayKey()+':'+i]=true; render(); }
+function nuMealTap(i){
+  const it=_nuDayState().items.find(x=>x.i===i); if(!it) return;
+  if(it.status==='pulada'||it.status==='trocada'){
+    if(!confirm(`Desfazer "${it.status==='pulada'?'pulei':'comi outra coisa'}" do ${it.meal}?`)) return;
+    const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
+    delete log['x_skip_'+i];
+    if(log.x_adj&&log.x_adj.from===i) delete log.x_adj;
+    if(Array.isArray(log.x_extra)) log.x_extra=log.x_extra.filter(x=>x.for!==i);
+    saveMealLog(dk,log); render(); _nuSnack('Voltou ao plano: '+it.meal,()=>_nuRestore(s));
+    return;
+  }
+  showMealOptionPicker(i);
+}
+function nuRemoveExtra(ts){
+  const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
+  log.x_extra=(Array.isArray(log.x_extra)?log.x_extra:[]).filter(x=>x.ts!==ts);
+  saveMealLog(dk,log); render(); _nuSnack('Item removido',()=>_nuRestore(s));
+}
+
+// ── Ajuste inteligente: redistribui o que faltou (ou sobrou) nas refeições que ainda vêm ──
+// deltaK/deltaP = quanto as próximas refeições precisam cobrir a MAIS (negativo = a menos).
+function _nuPlanRebalance(fromIdx, deltaK, deltaP){
+  const st=_nuDayState();
+  const from=st.items.find(x=>x.i===fromIdx);
+  // Ainda por vir = sem registro (no horário ou atrasada) e depois da refeição que mudou.
+  const pending=x=>x.status==='planejada'||x.status==='atrasada';
+  const rest=st.items.filter(x=>x.i!==fromIdx&&pending(x)&&x.clock>=(from?from.clock:0));
+  const others=st.items.filter(x=>x.i!==fromIdx&&pending(x)&&!rest.includes(x)).reduce((s,x)=>({k:s.k+x.kcal,p:s.p+x.prot}),{k:0,p:0});
+  const kBase=rest.reduce((s,x)=>s+(+x.macros.kcal||0),0);
+  const kNow=rest.reduce((s,x)=>s+(+x.macros.kcal||0)*x.f,0);
+  if(!rest.length||kBase<=0) return {none:true, meals:[], f:1, rows:[], others};
+  let f=(kNow+deltaK)/kBase; f=Math.max(0.65,Math.min(1.35,f)); f=Math.round(f*100)/100;
+  const rows=rest.map(x=>({i:x.i, meal:x.meal, clock:x.clock, from:Math.round(x.kcal), to:Math.round((+x.macros.kcal||0)*f+x.add.reduce((s,a)=>s+(+a.kcal||0),0)),
+    pTo:Math.round((+x.macros.prot||0)*f+x.add.reduce((s,a)=>s+(+a.p||0),0)), text:_nuScaleText(x.options[0]||'',f)}));
+  return {none:false, f, meals:rest.map(x=>x.i), rows, others, capped:Math.abs((kNow+deltaK)/kBase-f)>0.01};
+}
+function _nuDayClose(plan, extra){
+  const cm=getConsumedMacros(); const T=getNutriTargets();
+  // consumido + o que ainda vem (ajustado) + outras refeições sem registro, como planejadas
+  let k=cm.kcal+(extra?extra.kcal:0)+((plan.others&&plan.others.k)||0), p=cm.prot+(extra?extra.p:0)+((plan.others&&plan.others.p)||0);
+  (plan.rows||[]).forEach(r=>{ k+=r.to; p+=r.pTo; });
+  return {k:Math.round(k), p:Math.round(p), T};
+}
+function nuAskSkip(i){
+  const it=_nuDayState().items.find(x=>x.i===i); if(!it) return;
+  const plan=_nuPlanRebalance(i, it.kcal, it.prot);
+  _nuPending={kind:'skip', i, plan};
+  _nuShowAdjust(plan.none?`Você pulou o ${it.meal}.`:`Você pulou o ${it.meal}. Redistribuí no resto do dia.`,
+    `${it.meal}: −${_num(it.kcal)} kcal e −${_num(it.prot)} g de proteína`, plan, null);
+}
+function nuAskOther(i){
+  const it=_nuDayState().items.find(x=>x.i===i); if(!it) return;
+  _nuSheet(`<div class="lbl">Fora do plano</div>
+    <div class="nu-h2">O que você comeu no lugar do ${_nuEsc(it.meal)}?</div>
+    ${_NU_OTHER.map((o,k)=>`<button class="nu-opt" onclick="nuPickOther(${i},${k})"><span>${_nuEsc(o.name)}</span><small>${_num(o.kcal)} kcal</small></button>`).join('')}
+    <div class="nu-custom">
+      <input id="nu-o-name" placeholder="Outra coisa (ex.: hambúrguer)" aria-label="O que você comeu"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="nu-o-kcal" type="number" inputmode="numeric" placeholder="kcal (aprox.)" aria-label="Calorias aproximadas"/>
+        <input id="nu-o-prot" type="number" inputmode="numeric" placeholder="proteína (g)" aria-label="Proteína em gramas"/>
+      </div>
+      <button class="nu-sec" style="width:100%" onclick="nuPickOther(${i},-1)">Usar este</button>
+    </div>`);
+}
+function nuPickOther(i,k){
+  const it=_nuDayState().items.find(x=>x.i===i); if(!it) return;
+  let ex;
+  if(k>=0) ex={..._NU_OTHER[k]};
+  else{
+    const name=(document.getElementById('nu-o-name')?.value||'').trim();
+    const kcal=parseFloat(document.getElementById('nu-o-kcal')?.value), p=parseFloat(document.getElementById('nu-o-prot')?.value)||0;
+    if(!name||!(kcal>0)){ alert('Diga o que comeu e as calorias aproximadas.'); return; }
+    ex={name, kcal:Math.round(kcal), p:Math.round(p), c:0, g:0};
+  }
+  ex={...ex, for:i, ts:Date.now()};
+  const dk=+ex.kcal-it.kcal, dp=(+ex.p||0)-it.prot;
+  const plan=_nuPlanRebalance(i, -dk, -dp);
+  _nuPending={kind:'other', i, plan, extra:ex};
+  _nuShowAdjust(`Registrado: ${ex.name}.`,
+    `${dk>=0?'+':'−'}${_num(Math.abs(dk))} kcal e ${dp>=0?'+':'−'}${_num(Math.abs(dp))} g de proteína em relação ao ${it.meal}`, plan, ex);
+}
+function _nuShowAdjust(title, sub, plan, extra){
+  const c=_nuDayClose(plan, extra);
+  const rowsHtml=plan.none?`<div class="nu-sub" style="margin-top:10px">Não há mais refeições hoje para compensar.</div>`
+    :plan.rows.map(r=>`<div class="nu-diff">
+        <div class="nu-diff-h"><b>${_nuEsc(r.meal)} · ${_hm(r.clock)}</b><span>${_num(r.from)} → <b>${_num(r.to)} kcal</b></span></div>
+        ${r.text?`<div class="nu-diff-t">${_nuEsc(r.text)}</div>`:''}
+      </div>`).join('');
+  const T=c.T;
+  const closeTxt=T.kcal>0?`O dia fecha em ${_num(c.k)} de ${_num(T.kcal)} kcal e ${_num(c.p)} de ${_num(T.prot)} g de proteína.`:'';
+  _nuSheet(`<div class="lbl" style="color:var(--him)">Ajuste inteligente</div>
+    <div class="nu-h2">${_nuEsc(title)}</div>
+    <div class="nu-sub">${_nuEsc(sub)}</div>
+    ${rowsHtml}
+    ${closeTxt?`<div class="nu-ok">${closeTxt}</div>`:''}
+    <div class="nu-fine">${plan.none?'Nada será alterado no seu plano.':(plan.capped?'Limitei cada refeição a 35% acima ou abaixo do plano original para não exagerar numa só. ':'Nenhuma refeição fica mais de 35% acima ou abaixo do plano original. ')+'O plano original continua salvo.'}</div>
+    <div class="nu-2btn">
+      ${plan.none?`<button class="nu-pri" onclick="nuKeepPlan()">Registrar</button>`
+        :`<button class="nu-pri" onclick="nuAcceptAdjust()">Aceitar ajuste</button><button class="nu-sec" onclick="nuKeepPlan()">Manter plano</button>`}
+    </div>`);
+}
+function _nuCommitPending(withAdj){
+  const P=_nuPending; if(!P) return; _nuPending=null; _nuCloseSheet();
+  const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
+  log['x_skip_'+P.i]={ts:Date.now(), ...(P.kind==='other'?{replaced:true}:{})};
+  if(P.extra) log.x_extra=(Array.isArray(log.x_extra)?log.x_extra:[]).concat([P.extra]);
+  if(withAdj&&P.plan&&!P.plan.none&&P.plan.f!==1) log.x_adj={f:P.plan.f, from:P.i, meals:P.plan.meals, at:Date.now()};
+  saveMealLog(dk,log); render();
+  _nuSnack(withAdj&&!P.plan.none?'Plano de hoje ajustado':(P.kind==='other'?'Registrado fora do plano':'Marcada como pulada'),()=>_nuRestore(s));
+}
+function nuAcceptAdjust(){ _nuCommitPending(true); }
+function nuKeepPlan(){ _nuCommitPending(false); }
+function _nuSheet(inner){
+  _nuCloseSheet();
+  const ov=document.createElement('div'); ov.id='nu-sheet'; ov.className='nu-sheet-ov';
+  ov.onclick=e=>{ if(e.target===ov){ _nuPending=null; _nuCloseSheet(); } };
+  ov.innerHTML=`<div class="nu-sheet" role="dialog" aria-modal="true" aria-label="Ajuste do dia"><div class="nu-grab"></div>
+    <button class="nu-x" onclick="_nuPending=null;_nuCloseSheet()" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>${inner}</div>`;
+  document.body.appendChild(ov);
+}
+function _nuCloseSheet(){ try{ document.getElementById('nu-sheet')?.remove(); }catch(e){} }
+
+// ── Abas da Nutrição ──
+function _nuTabsHtml(){
+  const main=[['hoje','Hoje'],['plano','Plano'],['semana','Semana']];
+  const more=_isSimple()?[['lembretes','Lembretes']]:[['mercado','Mercado'],['macros','Macros & Micros'],['suplementos','Suplementos'],['lembretes','Lembretes'],['simulador','Simulador'],['dicas','Orientações']];
+  return `<div class="nu-seg" role="tablist" aria-label="Nutrição">${main.map(([k,l])=>`<button role="tab" aria-selected="${nuSubTab===k}" class="${nuSubTab===k?'on':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>
+    <div class="nu-more">${more.map(([k,l])=>`<button class="${nuSubTab===k?'on':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
+}
+
+// ── HOJE ──
+function buildNuHoje(subtabs){
+  const st=_nuDayState(); const T=getNutriTargets(); const cm=getConsumedMacros(); const dk=st.dk;
+  // 1) Refeição que passou do horário sem registro → pergunta (uma por vez)
+  const late=st.items.find(x=>x.status==='atrasada'&&!_nuAskDismiss[dk+':'+x.i]);
+  const askCard=late?`<section class="card nu-card nu-ask" aria-label="Refeição sem registro">
+      <div class="lbl">Sem registro desde ${_hm(late.clock)}</div>
+      <div class="nu-h2">Pulou o ${_nuEsc(late.meal)}?</div>
+      <div class="nu-sub">${_num(late.kcal)} kcal · ${_num(late.prot)} g de proteína</div>
+      <button class="nu-opt" onclick="nuAskSkip(${late.i})"><span>Pulei. Ajuste o resto do dia</span></button>
+      <button class="nu-opt" onclick="nuRegisterPlanned(${late.i})"><span>Comi como planejado</span></button>
+      <button class="nu-opt" onclick="nuAskOther(${late.i})"><span>Comi outra coisa</span></button>
+      <button class="nu-link" onclick="nuAskLater(${late.i})">Perguntar depois</button>
+    </section>`:'';
+  // 2) Resumo do dia
+  const rem=T.kcal-cm.kcal, pct=T.kcal>0?Math.min(100,Math.round(cm.kcal/T.kcal*100)):0, C=2*Math.PI*30;
+  const expected=st.items.filter(x=>x.clock<=st.nowMin).reduce((s,x)=>s+x.kcal,0);
+  const pace=expected<=0?'':(cm.kcal>=expected*0.9?`<span style="color:var(--good);font-weight:700">no ritmo</span>`:`<span style="color:var(--warn);font-weight:700">${_num(expected-cm.kcal)} kcal atrás do plano</span>`);
+  const bar=(lbl,v,m,col)=>{ const left=Math.round(m-v), w=m>0?Math.min(100,Math.round(v/m*100)):0;
+    return `<div class="nu-mrow"><div class="nu-mrow-h"><span>${lbl}</span><span>${m>0?(left>0?'faltam '+_num(left)+' g':'meta batida'):'—'}</span></div><div class="nu-track"><div style="width:${w}%;background:${col}"></div></div></div>`; };
+  const hero=T.kcal>0?`<section class="card nu-card" aria-label="Resumo do dia">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="flex:1;min-width:0">
+          <div class="nu-big">${_num(Math.abs(rem))}</div>
+          <div class="nu-sub" style="font-weight:700;color:var(--text)">${rem>=0?'kcal restantes':'kcal acima da meta'}</div>
+          <div class="nu-mini">${_num(cm.kcal)} de ${_num(T.kcal)}${pace?' · '+pace:''}</div>
+        </div>
+        <svg width="72" height="72" viewBox="0 0 76 76" role="img" aria-label="${pct}% das calorias do dia">
+          <circle cx="38" cy="38" r="30" fill="none" style="stroke:var(--bg5)" stroke-width="8"/>
+          <circle cx="38" cy="38" r="30" fill="none" style="stroke:var(--him)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(pct/100*C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 38 38)"/>
+          <text x="38" y="43" text-anchor="middle" style="fill:var(--text);font-family:var(--font2);font-size:15px;font-weight:700">${pct}%</text>
+        </svg>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+        ${bar('Proteína',cm.prot,T.prot,'var(--good)')}${bar('Carboidrato',cm.carb,T.carb,'var(--sub)')}${bar('Gordura',cm.gord,T.fat,'var(--sub)')}
+      </div>
+    </section>`:`<section class="card nu-card"><div class="nu-h2">Complete seu perfil</div><div class="nu-sub">Com o seu peso eu calculo calorias e proteína do dia.</div><div class="nu-2btn"><button class="nu-pri" onclick="openSettings()">Abrir perfil</button></div></section>`;
+  // 3) Sugestão de proteína (só quando o que falta comer não fecha a meta)
+  let insight='';
+  if(st.isToday&&st.next&&T.prot>0&&_nuHideIns!==dk){
+    const pendP=st.items.filter(x=>x.status==='planejada'||x.status==='atrasada').reduce((s,x)=>s+x.prot,0);
+    const need=Math.round(T.prot-cm.prot), gap=Math.round(need-pendP);
+    if(gap>=10){
+      const k=_NU_PROT_ADDS.findIndex(a=>a.p>=gap-3); const kk=k>=0?k:_NU_PROT_ADDS.length-1; const pk=_NU_PROT_ADDS[kk];
+      insight=`<section class="card nu-card nu-ins" aria-label="Sugestão">
+        <div class="nu-h3">Faltam ${_num(need)} g de proteína. As refeições que faltam entregam ${_num(pendP)} g.</div>
+        <div class="nu-sub">${_nuEsc(pk.name)} no ${_nuEsc(st.next.meal)} ${pk.p>=gap-3?'fecha a meta do dia':'chega perto da meta'}.</div>
+        <div class="nu-2btn"><button class="nu-pri" onclick="nuAddToMeal(${st.next.i},${kk})">Somar ao ${_nuEsc(st.next.meal)}</button><button class="nu-sec" onclick="nuHideInsight()">Agora não</button></div>
+      </section>`;
+    }
+  }
+  // 4) Próxima refeição
+  const nx=st.next;
+  const nxTxt=nx?(_nuScaleText(nx.options[0]||'',nx.f)+(nx.add.length?' + '+nx.add.map(a=>a.name).join(' + '):'')):'';
+  const near=nx&&Math.abs(nx.clock-st.nowMin)<=30;
+  const nextCard=nx?`<section class="card nu-card" aria-label="Próxima refeição">
+      <div class="nu-row-h"><span class="lbl">${near?'Agora':'Próxima'} · ${_hm(nx.clock)}</span><span class="nu-mini">${_num(nx.kcal)} kcal · ${_num(nx.prot)} g P${nx.f!==1?' · ajustada':''}</span></div>
+      <div class="nu-h2">${_nuEsc(nx.meal)}</div>
+      ${nxTxt?`<div class="nu-sub">${_nuEsc(nxTxt)}</div>`:''}
+      <div class="nu-2btn"><button class="nu-pri" onclick="nuRegisterPlanned(${nx.i})">Registrar como planejado</button>${nx.options.length>1?`<button class="nu-sec" onclick="showMealOptionPicker(${nx.i})">Trocar</button>`:''}</div>
+    </section>`:(st.items.length?`<section class="card nu-card"><div class="nu-h3">Dia completo</div><div class="nu-sub">Todas as refeições de hoje já têm registro.</div></section>`
+      :`<section class="card nu-card"><div class="nu-h3">Você ainda não tem um plano alimentar</div><div class="nu-2btn"><button class="nu-pri" onclick="nuSubTab='plano';render()">Montar meu plano</button></div></section>`);
+  // 5) Água
+  const wg=getWaterGoalMl(), wml=getWaterMl(), wc=getWaterCfg();
+  const s0=(+wc.start||8)*60, e0=(+wc.end||22)*60;
+  const paceMl=Math.round(wg*Math.max(0,Math.min(1,(st.nowMin-s0)/Math.max(60,e0-s0)))/50)*50;
+  let wStat,wCol;
+  if(wml>=wg){ wStat='Meta de água batida'; wCol='var(--good)'; }
+  else if(wml>=paceMl-150){ wStat=`No ritmo · faltam ${_num(wg-wml)} ml`; wCol='var(--good)'; }
+  else { wStat=`${_num(paceMl-wml)} ml atrás do ritmo`; wCol='var(--warn)'; }
+  const water=`<section class="card nu-card" aria-label="Água">
+      <div class="nu-row-h"><span class="nu-h3" style="display:flex;align-items:center;gap:6px"><svg class="nu-ico" style="color:var(--info)" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 6 6 10a6 6 0 0 1-12 0c0-4 3-6 6-10Z"/></svg>Água</span><span class="nu-val">${(wml/1000).toFixed(1).replace('.',',')} / ${(wg/1000).toFixed(1).replace('.',',')} L</span></div>
+      <div class="nu-track" style="margin-top:8px"><div style="width:${Math.min(100,Math.round(wml/wg*100))}%;background:var(--info)"></div></div>
+      <div class="nu-mini" style="color:${wCol};font-weight:700;margin-top:6px">${wStat}</div>
+      <div class="nu-3btn"><button onclick="nuAddWater(250)">+250 ml</button><button onclick="nuAddWater(500)">+500 ml</button><button onclick="nuAddWater(1000)">+1 L</button></div>
+    </section>`;
+  // 6) Linha do tempo
+  const B={feita:['feita','var(--good)'],planejada:['planejada','var(--muted)'],atrasada:['sem registro','var(--warn)'],pulada:['pulada','var(--muted)'],trocada:['fora do plano','var(--info)']};
+  const extras=Array.isArray(st.log.x_extra)?st.log.x_extra:[];
+  const rows=st.items.map(x=>{ const b=x===nx?['próxima','var(--him)']:B[x.status];
+    return `<button class="nu-tl" onclick="nuMealTap(${x.i})" aria-label="${_nuEsc(x.meal)}: ${b[0]}">
+      <span class="nu-tl-t">${_hm(x.clock)}</span>
+      <span class="nu-tl-m"><b>${_nuEsc(x.meal)}</b><small>${(x.status==='pulada'||x.status==='trocada')?_num(+x.macros.kcal||0)+' kcal planejadas':_num(x.kcal)+' kcal'}${x.status==='feita'&&x.entry?.time?' · às '+_nuEsc(x.entry.time):''}${x.f!==1&&(x.status==='planejada'||x.status==='atrasada')?' · ajustada':''}</small></span>
+      <span class="nu-tl-b" style="color:${b[1]}">${b[0]}</span></button>`; }).join('')
+    +extras.map(x=>`<div class="nu-tl" style="cursor:default"><span class="nu-tl-t"></span><span class="nu-tl-m"><b>${_nuEsc(x.name)}</b><small>${_num(x.kcal)} kcal · fora do plano</small></span><button class="nu-link" onclick="nuRemoveExtra(${+x.ts||0})" aria-label="Remover ${_nuEsc(x.name)}">remover</button></div>`).join('');
+  const timeline=st.items.length||extras.length?`<section class="card nu-card" aria-label="Refeições de hoje"><div class="lbl" style="margin-bottom:4px">Refeições de hoje</div>${rows}</section>`:'';
+  return `<div class="page nu-page">${subtabs}${askCard}${hero}${insight}${nextCard}${water}${timeline}</div>`;
+}
+
+// ── SEMANA ──
+function _nuDaySummary(dk){
+  const st=_nuDayState(dk); const cm=getConsumedMacros(dk);
+  const total=st.items.length, done=st.items.filter(x=>x.status==='feita').length, swapped=st.items.filter(x=>x.status==='trocada').length;
+  const any=done>0||(Array.isArray(st.log.x_extra)&&st.log.x_extra.length>0);
+  return {dk, kcal:cm.kcal, prot:cm.prot, done, total, any, complete:total>0&&(done+swapped)>=Math.ceil(total*0.75)};
+}
+// Tendência do peso: regressão linear nas pesagens dos últimos 35 dias (kg/semana).
+function _nuWeightTrend(){
+  const cut=Date.now()-35*86400000;
+  const pts=(getEntries()||[]).filter(e=>e&&e.weight!=null&&e.weight!==''&&new Date(e.date).getTime()>=cut).map(e=>({t:new Date(e.date).getTime(),w:parseFloat(e.weight)})).filter(p=>p.w>0).sort((a,b)=>a.t-b.t);
+  if(pts.length<3||(pts[pts.length-1].t-pts[0].t)<10*86400000) return {pts, ok:false};
+  const n=pts.length, mx=pts.reduce((s,p)=>s+p.t,0)/n, my=pts.reduce((s,p)=>s+p.w,0)/n;
+  const sxx=pts.reduce((s,p)=>s+(p.t-mx)**2,0), sxy=pts.reduce((s,p)=>s+(p.t-mx)*(p.w-my),0);
+  const b=sxy/sxx; // kg por ms
+  return {pts, ok:true, slopeWk:b*7*86400000, at:(t)=>my+b*(t-mx), t0:pts[0].t, t1:pts[pts.length-1].t};
+}
+function nuApplyTarget(newKcal){
+  const T=getNutriTargets(); const prev=getDietAdj();
+  const change=newKcal-T.kcal;
+  saveDietAdj({kcal:newKcal, prot:T.prot, carb:Math.max(0,Math.round(T.carb+change/4)), fat:T.fat, source:'semana', prevKcal:T.kcal,
+    date:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})});
+  render();
+  _nuSnack('Meta atualizada para '+_num(newKcal)+' kcal/dia',()=>{ if(prev) saveDietAdj(prev); else clearDietAdj(); });
+}
+function buildNuSemana(subtabs){
+  const T=getNutriTargets(); const today=getTodayKey();
+  const days=Array.from({length:7},(_,k)=>{ const d=new Date(); d.setDate(d.getDate()-(6-k)); return {d, s:_nuDaySummary(localDayKey(d))}; });
+  const closed=days.filter(x=>x.s.dk!==today&&x.s.any);
+  const inTarget=x=>T.kcal>0&&x.s.kcal>=T.kcal*0.9&&x.s.kcal<=T.kcal*1.15;
+  const hits=closed.filter(inTarget).length;
+  const sel=days.find(x=>x.s.dk===_nuSemSel)||days[6];
+  const C=2*Math.PI*13, WD=['D','S','T','Q','Q','S','S'], WDL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const strip=days.map(x=>{ const s=x.s, isT=s.dk===today, p=T.kcal>0?Math.min(1,s.kcal/T.kcal):0;
+    const col=isT?'var(--himl)':(inTarget(x)?'var(--him)':'var(--sub)'); const pOk=T.prot>0&&s.prot>=T.prot*0.9;
+    return `<button class="nu-day${x===sel?' on':''}" onclick="_nuSemSel='${s.dk}';render()" aria-pressed="${x===sel}" aria-label="${WDL[x.d.getDay()]}: ${_num(s.kcal)} kcal, ${_num(s.prot)} g de proteína">
+      <span>${WD[x.d.getDay()]}</span>
+      <svg width="32" height="32" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="13" fill="none" style="stroke:var(--bg5)" stroke-width="4"/><circle cx="17" cy="17" r="13" fill="none" style="stroke:${col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(p*C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 17 17)"/></svg>
+      <i style="background:${!s.any||isT?'transparent':(pOk?'var(--good)':'var(--bg5)')}"></i></button>`; }).join('');
+  const ss=sel.s, sp=T.kcal>0?Math.round(ss.kcal/T.kcal*100):0, sIsT=ss.dk===today;
+  const selBadge=sIsT?['em andamento','var(--muted)']:(!ss.any?['sem registro','var(--muted)']:(inTarget(sel)?['na meta','var(--him)']:['fora da meta','var(--warn)']));
+  const head=`<section class="card nu-card" aria-label="Aderência da semana">
+      <div class="nu-row-h" style="align-items:flex-end"><div><div class="lbl">Dias na meta</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span class="nu-big">${hits}</span><span class="nu-val" style="color:var(--sub)">de ${closed.length}</span></div><div class="nu-mini">${closed.length?'Hoje ainda em andamento':'Registre refeições para acompanhar a semana'} · meta ${_num(T.kcal)} kcal</div></div>
+      <div class="nu-mini" style="text-align:right;line-height:1.7"><span class="nu-key" style="border:2px solid var(--him)"></span>kcal<br><span class="nu-key" style="background:var(--good)"></span>proteína ok</div></div>
+      <div class="nu-strip">${strip}</div>
+      <div class="nu-sel"><div class="nu-row-h"><b>${WDL[sel.d.getDay()]}, ${String(sel.d.getDate()).padStart(2,'0')}/${String(sel.d.getMonth()+1).padStart(2,'0')}</b><span style="color:${selBadge[1]};font-weight:800;font-size:12px">${selBadge[0]}</span></div>
+        <div class="nu-3col"><div><b>${_num(ss.kcal)}</b><small>kcal · ${sp}%</small></div><div><b>${_num(ss.prot)} g</b><small>proteína</small></div><div><b>${ss.done} de ${ss.total}</b><small>refeições</small></div></div></div>
+    </section>`;
+  // Padrão: dia da semana com menos proteína (últimas 4 semanas)
+  let pattern='';
+  const hist=Array.from({length:28},(_,k)=>{ const d=new Date(); d.setDate(d.getDate()-1-k); return {d, s:_nuDaySummary(localDayKey(d))}; }).filter(x=>x.s.any);
+  if(hist.length>=8&&T.prot>0){
+    const by={}; hist.forEach(x=>{ const w=x.d.getDay(); (by[w]=by[w]||[]).push(x); });
+    const avg=a=>a.reduce((s,x)=>s+x.s.prot,0)/a.length;
+    const all=avg(hist); let worst=null;
+    Object.keys(by).forEach(w=>{ if(by[w].length>=2){ const a=avg(by[w]); if(!worst||a<worst.a) worst={w:+w,a,list:by[w]}; } });
+    if(worst&&worst.a<all*0.85){
+      const ms=_mealSchedule(); let miss=null;
+      ms.forEach(m=>{ const c=worst.list.filter(x=>!getMealLog(x.s.dk)['meal_'+m.i]).length; if(!miss||c>miss.c) miss={m,c}; });
+      pattern=`<section class="card nu-card" aria-label="Padrão encontrado">
+        <div class="lbl" style="color:var(--warn)">Padrão das últimas ${Math.ceil(hist.length/7)} semanas</div>
+        <div class="nu-h3" style="margin-top:6px">${WDL[worst.w]} é seu dia mais fraco: proteína em ${_num(worst.a)} g (−${Math.round((1-worst.a/all)*100)}% da sua média).</div>
+        ${miss&&miss.c>=Math.ceil(worst.list.length/2)?`<div class="nu-sub">O ${_nuEsc(miss.m.meal)} costuma ficar sem registro nesse dia (${miss.c} de ${worst.list.length}).</div>`:''}
+        <div class="nu-2btn"><button class="nu-sec" onclick="nuSubTab='lembretes';render()">Ajustar lembretes</button></div>
+      </section>`;
+    }
+  }
+  // Peso: tendência vs. ritmo da meta
+  const d=getD(); const tr=_nuWeightTrend();
+  const pace=d.goalW>0&&d.curW>0?(d.goalW>d.curW+0.5?0.25:(d.goalW<d.curW-0.5?-0.5:0)):0;
+  const paceTxt=(pace>0?'+':pace<0?'−':'')+Math.abs(pace).toLocaleString('pt-BR',{minimumFractionDigits:2})+' kg/semana';
+  let weight;
+  if(!tr.ok){
+    weight=`<section class="card nu-card" aria-label="Tendência de peso"><div class="lbl">Peso · tendência</div><div class="nu-sub" style="margin-top:6px">Preciso de pelo menos 3 pesagens em 10 dias para mostrar a tendência (você tem ${tr.pts.length} nos últimos 35 dias).</div><div class="nu-2btn"><button class="nu-sec" onclick="go('registrar')">Registrar peso</button></div></section>`;
+  } else {
+    const W=320,H=110, lo=Math.min(...tr.pts.map(p=>p.w),tr.at(tr.t0),tr.at(tr.t0)+pace*((tr.t1-tr.t0)/(7*86400000)))-0.2;
+    const hi=Math.max(...tr.pts.map(p=>p.w),tr.at(tr.t1),tr.at(tr.t0)+pace*((tr.t1-tr.t0)/(7*86400000)))+0.2;
+    const X=t=>(6+(t-tr.t0)/Math.max(1,tr.t1-tr.t0)*(W-12)).toFixed(1), Y=v=>(H-6-(v-lo)/Math.max(0.1,hi-lo)*(H-12)).toFixed(1);
+    const dots=tr.pts.map(p=>`M${X(p.t)} ${Y(p.w)}h0`).join('');
+    const goalEnd=tr.at(tr.t0)+pace*((tr.t1-tr.t0)/(7*86400000));
+    const sw=tr.slopeWk, swTxt=(sw>=0?'+':'−')+Math.abs(sw).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    // Mesmo critério do ajuste de meta: < 50 kcal/dia de diferença (≈0,045 kg/sem) = no ritmo
+    const status=Math.abs(sw-pace)*1100<50?['no ritmo','var(--good)']:(sw<pace?['abaixo da meta','var(--warn)']:['acima da meta','var(--warn)']);
+    weight=`<section class="card nu-card" aria-label="Tendência de peso">
+      <div class="nu-row-h" style="align-items:flex-start"><div><div class="lbl">Peso · tendência</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span class="nu-big" style="font-size:26px">${swTxt}</span><span class="nu-mini">kg/semana</span></div><div class="nu-mini">Ritmo da meta: ${paceTxt}</div></div><span style="font-size:12px;font-weight:800;color:${status[1]}">${status[0]}</span></div>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" role="img" aria-label="Pesagens recentes com a tendência ${swTxt} kg por semana e o ritmo da meta ${paceTxt}" style="display:block;margin-top:10px">
+        <path d="M${X(tr.t0)} ${Y(tr.at(tr.t0))}L${X(tr.t1)} ${Y(goalEnd)}" fill="none" style="stroke:var(--sub)" stroke-width="1.5" stroke-dasharray="4 5"/>
+        <path d="${dots}" fill="none" style="stroke:var(--border2)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M${X(tr.t0)} ${Y(tr.at(tr.t0))}L${X(tr.t1)} ${Y(tr.at(tr.t1))}" fill="none" style="stroke:var(--him)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <div class="nu-legend"><span><i style="background:var(--him)"></i>tendência</span><span><i style="border-top:2px dashed var(--sub);height:0"></i>ritmo da meta</span><span><i style="background:var(--border2);width:6px;height:6px;border-radius:50%"></i>pesagens</span></div>
+    </section>`;
+  }
+  // Ajuste da meta pelo GASTO REAL (o que você comeu × como o peso mudou)
+  let suggest='';
+  if(T.kcal>0&&_nuSemHide!==today){
+    const comp=Array.from({length:28},(_,k)=>{ const dd=new Date(); dd.setDate(dd.getDate()-1-k); return _nuDaySummary(localDayKey(dd)); }).filter(s=>s.complete);
+    if(!tr.ok||comp.length<5){
+      suggest=`<section class="card nu-card" aria-label="Ajuste da meta"><div class="lbl">Ajuste automático da meta</div><div class="nu-sub" style="margin-top:6px">Para calcular seu gasto real eu preciso de 5 dias com as refeições registradas (você tem ${comp.length}) e da tendência do peso (${tr.ok?'ok':'faltam pesagens'}).</div></section>`;
+    } else {
+      const avgIn=comp.reduce((s,x)=>s+x.kcal,0)/comp.length;
+      const tdee=avgIn-tr.slopeWk*1100;              // 1 kg ≈ 7.700 kcal → por dia: kg/sem × 1.100
+      const need=tdee+pace*1100;
+      const adh=Math.max(0.8,Math.min(1.05,avgIn/T.kcal));
+      let change=(need-avgIn)/adh; const cap=T.kcal*0.10; change=Math.max(-cap,Math.min(cap,change));
+      change=Math.round(change/10)*10; const newK=T.kcal+change;
+      const why=`Pelo que você comeu (${comp.length} dias completos, média ${_num(avgIn)} kcal) e pelo seu peso (${_nuSlopeTxt(tr)} kg/semana), seu gasto real é de cerca de ${_num(tdee)} kcal/dia. Para o ritmo de ${paceTxt} você precisa comer uns ${_num(need)} kcal. Como você cumpre ${Math.round(adh*100)}% da meta em média, a meta vira ${_num(newK)}. Nunca mudo mais de 10% de uma vez; reavalie em 14 dias.`;
+      if(Math.abs(change)<50){
+        suggest=`<section class="card nu-card" aria-label="Ajuste da meta"><div class="lbl" style="color:var(--good)">Meta no ponto</div><div class="nu-sub" style="margin-top:6px">Seu gasto real (≈ ${_num(tdee)} kcal/dia) confirma a meta de ${_num(T.kcal)} kcal. Continue assim.</div></section>`;
+      } else {
+        suggest=`<section class="card nu-card nu-ins" aria-label="Ajuste sugerido">
+          <div class="lbl" style="color:var(--him)">Ajuste sugerido</div>
+          <div class="nu-h2" style="margin-top:4px">${change>0?'+':'−'}${_num(Math.abs(change))} kcal por dia</div>
+          <div class="nu-sub">Nova meta: ${_num(newK)} kcal (hoje: ${_num(T.kcal)}). A diferença entra no carboidrato.</div>
+          <button class="nu-link" onclick="_nuSemWhy=!_nuSemWhy;render()" aria-expanded="${_nuSemWhy}">${_nuSemWhy?'Esconder o cálculo':'Por que esse número?'}</button>
+          ${_nuSemWhy?`<div class="nu-why">${why}</div>`:''}
+          <div class="nu-2btn"><button class="nu-pri" onclick="nuApplyTarget(${newK})">Aplicar</button><button class="nu-sec" onclick="_nuSemHide=getTodayKey();render()">Agora não</button></div>
+        </section>`;
+      }
+    }
+  }
+  return `<div class="page nu-page">${subtabs}${head}${pattern}${weight}${suggest}</div>`;
+}
+function _nuSlopeTxt(tr){ const sw=tr.slopeWk; return (sw>=0?'+':'−')+Math.abs(sw).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
 function buildNutricao(){
-  const _nuAll=[['plano','Plano Alimentar'],['dieta','Acompanhamento'],['mercado','Lista do Mercado'],['macros','Macros & Micros'],['suplementos','Suplementos'],['lembretes','Lembretes'],['simulador','Simulador'],['dicas','Orientações']];
-  const _nuSimple=['plano','dieta','lembretes'];
-  if(_isSimple()&&!_nuSimple.includes(nuSubTab)) nuSubTab='plano';
-  const _nuTabs=_isSimple()?_nuAll.filter(t=>_nuSimple.includes(t[0])):_nuAll;
-  const subtabs=`<div class="subtabs">${_nuTabs.map(([k,l])=>`<button class="stab${nuSubTab===k?' active':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
+  // Abas principais Hoje · Plano · Semana (+ ferramentas em "Mais"). O antigo
+  // 'dieta' (Acompanhamento) virou o Hoje; atalhos antigos caem nele.
+  const _valid=_isSimple()?['hoje','plano','semana','lembretes']:['hoje','plano','semana','mercado','macros','suplementos','lembretes','simulador','dicas'];
+  if(nuSubTab==='dieta'||!_valid.includes(nuSubTab)) nuSubTab='hoje';
+  const subtabs=_nuTabsHtml();
   const d=getD();
   const ac=d.p.accentHex;
   const w=d.curW;
+  if(nuSubTab==='hoje') return buildNuHoje(subtabs);
+  if(nuSubTab==='semana') return buildNuSemana(subtabs);
   if(nuSubTab==='lembretes') return buildLembretes(subtabs);
-
-  if(nuSubTab==='dieta'){
-    const stats=getMealStats();
-    const ac2=PROFILES[CP].accentHex;
-    const todayLog=getMealLog(getTodayKey());
-    const adherePct=stats.weekTotal>0?Math.round(stats.weekDone/stats.weekTotal*100):0;
-    const todayPct=Math.round(stats.todayDone/stats.todayTotal*100);
-    const _mealsD=getMeals();
-    const MEAL_NAMES=_mealsD.map(m=>m.meal);
-    const MEAL_ICONS=_mealsD.map(m=>m.icon);
-    const _nMeals=Math.max(1,_mealsD.length);
-    // Water goal 4L = 4000ml
-    const waterPct=Math.min((stats.water/4000)*100,100);
-
-    // Last 7 days grid
-    const weekGrid=Array.from({length:7},(_,i)=>{
-      const d=new Date(); d.setDate(d.getDate()-(6-i));
-      const dk=localDayKey(d);
-      const log=getMealLog(dk);
-      const done=Object.keys(log).filter(k=>k.startsWith('meal_')).length;
-      const pct=Math.round(done/_nMeals*100);
-      const isToday=dk===getTodayKey();
-      const dayLabel=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];
-      const color=pct>=100?'var(--good)':pct>=60?'var(--him)':pct>0?'var(--warn)':'var(--border2)';
-      return`<div style="text-align:center">
-        <div style="font-size:8px;color:${isToday?ac2:'var(--muted)'};margin-bottom:4px;font-weight:${isToday?'700':'400'}">${dayLabel}</div>
-        <div style="width:32px;height:32px;border-radius:50%;background:${color}22;border:2px solid ${color};display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:9px;font-weight:700;color:${color}">${done}</div>
-        <div style="font-size:7px;color:var(--muted);margin-top:3px">${pct}%</div>
-      </div>`;
-    }).join('');
-
-    return`<div class="page">
-      <div class="sec-title" style="padding:0 0 14px">Acompanhamento da Dieta</div>
-      ${subtabs}
-
-      <!-- Macros consumidos hoje -->
-      ${(()=>{
-        const cm=getConsumedMacros();
-        const _nt=getNutriTargets();
-        const tKcal=_nt.kcal,tProt=_nt.prot,tCarb=_nt.carb,tGord=_nt.fat;
-        if(stats.todayDone===0) return`<div class="card" style="margin-bottom:14px;text-align:center;padding:16px"><div style="font-size:11px;color:var(--muted)">Marque refeições para ver os macros consumidos</div></div>`;
-        const mBar=(v,m,col)=>{const p=Math.min(Math.round(v/m*100),100);const over=v>m;return`<div style="height:5px;background:var(--bg5);border-radius:3px;overflow:hidden;margin-top:4px"><div style="width:${Math.max(p,v>0?3:0)}%;height:100%;background:${over?'var(--warn)':col};border-radius:3px"></div></div>`;};
-        return`<div class="card" style="margin-bottom:14px;border-color:${ac2}28">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <div style="font-size:11px;font-weight:700">Macros Consumidos Hoje</div>
-            <div style="font-size:9px;color:var(--muted)">${stats.todayDone}/${stats.todayTotal} refeições</div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;width:100%">
-            ${[['KCAL',cm.kcal,tKcal,'','var(--him)'],['PROT',cm.prot,tProt,'g','var(--good)'],['CARB',cm.carb,tCarb,'g','var(--sub)'],['GORD',cm.gord,tGord,'g','var(--sub)']].map(([ico,v,m,lbl,col])=>`<div style="background:var(--bg4);border-radius:8px;padding:8px 4px;text-align:center">
-              <div style="font-size:8px;letter-spacing:1px;color:var(--muted);font-weight:800;margin-bottom:2px">${ico}</div>
-              <div style="font-size:13px;font-weight:700;color:${v>=m?'var(--good)':col}">${v}</div>
-              <div style="font-size:8px;color:var(--muted)">/${m}${lbl}</div>
-              ${mBar(v,m,col)}
-            </div>`).join('')}
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px">
-            <span style="color:var(--sub)">🌾 Fibras: ${cm.fibra}g</span>
-            <span style="color:${cm.kcal>=tKcal*0.9?'var(--good)':'var(--warn)'}">
-              ${cm.kcal>=tKcal?'✅ Meta atingida!':Math.round(tKcal-cm.kcal)+' kcal restantes'}
-            </span>
-          </div>
-        </div>`;
-      })()}
-
-            <!-- KPIs -->
-      <div class="grid2" style="margin-bottom:14px">
-        <div class="card-accent" style="border-color:${ac2}28">
-          <div class="lbl">Hoje</div>
-          <div style="font-size:36px;font-weight:700;color:${todayPct>=100?'var(--good)':ac2};line-height:1">${stats.todayDone}<span style="font-size:16px;color:var(--muted)">/${stats.todayTotal}</span></div>
-          <div style="font-size:10px;color:var(--sub);margin-top:4px">refeições feitas</div>
-          <div class="bar" style="margin-top:10px"><div class="fill" style="width:${Math.max(todayPct,2)}%;background:${todayPct>=100?'var(--good)':ac2}"></div></div>
-        </div>
-        <div class="grid2" style="gap:10px">
-          <div class="card"><div style="font-size:22px;font-weight:700;color:${adherePct>=80?'var(--good)':adherePct>=50?'var(--warn)':'var(--bad)'}">${adherePct}%</div><div class="lbl" style="margin:3px 0">Aderência semanal</div></div>
-          <div class="card"><div style="font-size:22px;font-weight:700;color:${stats.streak>0?'var(--good)':'var(--muted)'}">${stats.streak}🔥</div><div class="lbl" style="margin:3px 0">Dias 100%</div></div>
-          <div class="card" style="grid-column:1/-1">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-              <div class="lbl" style="margin:0">💧 Água hoje</div>
-              <span style="font-size:11px;font-weight:700;color:${waterPct>=100?'var(--good)':ac2}">${(stats.water/1000).toFixed(1)}L / 4L</span>
-            </div>
-            <div class="bar"><div class="fill" style="width:${Math.max(waterPct,2)}%;background:var(--info)"></div></div>
-            <div style="display:flex;gap:6px;margin-top:8px">
-              ${[['+ 250ml',250],['+ 500ml',500],['+ 1L',1000]].map(([l,ml])=>`<button onclick="addWater(${ml})" style="flex:1;padding:6px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--info);font-family:var(--font);font-size:9px;cursor:pointer">${l}</button>`).join('')}
-              <button onclick="resetWaterToday()" style="padding:6px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:9px;cursor:pointer">↺</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Last 7 days -->
-      <div class="card" style="margin-bottom:14px">
-        <div style="font-size:10px;font-weight:700;color:var(--sub);margin-bottom:12px">📅 Últimos 7 dias</div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-end">${weekGrid}</div>
-      </div>
-
-      <!-- Meal checks today -->
-      <div class="card" style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--sub)">✅ Refeições de Hoje</div>
-          <div style="font-size:9px;color:var(--muted)">${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'short'})}</div>
-        </div>
-        ${MEAL_NAMES.map((name,i)=>{
-          const log=todayLog['meal_'+i];
-          const done=!!log;
-          return`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-            <button class="meal-check-btn${done?' done':''}" onclick="toggleMealCheck(${i},null)">${done?'✅':'○'}</button>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:700">${MEAL_ICONS[i]} ${name}</div>
-              ${done?`<div style="font-size:9px;color:var(--good)">Op.${log.option} às ${log.time}</div>`:`<div style="font-size:9px;color:var(--muted)">Não registrada</div>`}
-            </div>
-            ${done?`<button onclick="toggleMealCheck(${i},null)" style="padding:4px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-family:var(--font);font-size:8px;cursor:pointer">✕</button>`:''}
-          </div>`;
-        }).join('')}
-      </div>
-
-      <!-- Padrões e alertas -->
-      ${stats.mostSkippedIdx>=0&&stats.skipCount[stats.mostSkippedIdx]>5?`<div class="card" style="border-color:rgba(251,191,36,.3)">
-        <div style="font-size:10px;font-weight:700;color:var(--warn);margin-bottom:8px">⚠️ Padrão identificado</div>
-        <div style="font-size:11px;color:var(--sub)">Você pula <strong style="color:var(--warn)">${MEAL_NAMES[stats.mostSkippedIdx]}</strong> com frequência (${stats.skipCount[stats.mostSkippedIdx]}x nos últimos 30 dias). Essa refeição é importante para manter o volume calórico.</div>
-      </div>`:''}
-    </div>`;
-  }
 
   if(nuSubTab==='mercado') return buildMercado(subtabs);
   if(nuSubTab==='suplementos'){
@@ -5699,18 +6104,22 @@ function buildGuia(){
 // INIT
 // ══════════════════════════════════════
 // ── Meal tracking helpers ──
-function getConsumedMacros(){
-  // Macros consumidos hoje = soma dos macros das refeições marcadas
-  const log=getMealLog(getTodayKey());
+function getConsumedMacros(dk){
+  // Macros consumidos no dia = refeições marcadas (× porção ajustada, se houver)
+  // + o que foi comido fora do plano + itens somados a refeições já feitas.
+  const log=getMealLog(dk||getTodayKey());
   const meals=getMeals();
   let kcal=0,prot=0,carb=0,gord=0,fibra=0;
   for(let i=0;i<meals.length;i++){
     const entry=log['meal_'+i];
     if(!entry) continue;
-    const macros=(meals[i]&&meals[i].macros)||{kcal:0,prot:0,carb:0,gord:0,fibra:0};
-    kcal+=macros.kcal; prot+=macros.prot; carb+=macros.carb;
-    gord+=macros.gord; fibra+=macros.fibra;
+    const macros=(meals[i]&&meals[i].macros)||{};
+    const f=+entry.scale||1;
+    kcal+=(+macros.kcal||0)*f; prot+=(+macros.prot||0)*f; carb+=(+macros.carb||0)*f;
+    gord+=(+macros.gord||0)*f; fibra+=(+macros.fibra||0)*f;
   }
+  (Array.isArray(log.x_extra)?log.x_extra:[]).forEach(x=>{ kcal+=+x.kcal||0; prot+=+x.p||0; carb+=+x.c||0; gord+=+x.g||0; });
+  (Array.isArray(log.x_add)?log.x_add:[]).forEach(x=>{ if(log['meal_'+x.to]){ kcal+=+x.kcal||0; prot+=+x.p||0; carb+=+x.c||0; gord+=+x.g||0; } });
   return{kcal:Math.round(kcal),prot:parseFloat(prot.toFixed(1)),carb:parseFloat(carb.toFixed(1)),gord:parseFloat(gord.toFixed(1)),fibra:parseFloat(fibra.toFixed(1))};
 }
 
@@ -5745,11 +6154,11 @@ function getMealLog(date){ return _dayCell(date).meals||{}; }
 function saveMealLog(date,log){ _dayCell(date).meals=log||{}; _persistDay(date); }
 function getSuppLog(day){ return _dayCell(day||getTodayKey()).supps||{}; }
 function saveSuppLog(day,log){ _dayCell(day).supps=log||{}; _persistDay(day); }
-// Carrega os registros diários da nuvem (últimos 14 dias) e migra os que só existem local.
+// Carrega os registros diários da nuvem (últimas 4 semanas) e migra os que só existem local.
 async function loadDailyLogs(){
   try{
     if(!(window._fb && window._fb.getDailyLogs)) return;
-    const from=localDayKey(new Date(Date.now()-14*86400000));
+    const from=localDayKey(new Date(Date.now()-28*86400000)); // 4 semanas (padrões da aba Semana)
     let rows=null; try{ rows=await window._fb.getDailyLogs(CP, from); }catch(e){ rows=null; }
     if(rows===null) return; // nuvem indisponível → mantém o cache local, não apaga
     const cloudDays=new Set();
@@ -5786,7 +6195,8 @@ function toggleMealCheck(mealIdx, option){
     if(log[key]?.option===option){
       delete log[key];
     } else {
-      log[key]={option, time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), ts:Date.now()};
+      log[key]=_mealEntryFor(log, mealIdx, option);
+      delete log['x_skip_'+mealIdx];
     }
     saveMealLog(today, log);
     render();
@@ -6568,7 +6978,7 @@ function _applyMealQuiet(idx){
     try{ const times=getMealTimes(); const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes(); let bestMin=-1; times.forEach((t,ti)=>{ const tm=(t.hour*60+((t.min||0))); if(tm<=nowMin && !log['meal_'+ti] && tm>bestMin){ i=ti; bestMin=tm; } }); }catch(e){}
   }
   if(i<0) return;
-  if(!log['meal_'+i]){ log['meal_'+i]={option:0, time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), ts:Date.now()}; saveMealLog(today, log); }
+  if(!log['meal_'+i]){ log['meal_'+i]=_mealEntryFor(log, i, 0); delete log['x_skip_'+i]; saveMealLog(today, log); }
 }
 let _draining=false;
 async function _drainNotifQueue(){
