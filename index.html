@@ -1366,6 +1366,8 @@ let nuMealOpt={}; // selected option per meal in plano view (0-based index)
 let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0;
 let woPrgExercise=null;
+// Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
+const APP_VERSION='31/10 · 2';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -6720,7 +6722,7 @@ function openSettings(onboarding){
   ov.style.cssText='position:fixed;inset:0;z-index:650;background:rgba(8,8,14,.8);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 14px) 13px calc(env(safe-area-inset-bottom) + 14px);overflow-y:auto';
   ov.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--him);border-radius:16px;width:100%;max-width:440px;box-shadow:0 14px 44px rgba(0,0,0,.6);overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 15px 13px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0">
-      <div onclick="_devTap()" style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">⚙️ Perfil & Ajustes</div>
+      <div><div onclick="_devTap()" style="font-family:var(--font2);font-size:15px;font-weight:800;color:var(--him)">⚙️ Perfil & Ajustes</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Versão ${APP_VERSION}</div></div>
       <button onclick="closeSettings()" aria-label="Fechar" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
     <div style="padding:15px">
@@ -7328,14 +7330,32 @@ if('serviceWorker' in navigator){
     // Only register SW on GitHub Pages (not on preview/dev environments)
     const isGHPages = location.hostname.includes('github.io') || location.hostname.includes('localhost');
     if(!isGHPages) return;
+    const hadController=!!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('./sw.js').then(async reg=>{
       _swReg=reg;
+      // Ao voltar pro app (PWA fica vivo em segundo plano), procura versão nova.
+      document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') reg.update().catch(()=>{}); });
       console.log('SW registered:', reg.scope);
       if(Notification.permission==='granted'){
         await subscribePush();
       }
     }).catch(err=>{
       console.warn('SW registration failed (normal em preview):', err);
+    });
+    // Versão nova assumiu: recarrega sozinho. Com treino/edição em andamento, só avisa
+    // (1 toque p/ atualizar) — nada é perdido no meio do uso.
+    let reloading=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(reloading||!hadController) return;
+      const busy=!!woStartTime || !!document.querySelector('#diet-builder,#diet-editor,#scan-modal,#exp-modal,#settings-modal,#supp-editor')
+        || (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName));
+      if(!busy){ reloading=true; location.reload(); return; }
+      if(document.getElementById('bt-update-bar')) return;
+      const b=document.createElement('button'); b.id='bt-update-bar'; b.type='button';
+      b.textContent='Nova versão pronta · tocar para atualizar';
+      b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 96px);z-index:900;min-height:44px;padding:0 18px;border-radius:999px;border:none;background:var(--him);color:#08080e;font-family:var(--font2);font-weight:800;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer';
+      b.onclick=()=>{ reloading=true; location.reload(); };
+      document.body.appendChild(b);
     });
   });
 }
