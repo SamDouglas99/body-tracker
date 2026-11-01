@@ -348,6 +348,10 @@ html[data-theme="light"] .nu-pri{color:#fff}
 .nu-legend span{display:flex;align-items:center;gap:6px}
 .nu-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
 .nu-q{width:100%;min-height:48px;margin-top:10px;font-size:16px}
+.nu-qrow{display:flex;gap:8px;align-items:center;margin-top:10px}
+.nu-qrow .nu-q{margin-top:0;flex:1;min-width:0}
+.nu-mic{width:48px;height:48px;border-radius:12px;border:1px solid var(--border2);background:var(--bg4);color:var(--him);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.nu-mic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .nu-fi{background:var(--bg4);border-radius:12px;padding:10px 12px;margin-top:10px}
 .nu-fi-h{display:flex;justify-content:space-between;gap:8px;font-size:13px}
 .nu-fi-h span{color:var(--sub);white-space:nowrap;font-weight:700}
@@ -720,10 +724,6 @@ html[data-theme="light"] .mn-fab{box-shadow:0 8px 18px color-mix(in srgb, var(--
   <button class="mn" onclick="go('nutricao')"><svg class="mi" viewBox="0 0 24 24"><path d="M12 7c-2-3-7-3-7 2 0 4 7 8 7 8s7-4 7-8c0-5-5-5-7-2Z"/></svg>Nutrição</button>
   <button class="mn" onclick="go('evolucao')"><svg class="mi" viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.4"/><path d="M12 9v7M8 12l4-2 4 2M9 20l3-4 3 4"/></svg>Corpo</button>
 </div>
-
-<!-- Voice command FAB -->
-<button id="voice-fab" onclick="startVoice()" title="Comando de voz" aria-label="Comando de voz"
-  style="position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:500;width:52px;height:52px;border-radius:50%;border:none;background:var(--him);color:#08080e;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center">🎤</button>
 
 <!-- Rest timer -->
 <div id="rest-timer" role="timer">
@@ -1495,7 +1495,7 @@ let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0, timerTotal=0;
 let woPrgExercise=null;
 // Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
-const APP_VERSION='01/11 · 3';
+const APP_VERSION='01/11 · 4';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -4865,7 +4865,7 @@ const _NU_CUSTOM=[
 // Busca curta e comum → alimento mais provável (o usuário pode trocar).
 const _NU_DEFAULT={frango:410,'peito frango':410,'frango grelhado':410,carne:377,bife:377,patinho:377,'carne moida':326,arroz:3,'arroz integral':1,
   feijao:561,ovo:488,'ovo cozido':488,pao:53,'pao frances':53,queijo:463,mozarela:463,banana:182,batata:91,'batata doce':88,iogurte:448,cafe:471,
-  acai:168,'pao forma':52,aveia:7,tapioca:551,presunto:439,requeijao:468,amendoim:558,leite:'c_leite','leite desnatado':'c_leite_d',whey:'c_whey',
+  acai:168,'pao forma':52,salada:78,aveia:7,tapioca:551,presunto:439,requeijao:468,amendoim:558,leite:'c_leite','leite desnatado':'c_leite_d',whey:'c_whey',
   'pasta amendoim':'c_pasta_amend',granola:'c_granola',hamburguer:417,coxinha:386,feijoada:540,cuscuz:533};
 // Gramas por medida caseira (aproximado). Específico do alimento vence o genérico.
 const _NU_UNITS={unidade:100,fatia:20,colher_sopa:15,colher_cha:5,xicara:120,copo:200,concha:100,pedaco:60,file:100,bife:100,porcao:100,scoop:30,pote:170,lata:350,prato:250,escumadeira:90,tigela:300};
@@ -4969,7 +4969,16 @@ function _nuItemMacros(it){
   return {kcal:+it.manual.kcal||0, p:+it.manual.p||0, c:0, g:0};
 }
 function _nuParseText(txt){
-  return String(txt||'').split(/\s+com\s+|\s+e\s+|[+;,\n]/i).map(s=>s.trim()).filter(s=>s.length>1).slice(0,12).map(_nuMakeItem);
+  const segs=String(txt||'').split(/\s+com\s+|\s+e\s+|[+;,\n]/i).map(s=>s.trim()).filter(s=>s.length>1);
+  // Voz não tem vírgula: "arroz feijão frango" (sem quantidade) vira 1 item por alimento comum.
+  const out=[];
+  segs.forEach(s=>{
+    const words=s.split(/\s+/).filter(w=>!_NU_STOP.has(_nuNorm(w)));
+    const toks=_nuToks(s);
+    if(!/^\d/.test(s)&&toks.length>=2&&words.length===toks.length&&toks.every(k=>_NU_DEFAULT[k]!=null)&&_NU_DEFAULT[toks.join(' ')]==null) out.push(...words);
+    else out.push(s);
+  });
+  return out.slice(0,12).map(_nuMakeItem);
 }
 
 // ── Tela "Registrar comida" ──
@@ -4980,7 +4989,10 @@ function nuOpenFood(forMeal){
   const opts=st.items.filter(x=>x.status==='planejada'||x.status==='atrasada'||x.i===forMeal);
   _nuSheet(`<div class="lbl">Registrar comida</div>
     <div class="nu-h2">O que você comeu?</div>
-    <input id="nu-q" class="nu-q" autocomplete="off" placeholder="ex.: 2 pães franceses com 2 fatias de mussarela" aria-label="O que você comeu" oninput="_nuRegInput(this.value)"/>
+    <div class="nu-qrow">
+      <input id="nu-q" class="nu-q" autocomplete="off" placeholder="ex.: 2 pães franceses com 2 fatias de mussarela" aria-label="O que você comeu" oninput="_nuRegInput(this.value)"/>
+      ${(window.SpeechRecognition||window.webkitSpeechRecognition)?`<button class="nu-mic" onclick="_nuDictate()" aria-label="Falar o que você comeu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>`:''}
+    </div>
     <div class="nu-mini">Separe os itens com "com", vírgula ou "+". Pode usar gramas, fatias, colheres, copos.</div>
     <div id="nu-res" aria-live="polite"></div>
     <label class="nu-for">Contar como
@@ -4992,6 +5004,9 @@ function nuOpenFood(forMeal){
     <div class="nu-fine">Valores por 100 g da TACO 4ª ed. (NEPA/UNICAMP). Medidas caseiras são aproximadas: ajuste os gramas se precisar.</div>`);
   setTimeout(()=>{ try{ document.getElementById('nu-q').focus(); }catch(e){} },60);
   _nuRegRender();
+}
+function _nuDictate(){
+  startVoice(txt=>{ const inp=document.getElementById('nu-q'); if(!inp) return; inp.value=(inp.value.trim()?inp.value.trim()+', ':'')+txt; _nuRegInput(inp.value); });
 }
 function _nuRegInput(v){ clearTimeout(_nuRegT); _nuRegT=setTimeout(()=>{ if(!_nuReg) return; _nuReg.q=v; _nuReg.items=_nuParseText(v); _nuRegRender(); },220); }
 function _nuRegPick(k,id){ const it=_nuReg&&_nuReg.items[k]; if(!it) return; it.food=_nuFoodById(id); if(it.unit&&!['g','ml','kg','l'].includes(it.unit)){ const ug=_nuUnitGrams(it.food,it.unit); it.grams=Math.round((it.qty||1)*ug.g); } _nuRegRender(); }
@@ -6786,21 +6801,24 @@ function _saveExpenseManual(){
 }
 
 // ── Comandos de voz (Web Speech API) ──
-function startVoice(){
+// Voz: acionada pelo "+" (Por voz) ou pelo microfone do "Registrar comida" — sem botão fixo na tela.
+// onText (opcional) recebe o texto falado; sem ele, vira comando (água, gasto, peso, comida).
+function startVoice(onText){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ alert('Seu navegador não suporta reconhecimento de voz. Use o Chrome (Android/desktop).'); return; }
-  const fab=document.getElementById('voice-fab');
   const rec=new SR(); rec.lang='pt-BR'; rec.interimResults=false; rec.maxAlternatives=1;
-  if(fab){ fab.textContent='🔴'; fab.style.background='var(--bad)'; }
-  rec.onresult=e=>{ const txt=e.results[0][0].transcript; handleVoiceCommand(txt); };
-  rec.onerror=e=>{ showSyncStatus&&showSyncStatus('🎤 '+(e.error==='not-allowed'?'permita o microfone':'erro: '+e.error),'var(--bad)'); };
-  rec.onend=()=>{ if(fab){ fab.textContent='🎤'; fab.style.background='var(--him)'; } };
+  showSyncStatus&&showSyncStatus('Ouvindo… pode falar','var(--him)');
+  rec.onresult=e=>{ const txt=e.results[0][0].transcript; (onText||handleVoiceCommand)(txt); };
+  rec.onerror=e=>{ showSyncStatus&&showSyncStatus(e.error==='not-allowed'?'Permita o microfone para usar a voz':(e.error==='no-speech'?'Não ouvi nada. Tente de novo':'Voz: erro '+e.error),'var(--bad)'); };
   try{ rec.start(); }catch(e){}
 }
 // Interpreta comandos simples de voz. Retorna o que fez (ou null).
 function parseVoiceCommand(txt){
   const t=(txt||'').toLowerCase().trim();
   const num=s=>{ const m=s.match(/(\d+(?:[.,]\d+)?)/); return m?parseFloat(m[1].replace(',','.')):null; };
+  // Comida: "comi 2 pães franceses com queijo", "almocei arroz e feijão", "tomei 1 copo de leite"
+  const fm=t.match(/^(?:eu\s+)?(?:comi|almocei|jantei|lanchei|tomei(?:\s+caf[eé](?:\s+da\s+manh[aã])?)?)\s+(?:com\s+|de\s+|um\s+|uma\s+)?(.+)$/);
+  if(fm&&!/^[aá]gua/.test(fm[1])) return {action:'food', text:fm[1], msg:''};
   // Água: "água 500", "bebi 2 litros", "500 ml de agua"
   if(/[aá]gua|litro|\bml\b|bebi/.test(t)){
     let ml=null; const litros=t.match(/(\d+(?:[.,]\d+)?)\s*(l|litro|litros)\b/); const mls=t.match(/(\d+)\s*ml/);
@@ -6821,6 +6839,7 @@ function parseVoiceCommand(txt){
 function handleVoiceCommand(txt){
   const cmd=parseVoiceCommand(txt);
   if(!cmd){ showSyncStatus&&showSyncStatus('🎤 Não entendi: "'+txt+'"','var(--warn)'); return; }
+  if(cmd.action==='food'){ nuOpenFood(-1); setTimeout(()=>{ const inp=document.getElementById('nu-q'); if(inp){ inp.value=cmd.text; _nuRegInput(cmd.text); } },80); return; }
   if(cmd.action==='water'){ addWater(cmd.ml); }
   else if(cmd.action==='expense'){ addExpense({store:cmd.store,total:cmd.total,category:cmd.category,source:'voz'}); render(); }
   else if(cmd.action==='weight'){ try{ localStorage.setItem('bt_voice_weight',String(cmd.kg)); }catch(e){} go('registrar'); }
