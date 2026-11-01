@@ -4,8 +4,13 @@
 // Recebe { question, context } → { answer }.
 // Modelo: claude-sonnet-5-5 (bom equilíbrio). Haiku p/ mais barato, Opus p/ máx. qualidade.
 
+const { applyCors, requireUser } = require('../lib/api-auth.js');
+
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') { res.status(405).json({ error: 'Use POST' }); return; }
+  // Login obrigatório ANTES de qualquer custo com a IA.
+  if (!(await requireUser(req, res))) return;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'ANTHROPIC_API_KEY não configurada na Vercel' }); return; }

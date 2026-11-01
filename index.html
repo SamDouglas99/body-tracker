@@ -1258,6 +1258,8 @@ function _dbGen(){
 function _dbSave(){
   if(!_dbPlan) _dbGen();
   saveDiet(_dbPlan.meals.slice(), getSupps());
+  const g=_dbPlan.target;
+  if(g&&g.kcal>0) saveDietAdj({kcal:g.kcal,prot:g.prot,carb:g.carb,fat:g.fat,simW:_dbCfg.w,source:'montador',date:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})});
   closeDietBuilder(); nuSubTab='plano'; render(); try{ showSyncStatus&&showSyncStatus('✓ Dieta montada e salva','var(--good)'); }catch(e){}
 }
 function _dbShow(){
@@ -1388,7 +1390,7 @@ function _settingSet(key, value, localKey){
 function _migrateLocalSettings(){
   try{
     const s=getSettings(); if(!s) return;
-    const pairs=[['customTargets','bt_custom_targets'],['marketWeeks','bt_mkt_weeks'],['estoque','bt_estoque'],['estoqueHist','bt_estoque_hist'],['checkinHist','bt_checkin_hist']];
+    const pairs=[['customTargets','bt_custom_targets'],['marketWeeks','bt_mkt_weeks'],['estoque','bt_estoque'],['estoqueHist','bt_estoque_hist'],['checkinHist','bt_checkin_hist'],['dietAdj','bt_diet_adj']];
     let changed=false;
     pairs.forEach(([key,lk])=>{
       if(s[key]===undefined || s[key]===null){
@@ -1501,31 +1503,45 @@ function fmtD(d){return new Date(d).toLocaleDateString('pt-BR',{day:'2-digit',mo
 function fmtFull(d){return new Date(d).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});}
 
 // ── Workout stats ──
+// Série de trabalho FEITA = marcada ✓ (done) e com carga e reps. As cargas vêm
+// pré-preenchidas com a sugestão, então série não marcada NÃO conta (antes contava).
+// Sessão antiga, salva antes do ✓ existir (nenhuma série tem 'done'), conta pelo preenchido.
+function _isLegacySession(sess){ return !!sess && !(sess.exercises||[]).some(ex=>(ex.sets||[]).some(st=>st&&typeof st==='object'&&('done' in st))); }
+function _doneWork(ex,sess){
+  if(!ex||!Array.isArray(ex.sets)) return [];
+  const legacy=_isLegacySession(sess);
+  return ex.sets.filter(st=>st&&st.t==='work'&&st.weight>0&&st.reps>0&&(legacy||st.done===true));
+}
+// Última sessão (do tipo, se informado) em que o exercício foi FEITO de verdade.
+function _lastDone(exName,type){
+  const ws=getWorkouts();
+  for(let i=ws.length-1;i>=0;i--){
+    const s=ws[i]; if(type&&s.type!==type) continue;
+    const ex=s.exercises?.find(e=>e.name===exName);
+    const sets=_doneWork(ex,s);
+    if(sets.length) return {session:s,sets};
+  }
+  return null;
+}
 function getMaxLoad(exName){
   return getWorkouts().reduce((mx,s)=>{
     const ex=s.exercises?.find(e=>e.name===exName);
-    if(ex){ex.sets.forEach(st=>{if(st.weight&&st.weight>mx)mx=st.weight;});}
+    _doneWork(ex,s).forEach(st=>{if(st.weight>mx)mx=st.weight;});
     return mx;
   },0);
 }
 function getLastLoad(exName,type){
-  const last=getLastWorkout(type);
-  if(!last)return null;
-  const ex=last.exercises?.find(e=>e.name===exName);
-  if(!ex)return null;
-  const ws=ex.sets.filter(s=>s.t==='work'&&s.weight);
-  if(!ws.length)return null;
+  const ld=_lastDone(exName,type);
+  if(!ld)return null;
+  const ws=ld.sets;
   return{weight:ws[0].weight,reps:ws[0].reps,all:ws.map(s=>`${s.weight}kg×${s.reps}`).join(' / ')};
 }
 function getVolumeHistory(exName){
   return getWorkouts()
-    .filter(s=>s.exercises?.find(e=>e.name===exName))
+    .map(s=>({s,sets:_doneWork(s.exercises?.find(e=>e.name===exName),s)}))
+    .filter(x=>x.sets.length)
     .slice(-12)
-    .map(s=>{
-      const ex=s.exercises.find(e=>e.name===exName);
-      const max=ex.sets.filter(st=>st.t==='work'&&st.weight).reduce((m,st)=>st.weight>m?st.weight:m,0);
-      return{date:fmtD(s.date),maxW:max};
-    });
+    .map(({s,sets})=>({date:fmtD(s.date),maxW:sets.reduce((m,st)=>st.weight>m?st.weight:m,0)}));
 }
 function getTotalSessions(){return getWorkouts().length;}
 function getThisWeekSessions(){
@@ -1661,9 +1677,9 @@ function buildDashboard(){
   // ── Semana: macro acumulado ──
   const cm=getConsumedMacros();
   const ms=getMealStats();
-  const _dietAdj=getDietAdj();
-  const targetKcal=_dietAdj?_dietAdj.kcal:Math.round(curW*41);
-  const targetProt=_dietAdj?_dietAdj.prot:Math.round(curW*2.4);
+  const _nt=getNutriTargets();
+  const targetKcal=_nt.kcal;
+  const targetProt=_nt.prot;
 
   // ── Semana: suplementos hoje ──
   const suppLog=getSuppLog();
@@ -2675,8 +2691,9 @@ function buildWoLog(tabs){
   const exCards=prog.exercises.map((ex,exIdx)=>{
     const last=getLastLoad(ex.name,activeWorkoutType);
     const max=getMaxLoad(ex.name);
-    const lastSession=getWorkouts().slice().reverse().find(s=>s.type===activeWorkoutType);
-    const lastWorkSets=lastSession?.exercises?.find(e=>e.name===ex.name)?.sets?.filter(s=>s.t==='work'&&s.weight>0)||[];
+    const _ld=_lastDone(ex.name,activeWorkoutType);
+    const lastSession=_ld?_ld.session:getWorkouts().slice().reverse().find(s=>s.type===activeWorkoutType);
+    const lastWorkSets=_ld?_ld.sets:[];
     const lastBannerOld=null; // replaced by lastBannerFull below
     const isAdditional=ex.name.startsWith('🦵')||ex.name.startsWith('🔵');
     // All sets from last session (including warm/adj for reference)
@@ -3100,14 +3117,14 @@ function calcSessionVolume(session){
   // Tonelagem = soma de (carga × reps) em séries de trabalho
   let total=0;
   session.exercises?.forEach(ex=>{
-    ex.sets.filter(s=>s.t==='work'&&s.weight&&s.reps).forEach(s=>{total+=s.weight*s.reps;});
+    _doneWork(ex,session).forEach(s=>{total+=s.weight*s.reps;});
   });
   return parseFloat(total.toFixed(1));
 }
 function calcSessionSets(session){
   let total=0;
   session.exercises?.forEach(ex=>{
-    total+=ex.sets.filter(s=>s.t==='work'&&s.done).length;
+    total+=_doneWork(ex,session).length;
   });
   return total;
 }
@@ -3117,7 +3134,10 @@ function saveWorkoutSession(){
   // Conta séries feitas p/ um "certeza?" informativo
   let _doneSets=0;
   prog.exercises.forEach((ex,ei)=>ex.sets.forEach((s,si)=>{ if(document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done')) _doneSets++; }));
-  if(!confirm(`Finalizar e salvar este treino?\n\n${_doneSets} série(s) marcada(s) como feita(s).`)) return;
+  const _msg=_doneSets>0
+    ? `Finalizar e salvar este treino?\n\n${_doneSets} série(s) marcada(s) como feita(s). Só elas contam para recordes, cargas e volume.`
+    : `Nenhuma série foi marcada como feita (✓).\n\nO treino será salvo, mas NÃO vai contar para recordes, cargas e volume. Marque ✓ nas séries que você fez.\n\nSalvar mesmo assim?`;
+  if(!confirm(_msg)) return;
   const session={id:Date.now(),date:new Date().toISOString(),type:activeWorkoutType,exercises:[]};
   prog.exercises.forEach((ex,ei)=>{
     const sets=[];
@@ -3145,16 +3165,12 @@ function saveWorkoutSession(){
   session.exercises.forEach(ex=>{
     const histMax=getMaxLoad(ex.name); // recorde ANTES desta sessão (ainda não salva)
     const lastEx=lastSame?.exercises?.find(e=>e.name===ex.name);
-    const lastWork=lastEx?lastEx.sets.filter(s=>s.t==='work'&&s.weight>0):[];
-    let wi=0;
-    ex.sets.filter(s=>s.t==='work').forEach(s=>{
-      if(s.weight>0&&s.reps>0){
-        workCount++;
-        if(histMax>0 && s.weight>histMax) prCount++;
-        const pv=lastWork[wi];
-        if(pv && (s.weight>pv.weight || (s.weight===pv.weight && s.reps>pv.reps))) beatCount++;
-      }
-      wi++;
+    const lastWork=_doneWork(lastEx,lastSame);
+    _doneWork(ex,session).forEach((s,wi)=>{
+      workCount++;
+      if(histMax>0 && s.weight>histMax) prCount++;
+      const pv=lastWork[wi];
+      if(pv && (s.weight>pv.weight || (s.weight===pv.weight && s.reps>pv.reps))) beatCount++;
     });
   });
   saveWorkout(session);
@@ -3233,7 +3249,7 @@ function buildWoHistory(tabs){
     [...sessions].reverse().map(s=>{
       const prog=getWorkoutProgram()[s.type]||{};
       const exRows=s.exercises?.map(ex=>{
-        const workSets=ex.sets.filter(st=>st.t==='work'&&st.weight>0);
+        const workSets=_doneWork(ex,s);
         if(!workSets.length)return'';
         return`<div class="wo-hist-ex">💪 ${ex.name} <span class="wo-hist-sets">${workSets.map(st=>`${st.weight}kg×${st.reps}`).join(' · ')}</span></div>`;
       }).join('')||'';
@@ -3244,8 +3260,8 @@ function buildWoHistory(tabs){
             <span style="font-size:10px;color:var(--muted);margin-left:8px">${fmtFull(s.date)}</span>
           </div>
           <div style="text-align:right">
-            <div style="font-size:10px;color:var(--muted)">${s.exercises?.filter(ex=>ex.sets.some(st=>st.done)).length||0}/${s.exercises?.length||0} exerc.</div>
-            ${calcSessionSets(s)>0?`<div style="font-size:9px;color:var(--good)">${calcSessionSets(s)} séries · ${s.tonnage||calcSessionVolume(s)}kg</div>`:''}
+            <div style="font-size:10px;color:var(--muted)">${s.exercises?.filter(ex=>_doneWork(ex,s).length).length||0}/${s.exercises?.length||0} exerc.</div>
+            ${calcSessionSets(s)>0?`<div style="font-size:9px;color:var(--good)">${calcSessionSets(s)} séries · ${calcSessionVolume(s)}kg</div>`:''}
           </div>
         </div>
         ${exRows}
@@ -3270,10 +3286,10 @@ function buildWoProgress(tabs){
       const hist=getVolumeHistory(ex.name);
       const first=hist[0]?.maxW||max;
       const gain=parseFloat((max-first).toFixed(1));
-      const lastSession=workouts.slice().reverse().find(s=>s.type===key);
-      const lastWorkSets=lastSession?.exercises?.find(e=>e.name===ex.name)?.sets?.filter(s=>s.t==='work'&&s.weight>0)||[];
+      const _ld=_lastDone(ex.name,key);
+      const lastWorkSets=_ld?_ld.sets:[];
       const lastStr=lastWorkSets.map(s=>`${s.weight}kg×${s.reps}`).join(' / ')||'—';
-      const sessions=workouts.filter(s=>s.exercises?.find(e=>e.name===ex.name)).length;
+      const sessions=workouts.filter(s=>_doneWork(s.exercises?.find(e=>e.name===ex.name),s).length).length;
       return`<div class="card" style="${max>0?`border-color:${prog.color}30`:''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
           <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div><div style="font-size:9px;color:var(--muted);margin-top:2px">${sessions} sessões</div></div>
@@ -3292,8 +3308,8 @@ function buildWoProgress(tabs){
   const muscleVolumes=Object.entries(muscleMap).map(([muscle,cfg])=>{
     const cutoff=new Date(Date.now()-7*24*3600*1000);
     const weekSets=workouts.filter(s=>new Date(s.date)>=cutoff).reduce((sum,s)=>{
-      cfg.keys.forEach(n=>{const ex=s.exercises?.find(e=>e.name===n);if(ex)sum+=ex.sets.filter(st=>st.t==='work').length;});return sum;},0);
-    const totalSets=workouts.reduce((sum,s)=>{cfg.keys.forEach(n=>{const ex=s.exercises?.find(e=>e.name===n);if(ex)sum+=ex.sets.filter(st=>st.t==='work'&&st.done).length;});return sum;},0);
+      cfg.keys.forEach(n=>{sum+=_doneWork(s.exercises?.find(e=>e.name===n),s).length;});return sum;},0);
+    const totalSets=workouts.reduce((sum,s)=>{cfg.keys.forEach(n=>{sum+=_doneWork(s.exercises?.find(e=>e.name===n),s).length;});return sum;},0);
     return{muscle,color:cfg.color,totalSets,weekSets};
   });
   const maxWeekSets=Math.max(...muscleVolumes.map(m=>m.weekSets),1);
@@ -4252,9 +4268,8 @@ function buildNutricao(){
       <!-- Macros consumidos hoje -->
       ${(()=>{
         const cm=getConsumedMacros();
-        const w2=getD().curW;
-        const _adj=getDietAdj();
-        const tKcal=_adj?_adj.kcal:Math.round(w2*41),tProt=_adj?_adj.prot:Math.round(w2*2.4),tCarb=_adj?_adj.carb:Math.round(tKcal*0.45/4),tGord=_adj?_adj.fat:Math.round(tKcal*0.28/9);
+        const _nt=getNutriTargets();
+        const tKcal=_nt.kcal,tProt=_nt.prot,tCarb=_nt.carb,tGord=_nt.fat;
         if(stats.todayDone===0) return`<div class="card" style="margin-bottom:14px;text-align:center;padding:16px"><div style="font-size:11px;color:var(--muted)">Marque refeições para ver os macros consumidos</div></div>`;
         const mBar=(v,m,col)=>{const p=Math.min(Math.round(v/m*100),100);const over=v>m;return`<div style="height:5px;background:var(--bg5);border-radius:3px;overflow:hidden;margin-top:4px"><div style="width:${Math.max(p,v>0?3:0)}%;height:100%;background:${over?'var(--warn)':col};border-radius:3px"></div></div>`;};
         return`<div class="card" style="margin-bottom:14px;border-color:${ac2}28">
@@ -4489,10 +4504,11 @@ function buildNutricao(){
     totCarb=parseFloat(totCarb.toFixed(1));totGord=parseFloat(totGord.toFixed(1));
     totFibra=parseFloat(totFibra.toFixed(1));
 
-    const targetKcal=Math.round(w*41);
-    const targetProt=parseFloat((w*2.4).toFixed(0));
-    const targetCarb=Math.round(targetKcal*0.45/4);
-    const targetGord=Math.round(targetKcal*0.28/9);
+    const _nt=getNutriTargets();
+    const targetKcal=_nt.kcal;
+    const targetProt=_nt.prot;
+    const targetCarb=_nt.carb;
+    const targetGord=_nt.fat;
 
     const macroBar=(val,meta,color)=>{
       const pct=Math.min((val/meta)*100,100);
@@ -5280,10 +5296,23 @@ function deleteEstoqueTemplate(name){
 // ══════════════════════════════════════
 // SIMULADOR DE SUPERÁVIT CALÓRICO
 // ══════════════════════════════════════
-function getDietAdj(){
-  try{return JSON.parse(localStorage.getItem('bt_diet_adj')||'null');}catch{return null;}
+// Meta diária salva (simulador ou montador). Vive no banco (settings) com backup local,
+// p/ celular e notebook mostrarem a MESMA meta.
+function getDietAdj(){ const a=_settingGet('dietAdj','bt_diet_adj',null); return (a&&a.kcal>0)?a:null; }
+function saveDietAdj(d){ _settingSet('dietAdj', d, 'bt_diet_adj'); }
+function clearDietAdj(){ _settingSet('dietAdj', null, 'bt_diet_adj'); }
+// FONTE ÚNICA das metas do dia — Início, Nutrição e relatórios leem daqui.
+// 1º a meta salva; sem ela, a fórmula padrão do montador (_dietTargets) pelo peso atual.
+function getNutriTargets(){
+  const adj=getDietAdj();
+  if(adj){
+    const kcal=Math.round(adj.kcal), prot=Math.round(adj.prot||0);
+    const rem=Math.max(0,kcal-prot*4);
+    return {kcal, prot, carb:Math.round(adj.carb!=null?adj.carb:rem*0.58/4), fat:Math.round(adj.fat!=null?adj.fat:rem*0.42/9), source:'salva'};
+  }
+  const w=(getD()||{}).curW||0;
+  return {..._dietTargets(w), source:'padrão'};
 }
-function saveDietAdj(d){localStorage.setItem('bt_diet_adj',JSON.stringify(d));}
 
 function buildSimulador(subtabs,d,ac,w){
   // ── Simulator params (persisted) ──
@@ -5308,12 +5337,13 @@ function buildSimulador(subtabs,d,ac,w){
   const fatTarget  = Math.round(kcalTarget * 0.25 / 9);
   const carbTarget = Math.round((kcalTarget - protTarget * 4 - fatTarget * 9) / 4);
 
-  // ── Baseline: what you're eating NOW (profile weight) ──
+  // ── Baseline: a meta ATUAL do usuário (mesma fonte do Início e da Nutrição) ──
   const curW    = w; // real profile weight
-  const curKcal = Math.round(curW * 41);
-  const curProt = Math.round(curW * 2.4);
-  const curCarb = Math.round(curKcal * 0.47 / 4);
-  const curFat  = Math.round(curKcal * 0.25 / 9);
+  const _nt     = getNutriTargets();
+  const curKcal = _nt.kcal;
+  const curProt = _nt.prot;
+  const curCarb = _nt.carb;
+  const curFat  = _nt.fat;
 
   // ── Delta ──
   const diffKcal = kcalTarget - curKcal;
@@ -5510,7 +5540,7 @@ function buildSimulador(subtabs,d,ac,w){
         <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--good)">
           ✅ Ativo: ${getDietAdj().kcal} kcal (ajustado em ${getDietAdj().date})
         </div>
-        <button onclick="localStorage.removeItem('bt_diet_adj');render()" style="width:100%;margin-top:6px;padding:10px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">
+        <button onclick="clearDietAdj();render()" style="width:100%;margin-top:6px;padding:10px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font2);font-size:10px;font-weight:700;cursor:pointer">
           ↩️ Restaurar plano original (${curKcal} kcal)
         </button>`:``}
     </div>
@@ -5539,7 +5569,7 @@ function buildGuia(){
     {icon:'📈',cat:'Sobrecarga Progressiva',color:'var(--good)',text:'Regra #1 de hipertrofia: aumente peso ou repetições toda semana. Use o módulo de treinos para rastrear cada carga e não deixar de progredir.'},
     {icon:'📅',cat:'Frequência e Volume',color:'var(--info)',text:'O Push·Pull·Legs·Upper·Lower te dá 2x por semana de estímulo em cada músculo — frequência ideal para hipertrofia. Cada grupo recebe 10–20 séries semanais.'},
     {icon:'💡',cat:'Entendendo os Ajustes',color:'var(--warn)',text:'O protocolo do PDF usa Aquecimento → Ajuste 1 → Ajuste 2 → Trabalho. Os "ajustes" são series de aproximação (ramping) que preparam o músculo para as séries de trabalho máximo.'},
-    {icon:'🍽️',cat:'Calorias e Massa (Ectomorfo)',color:'var(--him)',text:`Com ${d.curW}kg e metabolismo acelerado, você precisa de ~${Math.round(d.curW*41)} kcal/dia e ${Math.round(d.curW*2.4)}g de proteína. Se não estiver ganhando 0,3kg/sem, adicione 300kcal a cada semana até o peso subir.`},
+    {icon:'🍽️',cat:'Calorias e Massa (Ectomorfo)',color:'var(--him)',text:`Com ${d.curW}kg e metabolismo acelerado, você precisa de ~${getNutriTargets().kcal} kcal/dia e ${getNutriTargets().prot}g de proteína. Se não estiver ganhando 0,3kg/sem, adicione 300kcal a cada semana até o peso subir.`},
     {icon:'🔄',cat:'Deload',color:'var(--purple)',text:'A cada 4–6 semanas, faça uma semana com 50% da carga normal. Isso evita overtraining, melhora recuperação e você volta mais forte.'},
     {icon:'📸',cat:'Fotos de Progresso',color:'var(--good)',text:'Tire fotos mensais com a mesma iluminação, horário e posição. A balança não conta tudo — fotos mostram o que as medidas e o peso não mostram.'},
     {icon:'😴',cat:'Sono = Anabolismo',color:'var(--info)',text:'GH, testosterona e IGF-1 são liberados no sono profundo. Dormir 7–9h é obrigatório. Sem sono, você desperdiça treino, dieta e qualquer protocolo.'},
@@ -5867,34 +5897,38 @@ function openReceiptScan(){
 function _handleReceiptFile(file){
   const r=new FileReader();
   r.onload=()=>{ _scanState={img:r.result,items:null,busy:true,store:''}; _renderScanModal();
-    scanReceipt(r.result).then(res=>{ _scanState.items=res.items; _scanState.store=res.store||''; _scanState.demo=!!res.demo; _scanState.busy=false; _renderScanModal(); })
+    scanReceipt(r.result).then(res=>{ _scanState.items=res.items; _scanState.store=res.store||''; _scanState.busy=false; _renderScanModal(); })
       .catch(err=>{ _scanState.busy=false; _scanState.error=(err&&err.message)||'falha'; _renderScanModal(); });
   };
   r.readAsDataURL(file);
 }
-// Lê a nota: tenta o backend REAL (função serverless /api/scan-receipt na Vercel, que usa
-// a IA de visão). Se não existir (ex.: GitHub Pages) ou falhar, cai no modo DEMONSTRAÇÃO.
-async function scanReceipt(dataUrl){
+// Funções de IA ficam na Vercel. No GitHub Pages (e no preview local) não existe /api,
+// então chamamos a Vercel direto — o CORS de lá só libera as origens do app.
+const _API_BASE = /\.vercel\.app$/.test(location.hostname) ? '' : 'https://body-tracker-samdouglas99.vercel.app';
+// Token do login (Supabase). As funções de IA recusam chamada sem login (protege o crédito da IA).
+async function _apiAuthHeaders(){
   try{
-    const img = await _downscaleImage(dataUrl, 1300, 0.7); // reduz p/ caber no limite e ir rápido
-    const r = await fetch('/api/scan-receipt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:img})});
-    if(r.ok){
-      const j = await r.json();
-      if(j && Array.isArray(j.items) && j.items.length){ return { store:j.store||'', items:j.items, demo:false }; }
-      if(j && j.error) throw new Error(j.error);
-    } else { throw new Error('HTTP '+r.status); }
-  }catch(e){ console.warn('scanReceipt: backend indisponível — usando demonstração ('+(e&&e.message)+')'); }
-  // Fallback demonstração (sem backend configurado)
-  await new Promise(r=>setTimeout(r,900));
-  return { store:'Supermercado (demo)', demo:true, items:[
-    {name:'Arroz tipo 1 5kg',       qty:1,   price:27.90, category:'Mercado'},
-    {name:'Feijão carioca 1kg',     qty:2,   price:8.49,  category:'Mercado'},
-    {name:'Peito de frango (kg)',   qty:1.2, price:18.90, category:'Mercado'},
-    {name:'Ovos brancos 20un',      qty:1,   price:17.90, category:'Mercado'},
-    {name:'Banana prata (kg)',      qty:1.5, price:5.99,  category:'Mercado'},
-    {name:'Aveia em flocos 500g',   qty:1,   price:9.49,  category:'Mercado'},
-    {name:'Whey protein 900g',      qty:1,   price:129.90,category:'Suplementos'},
-  ]};
+    const tok = window._fb && window._fb.getAccessToken ? await window._fb.getAccessToken() : null;
+    return tok ? { authorization:'Bearer '+tok } : null;
+  }catch(e){ return null; }
+}
+// Lê a nota com a IA de visão (/api/scan-receipt). NUNCA inventa itens: se não der,
+// lança um erro com o motivo, e a tela oferece tentar de novo ou lançar à mão.
+async function scanReceipt(dataUrl){
+  const auth = await _apiAuthHeaders();
+  if(!auth) throw new Error('Para ler notas com IA, entre na sua conta.');
+  const img = await _downscaleImage(dataUrl, 1300, 0.7); // reduz p/ caber no limite e ir rápido
+  let r;
+  try{
+    r = await fetch(_API_BASE+'/api/scan-receipt',{method:'POST',headers:Object.assign({'content-type':'application/json'},auth),body:JSON.stringify({image:img})});
+  }catch(e){ throw new Error('Sem conexão com o servidor. Confira a internet e tente de novo.'); }
+  let j=null; try{ j=await r.json(); }catch(e){ /* corpo não-JSON: tratado pelo status abaixo */ }
+  if(r.status===401) throw new Error((j&&j.error)||'Sua sessão expirou. Entre de novo na sua conta.');
+  if(r.status===503) throw new Error('A leitura com IA ainda não está ativada no servidor.');
+  if(!r.ok) throw new Error('O servidor não conseguiu ler a nota agora (erro '+r.status+'). Tente de novo.');
+  if(!j||!Array.isArray(j.items)) throw new Error('Resposta inesperada do servidor. Tente de novo.');
+  if(!j.items.length) throw new Error('Não encontrei itens nessa foto. Tente uma foto mais nítida, reta e bem iluminada.');
+  return { store:j.store||'', items:j.items };
 }
 // Reduz a imagem no navegador antes de enviar (menos dados, mais rápido, dentro do limite).
 function _downscaleImage(dataUrl,maxPx,quality){
@@ -5947,7 +5981,16 @@ function _renderScanModal(){
       <div style="font-size:10px;color:var(--muted);margin-top:6px">Extraindo os itens da nota</div>
     </div>`;
   } else if(_scanState.error){
-    body=`<div style="padding:30px 16px;text-align:center"><div style="font-size:28px">⚠️</div><div style="font-size:12px;color:var(--bad);margin-top:8px">Não consegui ler: ${_scanState.error}</div></div>`;
+    const _esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    body=`<div style="padding:26px 16px 18px;text-align:center">
+      <div style="font-size:14px;font-weight:800;margin-bottom:6px">Não consegui ler a nota</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.5">${_esc(_scanState.error)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Nada foi salvo.</div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button onclick="_scanClose();openReceiptScan()" style="flex:1;min-height:44px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-weight:800;cursor:pointer">Tentar outra foto</button>
+        <button onclick="_scanClose();openExpenseManual()" style="flex:1;min-height:44px;background:var(--him);border:none;border-radius:10px;color:#08080e;font-family:var(--font2);font-weight:800;cursor:pointer">Lançar à mão</button>
+      </div>
+    </div>`;
   } else {
     const items=_scanState.items||[];
     const total=items.reduce((t,i)=>t+(parseFloat(i.price)||0)*(parseFloat(i.qty)||1),0);
@@ -5958,7 +6001,7 @@ function _renderScanModal(){
         <div style="flex:1;min-width:0"><label class="flabel">Estabelecimento</label>
           <input id="scan-store" value="${(_scanState.store||'').replace(/"/g,'&quot;')}" placeholder="Mercado" style="width:100%"/></div>
       </div>
-      <div style="font-size:9px;color:${_scanState.demo?'var(--warn)':'var(--good)'};margin-bottom:10px">${_scanState.demo?'⚠️ Demonstração (backend de IA não configurado). Confira e edite antes de salvar.':'✅ Lido pela IA — confira e edite se precisar.'}</div>
+      <div style="font-size:10px;color:var(--good);margin-bottom:10px">Lido pela IA. Confira e edite antes de salvar.</div>
       ${items.map((it,i)=>`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:9px;margin-bottom:8px">
         <div style="display:flex;gap:6px;margin-bottom:6px">
           <input id="sc_n_${i}" value="${(it.name||'').replace(/"/g,'&quot;')}" placeholder="Item" style="flex:1"/>
@@ -6579,10 +6622,11 @@ function buildEvolutionReport(period){
     // PR de carga
     const allEx=Object.values(getWorkoutProgram()).flatMap(w=>w.exercises);
     allEx.forEach(ex=>{
-      const recentSessions=recentWo.filter(s=>s.exercises?.find(e=>e.name===ex.name));
+      const _mx=s=>_doneWork(s.exercises.find(e=>e.name===ex.name),s).reduce((m,st)=>Math.max(m,st.weight),0);
+      const recentSessions=recentWo.filter(s=>s.exercises&&_mx(s)>0);
       if(recentSessions.length>=2){
-        const firstMax=recentSessions[0].exercises.find(e=>e.name===ex.name)?.sets.filter(s=>s.t==='work'&&s.weight).reduce((m,s)=>Math.max(m,s.weight),0)||0;
-        const lastMax=recentSessions[recentSessions.length-1].exercises.find(e=>e.name===ex.name)?.sets.filter(s=>s.t==='work'&&s.weight).reduce((m,s)=>Math.max(m,s.weight),0)||0;
+        const firstMax=_mx(recentSessions[0]);
+        const lastMax=_mx(recentSessions[recentSessions.length-1]);
         if(lastMax>firstMax) achievements.push(`PR: ${ex.name} ${firstMax}→${lastMax}kg! 🏆`);
       }
     });

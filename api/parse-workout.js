@@ -4,8 +4,13 @@
 // Recebe { image: dataURL base64 } → { name, days:[{label, exercises:[{name,sets,reps,note}]}] }.
 // Modelo: claude-haiku-5-5 (barato). Troque por claude-sonnet-5-5 p/ fichas complexas.
 
+const { applyCors, requireUser } = require('../lib/api-auth.js');
+
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') { res.status(405).json({ error: 'Use POST', days: [] }); return; }
+  // Login obrigatório ANTES de qualquer custo com a IA.
+  if (!(await requireUser(req, res, { days: [] }))) return;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'ANTHROPIC_API_KEY não configurada na Vercel', days: [] }); return; }

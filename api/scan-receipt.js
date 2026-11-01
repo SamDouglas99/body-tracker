@@ -6,10 +6,15 @@
 // Modelo: claude-haiku-5-5 (barato e com visão, ótimo p/ ler notas).
 // Troque por 'claude-opus-5-5' se quiser mais precisão (custa mais).
 
+const { applyCors, requireUser } = require('../lib/api-auth.js');
+
 const CAT_LIST = ['Mercado', 'Alimentação', 'Suplementos', 'Academia', 'Saúde', 'Transporte', 'Outros'];
 
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') { res.status(405).json({ error: 'Use POST', items: [] }); return; }
+  // Login obrigatório ANTES de qualquer custo com a IA.
+  if (!(await requireUser(req, res, { items: [] }))) return;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'ANTHROPIC_API_KEY não configurada na Vercel', items: [] }); return; }

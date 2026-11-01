@@ -3,16 +3,24 @@
 // a cada ~15 min. Reusa o MESMO worker do robô (minutos + dedup), então pode rodar
 // junto com o GitHub Actions sem duplicar (o dedup garante 1 aviso por slot/dia).
 //
-// Proteção: exige o header 'x-cron-secret' (ou ?secret=) igual a CRON_SECRET.
+// Proteção: exige o header 'x-cron-secret' igual a CRON_SECRET. Só header: segredo na URL
+// (?secret=) fica gravado em logs de servidor/proxy e no histórico.
 // Variáveis de ambiente na Vercel (Project → Settings → Environment Variables):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE, VAPID_PUBLIC, VAPID_PRIVATE, VAPID_SUBJECT, CRON_SECRET
+const crypto = require('crypto');
 const webpush = require('web-push');
 const { sendDueReminders } = require('../scripts/send-reminders-supabase.js');
 
+// Comparação em tempo constante (não vaza o segredo pelo tempo de resposta).
+function sameSecret(given, expected) {
+  const a = Buffer.from(String(given)), b = Buffer.from(String(expected));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 module.exports = async function handler(req, res) {
   const SECRET = process.env.CRON_SECRET;
-  const given = req.headers['x-cron-secret'] || (req.query && req.query.secret);
-  if (!SECRET || given !== SECRET) { res.status(401).json({ error: 'não autorizado' }); return; }
+  const given = req.headers['x-cron-secret'];
+  if (!SECRET || !given || !sameSecret(given, SECRET)) { res.status(401).json({ error: 'não autorizado' }); return; }
 
   const SUPABASE_URL  = process.env.SUPABASE_URL;
   const SERVICE_ROLE  = process.env.SUPABASE_SERVICE_ROLE;
