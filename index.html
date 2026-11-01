@@ -240,6 +240,16 @@ input:focus,select:focus{border-color:var(--muted)}
 .exc2-idx{font-size:11px;font-weight:800;color:var(--muted);flex-shrink:0}
 .exc2-meta{display:flex;align-items:center;gap:2px;font-size:12px;color:var(--sub);padding:0 14px;line-height:1.4}
 .exc2-meta b{font-family:var(--font2);color:var(--him);font-weight:800;font-size:13px}
+.exc2-top{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:44px;padding:0;border:none;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.exc2-sum{display:none;font-size:12px;color:var(--sub);font-weight:700;white-space:nowrap;flex-shrink:0}
+.exc2.collapsed{opacity:.72}
+.exc2.collapsed .exc2-main,.exc2.collapsed .exc2-edit{display:none}
+.exc2.collapsed .exc2-sum{display:block}
+.exc2.collapsed .ex-log-header{padding:4px 14px}
+.exc2.complete .exc2-sum{color:var(--good)}
+.exc2.complete.collapsed{opacity:.6}
+.exc2:not(.show-warm) .sr2.warm,.exc2:not(.show-warm) .sr2.adj{display:none}
+.exc2-warm{min-height:36px;border:none;background:none;color:var(--muted);font-family:var(--font2);font-size:11px;font-weight:800;cursor:pointer;padding:0}
 .exc2-why{margin:4px 14px 0;font-size:12px;line-height:1.5;color:var(--sub);background:var(--bg4);border-radius:10px;padding:8px 10px}
 .exc2-ibtn{width:36px;height:36px;border:none;background:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;padding:0;flex-shrink:0}
 .exc2-ibtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -1475,7 +1485,7 @@ let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0, timerTotal=0;
 let woPrgExercise=null;
 // Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
-const APP_VERSION='01/11 · 1';
+const APP_VERSION='01/11 · 2';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -2815,23 +2825,25 @@ function buildWoLog(tabs){
     // Meta inteligente (dupla progressão): mesma carga +1 rep até o topo da faixa;
     // fechou o topo em TODAS as séries → +2,5 kg. Peso corporal (0 kg) progride só em reps.
     const _work=ex.sets.filter(s=>s.t==='work');
+    const _nWarm=ex.sets.length-_work.length; // aquecimento/ajuste: recolhidos por padrão
     const _rng=String(_work[0]?.r||'').split(/[–-]/).map(x=>parseInt(x)).filter(n=>n>0);
     const _lo=_rng[0]||0, _hi=_rng[1]||_rng[0]||0;
     const _note=(ex.sets.find(s=>s.note)||{}).note||'';
-    let metaHtml, whyTxt;
+    let metaHtml, whyTxt, metaShort='primeira vez';
     if(lastWorkSets.length){
       const topW=Math.max(...lastWorkSets.map(s=>s.weight||0));
       const bestR=Math.max(...lastWorkSets.filter(s=>(s.weight||0)===topW).map(s=>s.reps));
       const allTop=_hi>0 && lastWorkSets.length>=_work.length && lastWorkSets.every(s=>(s.weight||0)>=topW&&s.reps>=_hi);
       const tgtR=_hi?Math.min(_hi,bestR+1):bestR+1;
-      const lastTxt=topW>0?`${_kg(topW)} kg × ${bestR}`:`${bestR} reps`;
+      const lastTxt=topW>0?`${bestR} × ${_kg(topW)}`:`${bestR} reps`;
       let goal;
       if(topW<=0) goal=`${allTop?bestR+1:tgtR} reps`;
-      else goal=allTop?`${_kg(topW+2.5)} kg × ${_lo||_hi}`:`${_kg(topW)} kg × ${tgtR}`;
+      else goal=allTop?`${_lo||_hi} × ${_kg(topW+2.5)} kg`:`${tgtR} × ${_kg(topW)} kg`;
+      metaShort='meta '+goal;
       metaHtml=`Meta <b>${goal}</b>&nbsp;· última ${lastTxt}`;
       whyTxt=(allTop&&topW>0?`Você fechou ${_hi} reps em todas as séries com ${_kg(topW)} kg: hora de subir a carga.`
         :`Mesma carga, +1 rep${_hi?` (faixa ${_lo}–${_hi})`:''}.${topW>0?` Quando fechar ${_hi||tgtR} reps em todas as séries, a meta sobe 2,5 kg.`:''}`)
-        +` Última vez: ${lastWorkSets.map(s=>(s.weight>0?_kg(s.weight)+'×':'')+s.reps).join(', ')}.`+(max>0?` Recorde: ${_kg(max)} kg.`:'');
+        +` Última vez: ${lastWorkSets.map(s=>s.reps+(s.weight>0?' × '+_kg(s.weight):'')).join(', ')}.`+(max>0?` Recorde: ${_kg(max)} kg.`:'');
     } else {
       metaHtml=`Primeira vez${_hi?` · faixa ${_lo}–${_hi} reps`:''}`;
       whyTxt='Escolha uma carga em que você faça as reps com boa técnica: qualquer carga já é recorde. Na próxima vez o app sugere a progressão.';
@@ -2876,17 +2888,23 @@ function buildWoLog(tabs){
     return`${sepBefore}<div class="ex-log-card exc2" id="exc_${exIdx}" ${isAdditional?'style="border-color:var(--himl);background:var(--himb)"':''}>
       <div class="ex-log-header">
         <div style="width:100%;display:flex;align-items:center;gap:8px">
-          <span class="exc2-idx">${exIdx+1}/${_nEx}</span>
-          <div class="ex-log-name" style="flex:1;min-width:0;${isAdditional?'color:var(--him)':''}">${ex.name}</div>
-          ${!isAdditional?`<button class="exc2-ibtn" onclick="showQuickEditSets('${activeWorkoutType}',${exIdx})" aria-label="Alterar número de séries (${_work.length})" title="Alterar número de séries">${_icoEdit}</button>`:''}
+          <button class="exc2-top" onclick="_woOpenEx(${exIdx})" aria-controls="exb_${exIdx}" aria-expanded="true">
+            <span class="exc2-idx">${exIdx+1}/${_nEx}</span>
+            <span class="ex-log-name" style="flex:1;min-width:0;${isAdditional?'color:var(--him)':''}">${ex.name}</span>
+            <span class="exc2-sum" id="exs_${exIdx}" data-meta="${_nuEsc(metaShort)}"></span>
+          </button>
+          ${!isAdditional?`<button class="exc2-ibtn exc2-edit" onclick="showQuickEditSets('${activeWorkoutType}',${exIdx})" aria-label="Alterar número de séries (${_work.length})" title="Alterar número de séries">${_icoEdit}</button>`:''}
         </div>
       </div>
-      <div class="exc2-meta"><span>${metaHtml}</span><button class="exc2-ibtn" id="whyb_${exIdx}" onclick="_woWhy(${exIdx})" aria-expanded="false" aria-controls="why_${exIdx}" aria-label="Por que essa meta?">${_icoInfo}</button></div>
-      <div class="exc2-why" id="why_${exIdx}" hidden>${whyTxt}</div>
-      <div class="exc2-body">
-        <div class="sr2-hd" aria-hidden="true"><span>SÉRIE</span><span>KG</span><span>REPS</span><span></span></div>
-        ${setRows}
-        ${stp}
+      <div class="exc2-main" id="exb_${exIdx}">
+        <div class="exc2-meta"><span>${metaHtml}</span><button class="exc2-ibtn" id="whyb_${exIdx}" onclick="_woWhy(${exIdx})" aria-expanded="false" aria-controls="why_${exIdx}" aria-label="Por que essa meta?">${_icoInfo}</button></div>
+        <div class="exc2-why" id="why_${exIdx}" hidden>${whyTxt}</div>
+        <div class="exc2-body">
+          ${_nWarm?`<button class="exc2-warm" id="exw_${exIdx}" onclick="_woWarm(${exIdx})" aria-expanded="false">Aquecimento (${_nWarm}) · mostrar</button>`:''}
+          <div class="sr2-hd" aria-hidden="true"><span>SÉRIE</span><span>KG</span><span>REPS</span><span></span></div>
+          ${setRows}
+          ${stp}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2898,29 +2916,28 @@ function buildWoLog(tabs){
 
   return`<div class="page">
     <!-- Header do treino ativo -->
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:13px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <button onclick="resetWoStopwatch();activeWorkoutType=null;render()" aria-label="Voltar" title="Voltar (mantém o registro)" style="background:var(--bg4);border:1px solid var(--border2);color:var(--sub);border-radius:12px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div style="flex:1;min-width:0">
-        ${_labTop?`<div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_labTop}</div>`:''}
-        <div class="big-num" style="font-size:16px;line-height:1.15;color:${prog.color};overflow-wrap:anywhere">${_labName}</div>
+        ${_labTop?`<div style="font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_labTop}</div>`:''}
+        <div class="big-num" style="font-size:15px;line-height:1.2;color:var(--text);overflow-wrap:anywhere">${_labName}</div>
       </div>
-      <div style="display:inline-flex;align-items:center;gap:6px;background:var(--bg4);border:1px solid var(--border2);border-radius:999px;padding:7px 11px;flex-shrink:0">
-        <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:${prog.color};fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
-        <span class="big-num" style="font-size:14px" id="wo-elapsed">${fmtElapsed(woStartTime?Date.now()-woStartTime:0)}</span>
-      </div>
+      <span style="display:inline-flex;align-items:center;gap:5px;color:var(--sub);flex-shrink:0;margin-right:2px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--him);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+        <span class="big-num" style="font-size:13px;color:var(--sub)" id="wo-elapsed">${fmtElapsed(woStartTime?Date.now()-woStartTime:0)}</span>
+      </span>
       <button class="theme-btn" onclick="toggleTheme()" aria-label="Alternar tema claro/escuro" title="Tema claro/escuro" style="background:transparent;border:1px solid var(--border2);color:var(--sub);border-radius:12px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">${_themeIco()}</button>
       <button onclick="exitWorkout()" aria-label="Encerrar treino" title="Encerrar e parar o cronômetro" style="background:transparent;border:1px solid var(--border2);color:var(--bad);border-radius:12px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
-    <!-- Status + progresso -->
-    <div id="wo-draft-note" style="display:inline-flex;align-items:center;gap:7px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.35);border-radius:999px;padding:6px 13px;margin-bottom:9px">
-      <span style="width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 1.6s infinite"></span>
-      <span style="font-size:12px;font-weight:800;color:var(--good)">Treino em andamento</span>
+    <!-- Progresso -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div class="bar" style="flex:1;height:4px;margin:0"><div class="fill" id="wo-progress-bar" style="width:0%;background:var(--him)"></div></div>
+      <span style="font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap"><span id="wo-progress-txt">0</span>/${_totalSets} séries</span>
     </div>
-    <div class="bar" style="height:6px;margin-bottom:5px"><div class="fill" id="wo-progress-bar" style="width:0%"></div></div>
-    <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:14px"><span id="wo-progress-txt">0</span> de ${_totalSets} séries concluídas</div>
+    <div id="wo-draft-note" style="display:none;font-size:11px;color:var(--muted);margin:-6px 0 10px">Treino retomado de onde você parou.</div>
     ${exCards}
     <div style="margin-top:20px">
-      <button onclick="saveWorkoutSession()" style="width:100%;padding:15px;background:${prog.color};color:#08080e;border:none;border-radius:14px;font-family:var(--fontd);font-size:14px;font-weight:700;cursor:pointer">Finalizar e salvar treino</button>
+      <button class="stp2-go" onclick="saveWorkoutSession()" style="width:100%;height:50px">Finalizar e salvar treino</button>
     </div>
   </div>`;
 }
@@ -2945,10 +2962,19 @@ function _woCurSet(ei){
   }
   return -1;
 }
+// Exercício aberto: null = automático (o 1º com série pendente). Tocar no nome abre outro.
+let _woOpen=null, _woLastOpen=null, _woOpenType=null;
+function _woOpenEx(ei){ _woOpen=ei; _woRefreshCur(); }
+function _woWarm(ei){
+  const c=document.getElementById('exc_'+ei), b=document.getElementById('exw_'+ei); if(!c) return;
+  const on=c.classList.toggle('show-warm');
+  if(b){ b.textContent=b.textContent.replace(/· (mostrar|esconder)$/, on?'· esconder':'· mostrar'); b.setAttribute('aria-expanded',String(on)); }
+}
 // Destaca a linha atual e põe os valores dela nos steppers (esconde quando o exercício acabou).
 function _woRefreshCur(only){
   try{
     const prog=getWorkoutProgram()[activeWorkoutType]; if(!prog) return;
+    if(_woOpenType!==activeWorkoutType){ _woOpenType=activeWorkoutType; _woOpen=null; _woLastOpen=null; }
     prog.exercises.forEach((ex,ei)=>{
       if(only!=null && ei!==only) return;
       const cur=_woCurSet(ei);
@@ -2962,6 +2988,22 @@ function _woRefreshCur(only){
       p.querySelector('.stp2-r').textContent=(r&&(r.value||r.placeholder))||'—';
       p.querySelector('.stp2-lbl').textContent='Concluir série '+n;
     });
+    // Acordeão (como no canvas): só o exercício atual aberto; os outros viram 1 linha.
+    let open=_woOpen;
+    if(open==null||!prog.exercises[open]){ open=prog.exercises.findIndex((_,ei)=>_woCurSet(ei)>=0); if(open<0) open=null; }
+    prog.exercises.forEach((ex,ei)=>{
+      const card=document.getElementById('exc_'+ei); if(!card) return;
+      const work=ex.sets.map((s,si)=>s.t==='work'?si:-1).filter(si=>si>=0);
+      const done=work.filter(si=>document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done')).length;
+      const isOpen=ei===open, complete=work.length>0&&done===work.length;
+      card.classList.toggle('collapsed',!isOpen);
+      card.classList.toggle('complete',complete);
+      card.querySelector('.exc2-top')?.setAttribute('aria-expanded',String(isOpen));
+      const sum=document.getElementById('exs_'+ei);
+      if(sum) sum.textContent=complete?`${done} séries ✓`:(done?`${done} de ${work.length} séries`:(sum.dataset.meta||''));
+    });
+    if(open!=null&&_woLastOpen!=null&&open!==_woLastOpen){ const c=document.getElementById('exc_'+open); if(c) setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),80); }
+    _woLastOpen=open;
   }catch(e){ console.warn('Série atual não atualizada:',e); }
 }
 function _woStep(ei,f,d){
@@ -3016,6 +3058,7 @@ function doneSet(exIdx,si,restSecs,exIdxOrName,isWork,prevW,prevR,maxLoad){
   }
   saveWoDraft();
   updateWoProgress();
+  if(_woOpen===exIdx&&_woCurSet(exIdx)<0) _woOpen=null;
   _woRefreshCur(exIdx);
 }
 
