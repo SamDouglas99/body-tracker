@@ -361,6 +361,22 @@ html[data-theme="light"] .nu-pri{color:#fff}
 .nu-for{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:var(--sub)}
 .nu-for select{width:100%;min-height:44px;font-size:14px}
 .nu-pri:disabled{opacity:.45;cursor:not-allowed}
+.nu-costcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;text-align:left;cursor:pointer;color:var(--text);font-family:var(--font)}
+.nu-costcard small{font-size:13px;color:var(--sub);margin-left:4px;font-weight:700}
+.nu-swap{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--border);font-size:13px}
+.nu-swap:first-of-type{border-top:none}
+.nu-swap span{font-size:12px;color:var(--sub);line-height:1.45}
+.nu-rank{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
+.nu-rank b{font-family:var(--font2)}
+.nu-price{display:grid;grid-template-columns:auto 1fr auto 70px 110px;gap:8px;align-items:center;margin-top:12px;font-size:13px;font-weight:700;color:var(--sub)}
+.nu-price input,.nu-price select{min-height:44px;width:100%;font-size:16px}
+.wo-adj{display:flex;align-items:center;gap:6px;margin:-4px 0 8px;overflow-x:auto;scrollbar-width:none}
+.wo-adj::-webkit-scrollbar{display:none}
+.wo-adj-l{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;flex-shrink:0;margin-right:2px}
+.wo-adj-b{flex-shrink:0;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--sub);font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer}
+.wo-adj-b.on{border-color:var(--him);color:var(--him);background:var(--himb)}
+.wo-adj-n{font-size:12px;color:var(--sub);line-height:1.45;margin:0 0 10px}
+.exc2.wo-off{opacity:.55}
 .nu-why{font-size:12px;color:var(--sub);line-height:1.55;background:var(--bg4);border-radius:10px;padding:10px 12px}
 .set-delta{font-size:8px;font-weight:800;text-align:center;margin-top:4px;line-height:1.15;letter-spacing:.2px;min-height:10px}
 /* ── Editar Treinos ── */
@@ -1495,7 +1511,7 @@ let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0, timerTotal=0;
 let woPrgExercise=null;
 // Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
-const APP_VERSION='01/11 · 4';
+const APP_VERSION='02/11 · 1';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -2749,7 +2765,9 @@ function buildWoLog(tabs){
   if(!activeWorkoutType||activeWorkoutType==='rest'){
     // ── Recomendação inteligente de hoje ──
     const _sched=getActiveSchedule();
-    const _todayPlan=_sched[(new Date().getDay()+6)%7]||{type:'rest'};
+    let _todayPlan=_sched[(new Date().getDay()+6)%7]||{type:'rest'};
+    const _missRec=getMissedWorkouts();
+    if(_todayPlan.type==='rest'&&_missRec.length&&getWorkoutProgram()[_missRec[_missRec.length-1].type]) _todayPlan={type:_missRec[_missRec.length-1].type, recover:_missRec[_missRec.length-1].day};
     const _prog=getWorkoutProgram();
     const _isRest=_todayPlan.type==='rest';
     const _p=_prog[_todayPlan.type];
@@ -2762,6 +2780,7 @@ function buildWoLog(tabs){
     const _trainedToday=_allW.some(s=>localDayKey(new Date(s.date))===getTodayKey());
     let _insight;
     if(_isRest) _insight='Dia de descanso no seu plano. Recuperação é onde o músculo cresce.';
+    else if(_todayPlan.recover) _insight=`Hoje era descanso, mas o treino de ${_todayPlan.recover} ficou sem registro. Fazendo hoje, sua semana fecha completa.`;
     else if(_trainedToday) _insight='Você já treinou hoje. 💪 Se for de novo, mantenha a intensidade.';
     else if(_daysSince!==null&&_daysSince>=3) _insight=`Faz ${_daysSince} dias desde o último treino — bora voltar com tudo!`;
     else if(_plannedWk>0&&_doneWk>=_plannedWk) _insight='Meta semanal batida! Cada treino extra é bônus. 🔥';
@@ -2822,19 +2841,25 @@ function buildWoLog(tabs){
   const _kg=n=>(Math.round(n*10)/10).toLocaleString('pt-BR');
   const _icoInfo='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
   const _icoEdit='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>';
-  const exCards=prog.exercises.map((ex,exIdx)=>{
+  const _adjW=_woAdjGet();
+  const exCards=prog.exercises.map((ex0,exIdx)=>{
+    if(_adjW.off[exIdx]) return `<div class="ex-log-card exc2 wo-off" id="exc_${exIdx}"><div class="ex-log-header"><div style="width:100%;display:flex;align-items:center;gap:8px">
+      <span class="exc2-idx">${exIdx+1}/${_nEx}</span><span class="ex-log-name" style="flex:1;min-width:0">${ex0.name}</span>
+      <button class="nu-link" onclick="woRestoreEx(${exIdx})">fora hoje · trazer</button></div></div></div>`;
+    const ex=_adjW.swaps[exIdx]?{...ex0,name:_adjW.swaps[exIdx]}:ex0;
+    const _cutSet=_woCutSet(_adjW,ex0,exIdx);
     const max=getMaxLoad(ex.name);
     const _ld=_lastDone(ex.name,activeWorkoutType);
     const lastSession=_ld?_ld.session:getWorkouts().slice().reverse().find(s=>s.type===activeWorkoutType);
     const lastWorkSets=_ld?_ld.sets:[];
-    const isAdditional=ex.name.startsWith('🦵')||ex.name.startsWith('🔵');
+    const isAdditional=ex0.name.startsWith('🦵')||ex0.name.startsWith('🔵');
     // Todas as séries da última sessão (aquecimento/ajuste viram placeholder)
     const allLastSets=lastSession?.exercises?.find(e=>e.name===ex.name)?.sets||[];
     let workSetIdx=0;
 
     // Meta inteligente (dupla progressão): mesma carga +1 rep até o topo da faixa;
     // fechou o topo em TODAS as séries → +2,5 kg. Peso corporal (0 kg) progride só em reps.
-    const _work=ex.sets.filter(s=>s.t==='work');
+    const _work=ex.sets.filter((s,si)=>s.t==='work'&&!_cutSet.has(si));
     const _nWarm=ex.sets.length-_work.length; // aquecimento/ajuste: recolhidos por padrão
     const _rng=String(_work[0]?.r||'').split(/[–-]/).map(x=>parseInt(x)).filter(n=>n>0);
     const _lo=_rng[0]||0, _hi=_rng[1]||_rng[0]||0;
@@ -2862,6 +2887,7 @@ function buildWoLog(tabs){
 
     let workN=0;
     const setRows=ex.sets.map((s,si)=>{
+      if(_cutSet.has(si)) return ''; // série a menos hoje (treino curto/leve)
       const typeClass=s.t==='warm'?'warm':s.t==='adj'?'adj':'work';
       const isWork=s.t==='work';
       // Casa com a série equivalente da última vez em que o exercício foi FEITO
@@ -2903,10 +2929,12 @@ function buildWoLog(tabs){
             <span class="ex-log-name" style="flex:1;min-width:0;${isAdditional?'color:var(--him)':''}">${ex.name}</span>
             <span class="exc2-sum" id="exs_${exIdx}" data-meta="${_nuEsc(metaShort)}"></span>
           </button>
+          <button class="exc2-ibtn exc2-edit" onclick="woSwapEx(${exIdx})" aria-label="Trocar ou pular só hoje" title="Máquina ocupada? Trocar só hoje"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button>
           ${!isAdditional?`<button class="exc2-ibtn exc2-edit" onclick="showQuickEditSets('${activeWorkoutType}',${exIdx})" aria-label="Alterar número de séries (${_work.length})" title="Alterar número de séries">${_icoEdit}</button>`:''}
         </div>
       </div>
       <div class="exc2-main" id="exb_${exIdx}">
+        ${_adjW.swaps[exIdx]?`<div class="wo-adj-n" style="margin:0 14px 4px">Trocado só hoje · no lugar de ${ex0.name}</div>`:''}
         <div class="exc2-meta"><span>${metaHtml}</span><button class="exc2-ibtn" id="whyb_${exIdx}" onclick="_woWhy(${exIdx})" aria-expanded="false" aria-controls="why_${exIdx}" aria-label="Por que essa meta?">${_icoInfo}</button></div>
         <div class="exc2-why" id="why_${exIdx}" hidden>${whyTxt}</div>
         <div class="exc2-body">
@@ -2919,7 +2947,7 @@ function buildWoLog(tabs){
     </div>`;
   }).join('');
 
-  const _totalSets=prog.exercises.reduce((n,ex)=>n+ex.sets.filter(s=>s.t==='work').length,0);
+  const _totalSets=_woVisibleWork(prog,_adjW), _estMin=_woEstimateMin(prog,_adjW);
   const _lp=(prog.label||'').split('—'); const _labTop=_lp.length>1?_lp[0].trim():''; const _labName=(_lp.length>1?_lp.slice(1).join('—'):prog.label).trim();
   setTimeout(updateWoProgress,40);
   setTimeout(()=>_woRefreshCur(),45);
@@ -2942,8 +2970,9 @@ function buildWoLog(tabs){
     <!-- Progresso -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
       <div class="bar" style="flex:1;height:4px;margin:0"><div class="fill" id="wo-progress-bar" style="width:0%;background:var(--him)"></div></div>
-      <span style="font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap"><span id="wo-progress-txt">0</span>/${_totalSets} séries</span>
+      <span style="font-size:11px;color:var(--sub);font-weight:700;white-space:nowrap"><span id="wo-progress-txt">0</span>/${_totalSets} séries · ~${_estMin} min</span>
     </div>
+    ${_woAdjBar(prog)}
     <div id="wo-draft-note" style="display:none;font-size:11px;color:var(--muted);margin:-6px 0 10px">Treino retomado de onde você parou.</div>
     ${exCards}
     <div style="margin-top:20px">
@@ -2956,7 +2985,8 @@ function updateWoProgress(){
   try{
     const prog=getWorkoutProgram()[activeWorkoutType]; if(!prog) return;
     let total=0,done=0;
-    prog.exercises.forEach((ex,ei)=>ex.sets.forEach((s,si)=>{ if(s.t==='work'){ total++; if(document.getElementById('btn_'+ei+'_'+si)?.classList.contains('done')) done++; } }));
+    // só conta séries na tela (fora hoje / séries a menos não entram)
+    prog.exercises.forEach((ex,ei)=>ex.sets.forEach((s,si)=>{ const b=document.getElementById('btn_'+ei+'_'+si); if(s.t==='work'&&b){ total++; if(b.classList.contains('done')) done++; } }));
     const bar=document.getElementById('wo-progress-bar'), txt=document.getElementById('wo-progress-txt');
     if(bar) bar.style.width=(total?Math.round(done/total*100):0)+'%';
     if(txt) txt.textContent=done;
@@ -2968,7 +2998,7 @@ function _woCurSet(ei){
   const ex=getWorkoutProgram()[activeWorkoutType]?.exercises?.[ei]; if(!ex) return -1;
   for(let si=0;si<ex.sets.length;si++){
     if(ex.sets[si].t!=='work') continue;
-    if(!document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done')) return si;
+    const b=document.getElementById(`btn_${ei}_${si}`); if(b&&!b.classList.contains('done')) return si;
   }
   return -1;
 }
@@ -3164,7 +3194,7 @@ function resetWoStopwatch(){
 function _woDraftKey(){ return 'bt_wo_draft_'+(CP||'him'); }
 function _woDraftFresh(d){ return !!(d && d.savedAt && (Date.now()-d.savedAt) < 16*3600*1000); }
 function loadWoDraft(){ try{ return JSON.parse(localStorage.getItem(_woDraftKey())||'null'); }catch(e){ return null; } }
-function clearWoDraft(){ try{ localStorage.removeItem(_woDraftKey()); }catch(e){} }
+function clearWoDraft(){ try{ localStorage.removeItem(_woDraftKey()); }catch(e){} try{ _woAdjClear(); }catch(e){} }
 function saveWoDraft(){
   try{
     if(!activeWorkoutType||activeWorkoutType==='rest') return;
@@ -3344,7 +3374,9 @@ function saveWorkoutSession(){
     : `Nenhuma série foi marcada como feita (✓).\n\nO treino será salvo, mas NÃO vai contar para recordes, cargas e volume. Marque ✓ nas séries que você fez.\n\nSalvar mesmo assim?`;
   if(!confirm(_msg)) return;
   const session={id:Date.now(),date:new Date().toISOString(),type:activeWorkoutType,exercises:[]};
+  const _adjS=_woAdjGet();
   prog.exercises.forEach((ex,ei)=>{
+    if(_adjS.off[ei]) return; // fora hoje: não entra no histórico
     const sets=[];
     ex.sets.forEach((s,si)=>{
       const w=parseFloat(document.getElementById(`w_${ei}_${si}`)?.value)||0;
@@ -3352,7 +3384,7 @@ function saveWorkoutSession(){
       const done=document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done')||false;
       sets.push({t:s.t,weight:w,reps:r,done});
     });
-    session.exercises.push({name:ex.name,sets});
+    session.exercises.push({name:_adjS.swaps[ei]||ex.name,sets});
   });
   // Calcular volume da sessão e do último treino igual
   const tonnage=calcSessionVolume(session);
@@ -4625,7 +4657,7 @@ function _nuCloseSheet(){ try{ document.getElementById('nu-sheet')?.remove(); }c
 // ── Abas da Nutrição ──
 function _nuTabsHtml(){
   const main=[['hoje','Hoje'],['plano','Plano'],['semana','Semana']];
-  const more=_isSimple()?[['lembretes','Lembretes']]:[['mercado','Mercado'],['macros','Macros & Micros'],['suplementos','Suplementos'],['lembretes','Lembretes'],['simulador','Simulador'],['dicas','Orientações']];
+  const more=_isSimple()?[['custo','Custo da dieta'],['lembretes','Lembretes']]:[['custo','Custo da dieta'],['mercado','Mercado'],['macros','Macros & Micros'],['suplementos','Suplementos'],['lembretes','Lembretes'],['simulador','Simulador'],['dicas','Orientações']];
   return `<div class="nu-seg" role="tablist" aria-label="Nutrição">${main.map(([k,l])=>`<button role="tab" aria-selected="${nuSubTab===k}" class="${nuSubTab===k?'on':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>
     <div class="nu-more">${more.map(([k,l])=>`<button class="${nuSubTab===k?'on':''}" onclick="nuSubTab='${k}';render()">${l}</button>`).join('')}</div>`;
 }
@@ -4865,7 +4897,7 @@ const _NU_CUSTOM=[
 // Busca curta e comum → alimento mais provável (o usuário pode trocar).
 const _NU_DEFAULT={frango:410,'peito frango':410,'frango grelhado':410,carne:377,bife:377,patinho:377,'carne moida':326,arroz:3,'arroz integral':1,
   feijao:561,ovo:488,'ovo cozido':488,pao:53,'pao frances':53,queijo:463,mozarela:463,banana:182,batata:91,'batata doce':88,iogurte:448,cafe:471,
-  acai:168,'pao forma':52,salada:78,aveia:7,tapioca:551,presunto:439,requeijao:468,amendoim:558,leite:'c_leite','leite desnatado':'c_leite_d',whey:'c_whey',
+  acai:168,'pao forma':52,salada:78,fruta:182,aveia:7,tapioca:551,presunto:439,requeijao:468,amendoim:558,leite:'c_leite','leite desnatado':'c_leite_d',whey:'c_whey',
   'pasta amendoim':'c_pasta_amend',granola:'c_granola',hamburguer:417,coxinha:386,feijoada:540,cuscuz:533};
 // Gramas por medida caseira (aproximado). Específico do alimento vence o genérico.
 const _NU_UNITS={unidade:100,fatia:20,colher_sopa:15,colher_cha:5,xicara:120,copo:200,concha:100,pedaco:60,file:100,bife:100,porcao:100,scoop:30,pote:170,lata:350,prato:250,escumadeira:90,tigela:300};
@@ -4917,8 +4949,14 @@ function _nuSearch(q,n){
   });
   scored.sort((a,b)=>b.s-a.s);
   const out=scored.slice(0,n||6).map(x=>x.f);
-  const dk=_NU_DEFAULT[qt.join(' ')];
-  if(dk!=null){ const d=_nuFoodById(dk); if(d) return [d].concat(out.filter(f=>f!==d)).slice(0,n||6); }
+  let d=_nuFoodById(_NU_DEFAULT[qt.join(' ')]);
+  // "arroz cozido", "feijão cozido": padrão do alimento se ele já estiver nesse estado
+  if(!d&&hasState){
+    const st=qt.filter(w=>_NU_STATE.has(w)), base=qt.filter(w=>!_NU_STATE.has(w)).join(' ');
+    const c=_nuFoodById(_NU_DEFAULT[base]);
+    if(c&&st.every(w=>c.toks.some(x=>x.slice(0,5)===w.slice(0,5)))) d=c;
+  }
+  if(d) return [d].concat(out.filter(f=>f!==d)).slice(0,n||6);
   return out;
 }
 function _nuUnitGrams(food,unit){
@@ -4930,6 +4968,7 @@ function _nuUnitGrams(food,unit){
 // Um pedaço do texto → {qty, unit, query}
 function _nuParseSeg(seg){
   let w=_nuNorm(seg).split(' ').filter(Boolean), qty=null, unit=null, k=0;
+  if(/^\d+(?:[.,]\d+)?x$/.test(w[0]||'')) w[0]=w[0].slice(0,-1); // "2x ovo"
   const glued=/^(\d+(?:[.,]\d+)?)(kg|g|gr|ml|l)$/.exec(w[0]||'');
   if(glued){ qty=parseFloat(glued[1].replace(',','.')); unit={gr:'g'}[glued[2]]||glued[2]; k=1; }
   else if(/^\d+(?:[.,]\d+)?$/.test(w[0]||'')){ qty=parseFloat(w[0].replace(',','.')); k=1; }
@@ -5065,11 +5104,304 @@ function nuRegSave(){
   const tk=extras.reduce((a,x)=>a+x.kcal,0);
   _nuSnack(`Registrado: ${_num(tk)} kcal`,()=>_nuRestore(s));
 }
+// ══════════════════════════════════════
+// QUANTO CUSTA SUA DIETA — preços são SEUS (digitados ou das suas compras), nada inventado.
+// O plano (opção 1 de cada refeição) é lido com o mesmo interpretador da TACO. Comida pronta
+// (cozida/grelhada) é convertida para o peso CRU, que é como se compra, pelos pares da TACO.
+// ══════════════════════════════════════
+let _nuCostEdit=null;
+function getFoodPrices(){ return _settingGet('foodPrices','bt_food_prices',{})||{}; }
+function saveFoodPrices(m){ _settingSet('foodPrices', m||{}, 'bt_food_prices'); }
+// Forma crua do alimento (como se compra) e quantos g crus rendem 1 g pronto (pela energia da TACO).
+function _rawOf(food){
+  if(!food||food.src!=='TACO') return {raw:food, f:1};
+  const parts=food.name.split(',').map(s=>s.trim());
+  const last=_nuNorm(parts[parts.length-1]).split(/[ /]/)[0];
+  if(!/^(cozid|grelhad|assad)/.test(last)) return {raw:food, f:1};
+  const base=parts.slice(0,-1).join(', ');
+  const raw=_nuFoods().find(x=>x.src==='TACO'&&(x.name===base+', cru'||x.name===base+', crua'))||
+            (/^Ovo, de galinha/.test(food.name)?_nuFoods().find(x=>x.name==='Ovo, de galinha, inteiro, cru'):null);
+  if(!raw||!(raw.kcal>0)) return {raw:food, f:1};
+  return {raw, f:Math.max(0.2,Math.min(2,food.kcal/raw.kcal))};
+}
+function _pricePerG(foodId){
+  const fp=getFoodPrices()[foodId]; if(!fp||!(+fp.price>0)||!(+fp.per>0)) return null;
+  const f=_nuFoodById(foodId); const u=fp.unit||'kg';
+  if(u==='kg'||u==='l') return fp.price/(fp.per*1000);
+  if(u==='g'||u==='ml') return fp.price/fp.per;
+  if(u==='un'){ const ug=_nuUnitGrams(f,'unidade').g; return fp.price/(fp.per*ug); }
+  return null;
+}
+// Itens do plano por dia (agrupados por alimento) + o que não deu para reconhecer.
+function _dietItems(){
+  const agg={}, unparsed=[];
+  (getMeals()||[]).forEach(m=>{
+    const txt=(m.options&&m.options[0])||''; if(!txt) return;
+    _nuParseText(txt).forEach(it=>{
+      if(!it.food){ unparsed.push({meal:m.meal, seg:it.seg}); return; }
+      const k=String(it.food.id); const a=agg[k]||(agg[k]={food:it.food, gDay:0, meals:[]});
+      a.gDay+=it.grams; if(!a.meals.includes(m.meal)) a.meals.push(m.meal);
+    });
+  });
+  return {items:Object.values(agg), unparsed};
+}
+function getDietCost(){
+  const {items, unparsed}=_dietItems();
+  let day=0, kcalAll=0, kcalPriced=0, protDay=0;
+  const rows=items.map(a=>{
+    const r=_rawOf(a.food); const rawG=a.gDay*r.f; const ppg=_pricePerG(a.food.id);
+    const kc=a.food.kcal*a.gDay/100, pr=a.food.p*a.gDay/100; kcalAll+=kc; protDay+=pr;
+    const cost=ppg!=null?rawG*ppg:null; if(cost!=null){ day+=cost; kcalPriced+=kc; }
+    return {...a, raw:r.raw, rawF:r.f, rawG, ppg, cost, kcal:kc, prot:pr};
+  }).sort((x,y)=>(y.cost||0)-(x.cost||0)||y.kcal-x.kcal);
+  return {rows, unparsed, day, month:day*30, coverage:kcalAll>0?kcalPriced/kcalAll:0, protDay};
+}
+// R$ por 100 g de proteína (alimentos com preço e ≥ 8 g de proteína/100 g)
+function _protCost(food){ const ppg=_pricePerG(food.id); if(ppg==null||!(food.p>=8)) return null; const r=_rawOf(food); return ppg*r.f/(food.p/100)*100; }
+function _costSwaps(rows){
+  const priced=Object.keys(getFoodPrices()).map(_nuFoodById).filter(f=>f&&_protCost(f)!=null);
+  const out=[];
+  rows.filter(r=>r.cost!=null&&r.food.p>=8&&r.prot>=10).forEach(r=>{
+    const cur=_protCost(r.food); let best=null;
+    priced.forEach(f=>{ if(String(f.id)===String(r.food.id)) return; const c=_protCost(f); if(c!=null&&c<cur*0.85&&(!best||c<best.c)) best={f,c}; });
+    if(best){
+      const save=(cur-best.c)*r.prot/100*30;
+      const altG=r.prot/(best.f.p/100), dk=altG*best.f.kcal/100-r.kcal;
+      if(save>=10) out.push({from:r.food, to:best.f, save, altG, dk, prot:r.prot});
+    }
+  });
+  return out.sort((a,b)=>b.save-a.save).slice(0,3);
+}
+// Dicas de preço tiradas das SUAS compras (notas escaneadas) e do estoque — o usuário confirma.
+function _priceHints(food){
+  const out=[]; const want=String(food.id); const rawName=_rawOf(food).raw.name;
+  const matches=n=>{ const s=_nuSearch(n,4); return s.some(f=>String(f.id)===want||f.name===rawName); };
+  const size=n=>{ const m=_nuNorm(n).match(/(\d+(?:[.,]\d+)?)\s?(kg|g|ml|l|un)\b/); return m?{per:parseFloat(m[1].replace(',','.')),unit:{ml:'ml',l:'l'}[m[2]]||m[2]}:(/\bkg\b|\(kg\)/i.test(n)?{per:1,unit:'kg'}:null); };
+  try{ (getExpenses()||[]).slice().reverse().forEach(e=>(e.items||[]).forEach(it=>{
+    if(out.length>=3||!it||!it.name||!(+it.price>0)||!matches(it.name)) return;
+    const sz=size(it.name); out.push({label:`${it.name} · ${brl(+it.price)} (compra de ${new Date(e.date).toLocaleDateString('pt-BR')})`, price:+it.price, per:sz?sz.per:null, unit:sz?sz.unit:null});
+  })); }catch(e){}
+  try{ (getEstoque()||[]).slice().reverse().forEach(it=>{
+    if(out.length>=4||!it||!it.name||!(+it.price>0)||!matches(it.name)) return;
+    const u={kg:'kg',g:'g',l:'l',ml:'ml',un:'un'}[String(it.unit||'').toLowerCase()]||null;
+    out.push({label:`${it.name} · ${brl(+it.price)} por ${it.qty||1} ${it.unit||''} (estoque)`, price:+it.price, per:u?parseFloat(String(it.qty).replace(',','.'))||1:null, unit:u});
+  }); }catch(e){}
+  return out;
+}
+
+// ── Tela de preço de um alimento ──
+function nuEditPrice(foodId){
+  const food=_nuFoodById(foodId); if(!food) return;
+  const raw=_rawOf(food).raw; const fp=getFoodPrices()[foodId]||{};
+  const hints=_priceHints(food); _nuCostEdit={id:foodId, hints};
+  _nuSheet(`<div class="lbl">Preço</div>
+    <div class="nu-h2">${_nuEsc(raw.name)}</div>
+    <div class="nu-sub">${raw!==food?'Preço de como você compra (cru). A conversão para o pronto é automática.':'Quanto você paga, do jeito que compra.'}</div>
+    <div class="nu-price">
+      <span>R$</span><input id="nu-pr-v" type="number" inputmode="decimal" step="0.01" placeholder="0,00" value="${fp.price||''}" aria-label="Preço em reais"/>
+      <span>por</span><input id="nu-pr-q" type="number" inputmode="decimal" step="0.1" placeholder="1" value="${fp.per||1}" aria-label="Quantidade"/>
+      <select id="nu-pr-u" aria-label="Unidade">${[['kg','kg'],['g','g'],['un','unidade(s)'],['l','litro(s)']].map(([v,l])=>`<option value="${v}"${(fp.unit||'kg')===v?' selected':''}>${l}</option>`).join('')}</select>
+    </div>
+    ${hints.length?`<div class="lbl" style="margin-top:14px">Das suas compras</div>${hints.map((h,k)=>`<button class="nu-opt" onclick="_nuUseHint(${k})"><span>${_nuEsc(h.label)}</span><small>usar</small></button>`).join('')}`:''}
+    <div class="nu-2btn"><button class="nu-pri" onclick="nuSavePrice()">Salvar preço</button>${fp.price?`<button class="nu-sec" onclick="nuDelPrice()">Remover</button>`:''}</div>
+    <div class="nu-fine">O preço fica salvo na sua conta e vale para todo o app.</div>`);
+  setTimeout(()=>{ try{ document.getElementById('nu-pr-v').focus(); }catch(e){} },60);
+}
+function _nuUseHint(k){
+  const h=_nuCostEdit&&_nuCostEdit.hints[k]; if(!h) return;
+  document.getElementById('nu-pr-v').value=h.price;
+  if(!h.unit) return; // sem tamanho na embalagem: o usuário completa "por quanto"
+  const ml=h.unit==='ml';
+  document.getElementById('nu-pr-q').value=ml?(h.per||1000)/1000:(h.per||1);
+  document.getElementById('nu-pr-u').value=ml?'l':h.unit;
+}
+function nuSavePrice(){
+  if(!_nuCostEdit) return;
+  const price=parseFloat(String(document.getElementById('nu-pr-v').value).replace(',','.')), per=parseFloat(String(document.getElementById('nu-pr-q').value).replace(',','.'))||1, unit=document.getElementById('nu-pr-u').value;
+  if(!(price>0)){ alert('Digite o preço.'); return; }
+  const m={...getFoodPrices()}; const prev=m[_nuCostEdit.id]?{...m[_nuCostEdit.id]}:null; const id=_nuCostEdit.id;
+  m[id]={price, per, unit, at:new Date().toISOString()};
+  saveFoodPrices(m); _nuCostEdit=null; _nuCloseSheet(); render();
+  _nuSnack('Preço salvo',()=>{ const mm={...getFoodPrices()}; if(prev) mm[id]=prev; else delete mm[id]; saveFoodPrices(mm); });
+}
+function nuDelPrice(){
+  if(!_nuCostEdit) return; const id=_nuCostEdit.id; const m={...getFoodPrices()}; const prev=m[id];
+  delete m[id]; saveFoodPrices(m); _nuCostEdit=null; _nuCloseSheet(); render();
+  _nuSnack('Preço removido',()=>{ const mm={...getFoodPrices()}; mm[id]=prev; saveFoodPrices(mm); });
+}
+
+// ── Card resumo (aba Plano) e tela completa (Nutrição → Custo) ──
+function _nuCostCard(){
+  const c=getDietCost(); if(!c.rows.length) return '';
+  return `<button class="card nu-card nu-costcard" onclick="nuSubTab='custo';render()" aria-label="Quanto custa sua dieta">
+    <span class="lbl">Quanto custa sua dieta</span>
+    ${c.day>0?`<span class="nu-big" style="font-size:26px">${brl(c.month).replace(',00','')}<small>/mês</small></span><span class="nu-mini">${brl(c.day)} por dia · ${Math.round(c.coverage*100)}% do plano com preço</span>`
+      :`<span class="nu-sub">Informe o preço de alguns alimentos e veja o custo por mês, a proteína mais barata e onde economizar.</span>`}
+  </button>`;
+}
+function buildNuCusto(subtabs){
+  const c=getDietCost();
+  if(!c.rows.length) return `<div class="page nu-page">${subtabs}<section class="card nu-card"><div class="nu-h3">Sem plano para calcular</div><div class="nu-sub">Monte ou escreva seu plano alimentar (ex.: "150g de frango + 120g de arroz") e o custo aparece aqui.</div><div class="nu-2btn"><button class="nu-pri" onclick="nuSubTab='plano';render()">Ir para o plano</button></div></section></div>`;
+  const missing=c.rows.filter(r=>r.cost==null);
+  const head=`<section class="card nu-card" aria-label="Custo da dieta">
+      <div class="lbl">Sua dieta custa</div>
+      ${c.day>0?`<div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span class="nu-big">${brl(c.month)}</span><span class="nu-val" style="color:var(--sub)">/mês</span></div>
+        <div class="nu-mini">${brl(c.day)} por dia${c.protDay>0?` · ${brl(c.day/c.protDay*100)} por 100 g de proteína da dieta`:''}</div>`
+        :`<div class="nu-sub" style="margin-top:4px">Toque num alimento abaixo e informe quanto você paga.</div>`}
+      <div class="nu-track" style="margin-top:10px"><div style="width:${Math.round(c.coverage*100)}%;background:var(--him)"></div></div>
+      <div class="nu-mini">${Math.round(c.coverage*100)}% das calorias do plano com preço${missing.length?` · faltam ${missing.length}`:''}${c.coverage<0.999&&c.day>0?'. O total sobe conforme você completa.':''}</div>
+    </section>`;
+  const swaps=_costSwaps(c.rows);
+  const swapCard=swaps.length?`<section class="card nu-card nu-ins" aria-label="Trocas que economizam">
+      <div class="lbl" style="color:var(--him)">Trocas que economizam</div>
+      ${swaps.map(s=>`<div class="nu-swap"><b>${_nuEsc(s.from.name.split(',')[0])} → ${_nuEsc(s.to.name.split(',').slice(0,2).join(','))}</b>
+        <span>−${brl(s.save)}/mês com a mesma proteína (${_num(s.prot)} g/dia ≈ ${_num(s.altG)} g de ${_nuEsc(s.to.name.split(',')[0].toLowerCase())})${Math.abs(s.dk)>=20?` · ${s.dk>0?'+':'−'}${_num(Math.abs(s.dk))} kcal/dia`:''}</span></div>`).join('')}
+      <div class="nu-fine">Comparação só entre alimentos que você já precificou.</div>
+    </section>`:'';
+  const pc=Object.keys(getFoodPrices()).map(_nuFoodById).filter(f=>f&&_protCost(f)!=null).map(f=>({f,c:_protCost(f)})).sort((a,b)=>a.c-b.c);
+  const rank=pc.length>=2?`<section class="card nu-card" aria-label="Proteína mais barata">
+      <div class="lbl">Proteína mais barata · R$ por 100 g de proteína</div>
+      ${pc.slice(0,6).map((x,k)=>`<div class="nu-rank"><span>${k+1}. ${_nuEsc(_rawOf(x.f).raw.name.split(',').slice(0,2).join(','))}</span><b>${brl(x.c)}</b></div>`).join('')}
+    </section>`:(c.day>0?`<section class="card nu-card"><div class="nu-sub">Precifique pelo menos 2 fontes de proteína (ex.: frango e ovo) para ver qual sai mais barata e onde economizar.</div></section>`:'');
+  const list=`<section class="card nu-card" aria-label="Alimentos do plano">
+      <div class="lbl" style="margin-bottom:4px">Alimentos do plano · por dia</div>
+      ${c.rows.map(r=>`<button class="nu-tl" onclick="nuEditPrice('${_nuEsc(String(r.food.id))}')">
+        <span class="nu-tl-m"><b>${_nuEsc(r.food.name)}</b><small>${_num(r.gDay)} g/dia${r.rawF!==1?` ≈ ${_num(r.rawG)} g cru`:''} · ${_nuEsc(r.meals.join(', '))}</small></span>
+        <span class="nu-tl-b" style="color:${r.cost!=null?'var(--text)':'var(--him)'}">${r.cost!=null?brl(r.cost*30)+'/mês':'+ preço'}</span></button>`).join('')}
+    </section>`;
+  const unp=c.unparsed.length?`<section class="card nu-card" aria-label="Não reconhecido"><div class="lbl" style="color:var(--warn)">Fora da conta</div>
+      <div class="nu-sub">Não reconheci no plano: ${c.unparsed.slice(0,6).map(u=>`"${_nuEsc(u.seg)}" (${_nuEsc(u.meal)})`).join(', ')}. Escreva o alimento e a quantidade no plano (ex.: "150g de patinho") para entrar no custo.</div></section>`:'';
+  return `<div class="page nu-page">${subtabs}${head}${swapCard}${list}${rank}${unp}
+    <div class="nu-fine" style="margin:4px 2px 16px">Quantidades: opção 1 de cada refeição do plano. Peso cru estimado pela TACO (pronto × energia). Preços: os seus.</div></div>`;
+}
+// ══════════════════════════════════════
+// TREINO QUE SE ADAPTA AO DIA — só para HOJE, o programa salvo não muda.
+// Curto (30/45 min): tira acessórios do fim e reduz séries até caber no tempo.
+// Leve (dormiu mal): 1 série a menos por exercício (mín. 2), mesma carga.
+// Trocar exercício (máquina ocupada): equivalente do mesmo grupo muscular.
+// Pular exercício hoje. Estado no aparelho junto do rascunho do treino.
+// ══════════════════════════════════════
+let _woAdj=null;
+function _woAdjKey(){ return 'bt_wo_adj_'+CP; }
+function _woAdjGet(){
+  const day=getTodayKey();
+  if(!_woAdj){ try{ _woAdj=JSON.parse(localStorage.getItem(_woAdjKey())||'null'); }catch(e){ _woAdj=null; } }
+  if(!_woAdj||_woAdj.type!==activeWorkoutType||_woAdj.day!==day) _woAdj={type:activeWorkoutType, day, mode:null, min:null, swaps:{}, off:{}, cut:{}};
+  return _woAdj;
+}
+function _woAdjSave(){ try{ localStorage.setItem(_woAdjKey(), JSON.stringify(_woAdj)); }catch(e){} }
+function _woAdjClear(){ _woAdj=null; try{ localStorage.removeItem(_woAdjKey()); }catch(e){} }
+// Séries de trabalho escondidas hoje (as últimas N do exercício)
+function _woCutSet(adj, ex, ei){
+  const w=ex.sets.map((s,i)=>s.t==='work'?i:-1).filter(i=>i>=0); const n=Math.min(+adj.cut[ei]||0, Math.max(0,w.length-1));
+  return new Set(w.slice(w.length-n));
+}
+function _woSetDone(ei,si){ return !!document.getElementById(`btn_${ei}_${si}`)?.classList.contains('done'); }
+function _woExHasDone(ex,ei){ return ex.sets.some((_,si)=>_woSetDone(ei,si)); }
+// Tempo estimado: série de trabalho ≈ 45 s + descanso; aquecimento ≈ 30 s + até 60 s.
+function _woEstimateMin(prog, adj){
+  let s=0;
+  prog.exercises.forEach((ex,ei)=>{
+    if(adj.off[ei]) return; const cut=_woCutSet(adj,ex,ei);
+    ex.sets.forEach((st,si)=>{ if(cut.has(si)) return; s+= st.t==='work' ? 45+(+st.rest||90) : 30+Math.min(+st.rest||60,60); });
+  });
+  return Math.round(s/60);
+}
+function _woVisibleWork(prog, adj){
+  return prog.exercises.reduce((n,ex,ei)=>{ if(adj.off[ei]) return n; const cut=_woCutSet(adj,ex,ei); return n+ex.sets.filter((s,si)=>s.t==='work'&&!cut.has(si)).length; },0);
+}
+function woSetMode(mode, min){
+  const prog=getWorkoutProgram()[activeWorkoutType]; if(!prog) return;
+  try{ saveWoDraft(); }catch(e){}
+  const adj=_woAdjGet(); const prev=JSON.parse(JSON.stringify(adj));
+  adj.off={}; adj.cut={}; adj.mode=mode||null; adj.min=min||null;
+  const isAdd=ex=>/^(🦵|🔵)/.test(ex.name);
+  const workLeft=(ex,ei)=>ex.sets.filter((s,si)=>s.t==='work'&&!_woCutSet(adj,ex,ei).has(si)).length;
+  if(mode==='leve'){
+    prog.exercises.forEach((ex,ei)=>{ if(workLeft(ex,ei)>=3) adj.cut[ei]=1; });
+  } else if(mode==='curto'){
+    const target=(min||45);
+    for(let guard=0; guard<80 && _woEstimateMin(prog,adj)>target; guard++){
+      const active=prog.exercises.map((ex,ei)=>ei).filter(ei=>!adj.off[ei]);
+      // 1º: protocolo adicional; 2º: acessórios do fim (mantém os 3 primeiros); 3º: séries
+      let ei=active.slice().reverse().find(i=>isAdd(prog.exercises[i])&&!_woExHasDone(prog.exercises[i],i));
+      if(ei==null&&active.length>3) ei=active.slice().reverse().find(i=>i>=3&&!_woExHasDone(prog.exercises[i],i));
+      if(ei!=null){ adj.off[ei]=true; continue; }
+      const red=active.slice().reverse().find(i=>workLeft(prog.exercises[i],i)>2);
+      if(red==null) break;
+      adj.cut[red]=(adj.cut[red]||0)+1;
+    }
+  }
+  _woAdj=adj; _woAdjSave(); _woOpen=null; render();
+  const msg=mode==='curto'?`Treino de ~${_woEstimateMin(prog,adj)} min montado`:mode==='leve'?'Treino leve para hoje':'Treino completo de volta';
+  _nuSnack(msg,()=>{ _woAdj=prev; _woAdjSave(); });
+}
+// Grupos musculares por palavra-chave (texto sem acento). Ordem importa (inverso antes de peito).
+const _WO_GROUPS=[['Deltoide posterior',/crucifixo inverso|face pull|deltoide post/],['Antebraço',/rosca inversa|punho|wrist/],
+  ['Peito',/supino|crucifixo|peck|voador|paralela|dips|flexao|cross ?over/],['Costas',/remada|puxada|pulley|pulldown|barra fixa|pull.?up|chin.?up|serrote|pullover/],
+  ['Ombros',/desenvolvimento|elevacao lateral|elevacao frontal|elevacao unilateral|arnold/],['Bíceps',/rosca|biceps/],['Tríceps',/triceps|frances|testa|coice/],
+  ['Quadríceps',/agachamento|leg press|extensora|hack|bulgaro|afundo|passada/],['Posterior',/flexora|stiff|terra|rdl|romeno|good morning/],
+  ['Glúteos',/pelvica|hip thrust|gluteo|abdutora|adutora|extensao de quadril/],['Panturrilha',/panturrilha|gemeos/],['Abdômen',/abdominal|prancha|crunch/]];
+function _woGroupOf(name){ const n=_nuNorm(name); for(const [g,re] of _WO_GROUPS){ if(re.test(n)) return g; } return null; }
+function _woEquivalents(name, exclude){
+  const g=_woGroupOf(name); const pool=new Set();
+  Object.values(MUSCLE_MAP).forEach(m=>(m.keys||[]).forEach(k=>pool.add(k)));
+  Object.values(getWorkoutProgram()).forEach(d=>(d.exercises||[]).forEach(e=>pool.add(e.name)));
+  const ex=new Set(exclude||[]);
+  return [...pool].filter(n=>n!==name&&!ex.has(n)&&!/^(🦵|🔵)/.test(n)&&g&&_woGroupOf(n)===g)
+    .map(n=>({n, max:getMaxLoad(n)})).sort((a,b)=>(b.max>0)-(a.max>0)||a.n.localeCompare(b.n,'pt-BR')).slice(0,10);
+}
+function woSwapEx(ei){
+  const prog=getWorkoutProgram()[activeWorkoutType]; const ex=prog&&prog.exercises[ei]; if(!ex) return;
+  const adj=_woAdjGet(); const cur=adj.swaps[ei]||ex.name;
+  const today=prog.exercises.map((e,i)=>adj.swaps[i]||e.name);
+  const eq=_woEquivalents(cur, today); _woCands=eq.map(x=>x.n);
+  const g=_woGroupOf(cur);
+  _nuSheet(`<div class="lbl">Só hoje</div>
+    <div class="nu-h2">${_nuEsc(cur)}</div>
+    <div class="nu-sub">${g?`Máquina ocupada? Troque por outro de ${_nuEsc(g)}. O programa salvo não muda.`:'Não reconheci o grupo muscular deste exercício.'}</div>
+    ${eq.map((x,k)=>`<button class="nu-opt" onclick="_woDoSwap(${ei},${k})"><span>${_nuEsc(x.n)}</span><small>${x.max>0?'recorde '+x.max+' kg':'novo'}</small></button>`).join('')}
+    ${adj.swaps[ei]?`<button class="nu-opt" onclick="_woDoSwap(${ei},-1)"><span>Voltar para ${_nuEsc(ex.name)}</span></button>`:''}
+    <button class="nu-opt" onclick="_woSkipEx(${ei})"><span>Pular este exercício hoje</span></button>`);
+}
+// Troca: limpa o que estava digitado (não feito) desse exercício p/ vir a sugestão do novo.
+let _woCands=[];
+function _woDoSwap(ei, k){
+  const prog=getWorkoutProgram()[activeWorkoutType]; if(!prog) return;
+  const name=k>=0?_woCands[k]:null;
+  try{ saveWoDraft(); }catch(e){}
+  const adj=_woAdjGet(); const prev=JSON.parse(JSON.stringify(adj));
+  if(name&&name!==prog.exercises[ei].name) adj.swaps[ei]=name; else delete adj.swaps[ei];
+  try{ const d=loadWoDraft(); if(d&&d.inputs){ Object.keys(d.inputs).forEach(k=>{ if(k.startsWith(ei+'_')&&!d.inputs[k].done) delete d.inputs[k]; }); localStorage.setItem(_woDraftKey(), JSON.stringify(d)); } }catch(e){}
+  _woAdj=adj; _woAdjSave(); _nuCloseSheet(); _woOpen=ei; render();
+  _nuSnack(name?'Trocado só por hoje':'Exercício original de volta',()=>{ _woAdj=prev; _woAdjSave(); });
+}
+function _woSkipEx(ei){
+  try{ saveWoDraft(); }catch(e){}
+  const adj=_woAdjGet(); const prev=JSON.parse(JSON.stringify(adj));
+  adj.off[ei]=true; _woAdj=adj; _woAdjSave(); _nuCloseSheet(); _woOpen=null; render();
+  _nuSnack('Exercício fora hoje',()=>{ _woAdj=prev; _woAdjSave(); });
+}
+function woRestoreEx(ei){ const adj=_woAdjGet(); delete adj.off[ei]; delete adj.cut[ei]; _woAdjSave(); _woOpen=ei; render(); }
+// Barra "Hoje" do treino em andamento
+function _woAdjBar(prog){
+  const adj=_woAdjGet(); const est=_woEstimateMin(prog,adj);
+  const b=(lbl,on,act)=>`<button class="wo-adj-b${on?' on':''}" onclick="${act}" aria-pressed="${on}">${lbl}</button>`;
+  const offN=Object.keys(adj.off).length, cutN=Object.values(adj.cut).reduce((a,n)=>a+n,0);
+  let note='';
+  if(adj.mode==='curto') note=`Treino de ~${est} min: ${offN?offN+' exercício(s) fora':'todos os exercícios'}${cutN?`, ${cutN} série(s) a menos`:''}. Comece pelos principais.`;
+  else if(adj.mode==='leve') note='Leve: 1 série a menos por exercício. Mesma carga, pare 2 reps antes da falha.';
+  else if(offN||Object.keys(adj.swaps).length) note=`Ajustado só para hoje · ~${est} min`;
+  return `<div class="wo-adj" role="group" aria-label="Ajustar o treino de hoje">
+      <span class="wo-adj-l">Hoje</span>
+      ${b('Completo',!adj.mode,"woSetMode(null)")}${b('30 min',adj.mode==='curto'&&adj.min===30,"woSetMode('curto',30)")}${b('45 min',adj.mode==='curto'&&adj.min===45,"woSetMode('curto',45)")}${b('Leve',adj.mode==='leve',"woSetMode('leve')")}
+    </div>${note?`<div class="wo-adj-n">${note}</div>`:''}`;
+}
 
 function buildNutricao(){
   // Abas principais Hoje · Plano · Semana (+ ferramentas em "Mais"). O antigo
   // 'dieta' (Acompanhamento) virou o Hoje; atalhos antigos caem nele.
-  const _valid=_isSimple()?['hoje','plano','semana','lembretes']:['hoje','plano','semana','mercado','macros','suplementos','lembretes','simulador','dicas'];
+  const _valid=_isSimple()?['hoje','plano','semana','custo','lembretes']:['hoje','plano','semana','custo','mercado','macros','suplementos','lembretes','simulador','dicas'];
   if(nuSubTab==='dieta'||!_valid.includes(nuSubTab)) nuSubTab='hoje';
   const subtabs=_nuTabsHtml();
   const d=getD();
@@ -5077,6 +5409,7 @@ function buildNutricao(){
   const w=d.curW;
   if(nuSubTab==='hoje') return buildNuHoje(subtabs);
   if(nuSubTab==='semana') return buildNuSemana(subtabs);
+  if(nuSubTab==='custo') return buildNuCusto(subtabs);
   if(nuSubTab==='lembretes') return buildLembretes(subtabs);
 
   if(nuSubTab==='mercado') return buildMercado(subtabs);
@@ -5443,6 +5776,7 @@ function buildNutricao(){
   return`<div class="page">
     <div class="sec-title" style="padding:0 0 14px">Plano Alimentar</div>
     ${subtabs}
+    ${_nuCostCard()}
     <div class="card-accent" style="margin-bottom:14px;border-color:${ac}30">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:9px;color:${ac};letter-spacing:3px;text-transform:uppercase">Objetivo: Hipertrofia</div>
