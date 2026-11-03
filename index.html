@@ -275,6 +275,7 @@ input:focus,select:focus{border-color:var(--muted)}
 .stp2-btn{width:44px;height:44px;border:none;background:none;color:var(--text);font-family:var(--font2);font-size:20px;font-weight:600;cursor:pointer;padding:0;flex-shrink:0}
 .stp2-val{font-family:var(--font2);font-size:16px;font-weight:700;white-space:nowrap}
 .stp2-val small{font-size:11px;color:var(--sub);margin-left:3px;font-weight:700}
+.stp2-hint{grid-column:1/-1;font-size:12px;color:var(--him);font-weight:700;line-height:1.4}
 .stp2-go{grid-column:1/-1;height:46px;border:none;border-radius:12px;background:var(--him);color:#08080e;font-family:var(--font2);font-size:14px;font-weight:800;cursor:pointer}
 html[data-theme="light"] .stp2-go{color:#fff}
 .theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -377,6 +378,18 @@ html[data-theme="light"] .nu-pri{color:#fff}
 .wo-adj-b.on{border-color:var(--him);color:var(--him);background:var(--himb)}
 .wo-adj-n{font-size:12px;color:var(--sub);line-height:1.45;margin:0 0 10px}
 .exc2.wo-off{opacity:.55}
+.nu-tl .nu-tl-t{width:66px;flex-shrink:0;min-height:40px;padding:0;border:none;background:transparent;color:var(--sub);font-family:var(--font2);font-size:12px;font-weight:700;cursor:pointer}
+.nu-tl-btn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:50px;border:none;background:none;color:var(--text);text-align:left;cursor:pointer;padding:0;font-family:var(--font)}
+.nu-ei{background:var(--bg4);border-radius:12px;padding:10px 12px;margin-top:8px}
+.nu-ei-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:13px}
+.nu-x2{width:36px;height:36px;margin:-8px -8px 0 0;border:none;background:none;color:var(--muted);font-size:20px;cursor:pointer;flex-shrink:0}
+.nu-ei-r{display:flex;align-items:center;gap:10px;margin-top:4px}
+.nu-ei-r small{font-size:11px;color:var(--muted);line-height:1.35}
+.nu-ei-s{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;flex-shrink:0}
+.nu-ei-s button{width:40px;height:40px;border:none;background:none;color:var(--text);font-family:var(--font2);font-size:18px;font-weight:700;cursor:pointer}
+.nu-ei-s span{min-width:74px;text-align:center;font-family:var(--font2);font-size:13px;font-weight:700}
+.nu-time{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--sub)}
+.nu-time input{min-height:40px;width:104px}
 .nu-why{font-size:12px;color:var(--sub);line-height:1.55;background:var(--bg4);border-radius:10px;padding:10px 12px}
 .set-delta{font-size:8px;font-weight:800;text-align:center;margin-top:4px;line-height:1.15;letter-spacing:.2px;min-height:10px}
 /* ── Editar Treinos ── */
@@ -1511,7 +1524,7 @@ let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0, timerTotal=0;
 let woPrgExercise=null;
 // Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
-const APP_VERSION='02/11 · 1';
+const APP_VERSION='03/11 · 1';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -2864,19 +2877,26 @@ function buildWoLog(tabs){
     const _rng=String(_work[0]?.r||'').split(/[–-]/).map(x=>parseInt(x)).filter(n=>n>0);
     const _lo=_rng[0]||0, _hi=_rng[1]||_rng[0]||0;
     const _note=(ex.sets.find(s=>s.note)||{}).note||'';
-    let metaHtml, whyTxt, metaShort='primeira vez';
+    let metaHtml, whyTxt, metaShort='primeira vez', gW=null, gR=null;
     if(lastWorkSets.length){
       const topW=Math.max(...lastWorkSets.map(s=>s.weight||0));
       const bestR=Math.max(...lastWorkSets.filter(s=>(s.weight||0)===topW).map(s=>s.reps));
       const allTop=_hi>0 && lastWorkSets.length>=_work.length && lastWorkSets.every(s=>(s.weight||0)>=topW&&s.reps>=_hi);
       const tgtR=_hi?Math.min(_hi,bestR+1):bestR+1;
       const lastTxt=topW>0?`${bestR} × ${_kg(topW)}`:`${bestR} reps`;
+      // Travado: as 3 últimas vezes com a mesma carga máxima e sem ganhar reps → deload de 10% hoje
+      const _h3=getWorkouts().map(s=>_doneWork(s.exercises?.find(e=>e.name===ex.name),s)).filter(a=>a.length).slice(-3)
+        .map(a=>{ const w=Math.max(...a.map(z=>z.weight||0)); return {w, r:Math.max(...a.filter(z=>(z.weight||0)===w).map(z=>z.reps))}; });
+      const stalled=topW>0&&!allTop&&_h3.length===3&&_h3.every(h=>h.w===_h3[0].w)&&_h3[2].r<=_h3[0].r;
       let goal;
-      if(topW<=0) goal=`${allTop?bestR+1:tgtR} reps`;
-      else goal=allTop?`${_lo||_hi} × ${_kg(topW+2.5)} kg`:`${tgtR} × ${_kg(topW)} kg`;
-      metaShort='meta '+goal;
-      metaHtml=`Meta <b>${goal}</b>&nbsp;· última ${lastTxt}`;
-      whyTxt=(allTop&&topW>0?`Você fechou ${_hi} reps em todas as séries com ${_kg(topW)} kg: hora de subir a carga.`
+      if(stalled){ gW=Math.max(2.5,Math.round(topW*0.9/2.5)*2.5); gR=_hi||bestR; goal=`${gR} × ${_kg(gW)} kg`; }
+      else if(topW<=0){ gW=0; gR=allTop?bestR+1:tgtR; goal=`${gR} reps`; }
+      else if(allTop){ gW=topW+2.5; gR=_lo||_hi; goal=`${gR} × ${_kg(gW)} kg`; }
+      else { gW=topW; gR=tgtR; goal=`${gR} × ${_kg(gW)} kg`; }
+      metaShort=(stalled?'deload ':'meta ')+goal;
+      metaHtml=stalled?`Deload <b>${goal}</b>&nbsp;· travado em ${lastTxt}`:`Meta <b>${goal}</b>&nbsp;· última ${lastTxt}`;
+      whyTxt=stalled?`Travado há 3 treinos com ${_kg(topW)} kg sem ganhar reps. Hoje: 10% mais leve e reps no topo da faixa, para recuperar e destravar. No próximo treino a meta volta para ${_kg(topW)} kg. Se travar de novo, troque a variação (⇄).`
+        :(allTop&&topW>0?`Você fechou ${_hi} reps em todas as séries com ${_kg(topW)} kg: hora de subir a carga.`
         :`Mesma carga, +1 rep${_hi?` (faixa ${_lo}–${_hi})`:''}.${topW>0?` Quando fechar ${_hi||tgtR} reps em todas as séries, a meta sobe 2,5 kg.`:''}`)
         +` Última vez: ${lastWorkSets.map(s=>s.reps+(s.weight>0?' × '+_kg(s.weight):'')).join(', ')}.`+(max>0?` Recorde: ${_kg(max)} kg.`:'');
     } else {
@@ -2896,9 +2916,10 @@ function buildWoLog(tabs){
       const prevW=lastSetData?.weight>0?lastSetData.weight:'';
       const prevR=lastSetData?.reps>0?lastSetData.reps:'';
       if(isWork) workSetIdx++;
-      // Trabalho: vem preenchido com a última vez. Aquecimento/ajuste: só placeholder.
-      const wVal=isWork&&prevW?`value="${prevW}"`:'';
-      const rVal=isWork&&prevR?`value="${prevR}"`:'';
+      // Trabalho: vem preenchido com a META de hoje (ou a última vez). Aquecimento/ajuste: só placeholder.
+      const pW=isWork?(gW!=null?(gW>0?gW:''):prevW):'', pR=isWork?(gR!=null?gR:prevR):'';
+      const wVal=isWork&&pW!==''?`value="${pW}"`:'';
+      const rVal=isWork&&pR!==''?`value="${pR}"`:'';
       const wPlaceholder=!isWork&&prevW?prevW:'';
       const rPlaceholder=!isWork?(prevR?prevR:(s.r.split('–')[1]||s.r)):'';
       const lbl=isWork?String(++workN):(s.t==='warm'?'Aq':'Aj');
@@ -2915,6 +2936,7 @@ function buildWoLog(tabs){
     const stp=_work.length?`<div class="stp2" id="stp_${exIdx}">
         <div class="stp2-box"><button class="stp2-btn" onclick="_woStep(${exIdx},'w',-2.5)" aria-label="Diminuir carga">−</button><span class="stp2-val"><span class="stp2-w">—</span><small>kg</small></span><button class="stp2-btn" onclick="_woStep(${exIdx},'w',2.5)" aria-label="Aumentar carga">+</button></div>
         <div class="stp2-box"><button class="stp2-btn" onclick="_woStep(${exIdx},'r',-1)" aria-label="Diminuir repetições">−</button><span class="stp2-val"><span class="stp2-r">—</span><small>reps</small></span><button class="stp2-btn" onclick="_woStep(${exIdx},'r',1)" aria-label="Aumentar repetições">+</button></div>
+        <div class="stp2-hint" id="stph_${exIdx}" role="status" hidden></div>
         <button class="stp2-go" onclick="_woFinishCur(${exIdx})"><span class="stp2-lbl">Concluir série</span></button>
       </div>`:'';
 
@@ -3061,6 +3083,27 @@ function _woFinishCur(ei){
   if(!(r>0)){ showSyncStatus('Preencha as reps da série antes de concluir','var(--warn)'); document.getElementById(`r_${ei}_${si}`)?.focus(); return; }
   document.getElementById(`btn_${ei}_${si}`)?.click();
 }
+// Autoajuste: pela série que acabou, ajusta a PRÓXIMA (só o que você não digitou).
+function _woAutoReg(ei,si){
+  try{
+    const ex=getWorkoutProgram()[activeWorkoutType]?.exercises?.[ei]; if(!ex) return;
+    const rng=String(ex.sets[si].r||'').split(/[–-]/).map(x=>parseInt(x)).filter(n=>n>0); const lo=rng[0]||0, hi=rng[1]||lo; if(!hi) return;
+    const w=parseFloat(document.getElementById(`w_${ei}_${si}`)?.value)||0, r=parseInt(document.getElementById(`r_${ei}_${si}`)?.value)||0; if(!(r>0)) return;
+    const kg=n=>(Math.round(n*10)/10).toLocaleString('pt-BR');
+    let nsi=-1; for(let k=si+1;k<ex.sets.length;k++){ const b=document.getElementById(`btn_${ei}_${k}`); if(ex.sets[k].t==='work'&&b&&!b.classList.contains('done')){ nsi=k; break; } }
+    let nw=w, nr=null, msg='';
+    if(w>0&&r>=hi+2){ nw=w+(w>=100?5:2.5); nr=lo||hi; msg=`Você fez ${r} (acima da faixa ${lo}–${hi}): próxima com ${kg(nw)} kg.`; }
+    else if(w>0&&lo&&r<=lo-2){ nw=Math.max(0,Math.round(w*0.95/2.5)*2.5); nr=lo; msg=`Ficou abaixo da faixa (${r} reps): próxima com ${kg(nw)} kg para manter a técnica.`; }
+    else if(r>hi) msg=`Passou da faixa: mantenha ${kg(w)} kg. Na próxima sessão a meta sobe.`;
+    else if(lo&&r<lo) msg=`Quase na faixa: mantenha a carga e busque ${lo} reps.`;
+    if(nsi>=0&&(nw!==w||nr!=null)){
+      const wi=document.getElementById(`w_${ei}_${nsi}`), ri=document.getElementById(`r_${ei}_${nsi}`);
+      if(wi&&!wi.dataset.touched) wi.value=String(nw);
+      if(ri&&nr!=null&&!ri.dataset.touched) ri.value=String(nr);
+    }
+    const h=document.getElementById('stph_'+ei); if(h){ h.textContent=nsi>=0?msg:''; h.hidden=!(nsi>=0&&msg); }
+  }catch(e){ console.warn('Autoajuste da série:',e); }
+}
 function _woWhy(ei){
   const box=document.getElementById('why_'+ei), b=document.getElementById('whyb_'+ei); if(!box) return;
   box.hidden=!box.hidden; if(b) b.setAttribute('aria-expanded',String(!box.hidden));
@@ -3096,6 +3139,7 @@ function doneSet(exIdx,si,restSecs,exIdxOrName,isWork,prevW,prevR,maxLoad){
     }catch(e){}
     startTimer(restSecs,exName);
   }
+  if(isDone&&isWork) _woAutoReg(exIdx,si);
   saveWoDraft();
   updateWoProgress();
   if(_woOpen===exIdx&&_woCurSet(exIdx)<0) _woOpen=null;
@@ -3257,7 +3301,7 @@ function _maybeResumeWorkout(){
 function _wireWoDraft(){
   if(window._woDraftWired) return; window._woDraftWired=true;
   document.addEventListener('input',e=>{ if(e.target&&e.target.classList&&e.target.classList.contains('set-inp')) _woDraftDebounced(); },true);
-  document.addEventListener('input',e=>{ const m=/^[wr]_(\d+)_\d+$/.exec((e.target&&e.target.id)||''); if(m) _woRefreshCur(+m[1]); },true);
+  document.addEventListener('input',e=>{ const m=/^[wr]_(\d+)_\d+$/.exec((e.target&&e.target.id)||''); if(m){ if(e.isTrusted) e.target.dataset.touched='1'; _woRefreshCur(+m[1]); } },true);
   // Momento CRÍTICO no celular: a página pode ser morta assim que fica oculta
   document.addEventListener('visibilitychange',()=>{ if(document.hidden) saveWoDraft(); });
   window.addEventListener('pagehide',saveWoDraft);
@@ -4379,15 +4423,18 @@ function buildMercado(subtabs){
 
 function buildLembretes(subtabs){
   const ac=PROFILES[CP].accentHex;
-  const meals=getMealTimes();
+  try{ _ensureMealTimes(); }catch(e){}
+  const _usePlan=(getMeals()||[]).length>0;
+  const meals=_usePlan?_mealSchedule().map(x=>({meal:x.meal,hour:Math.floor(x.clock/60),min:x.clock%60,icon:x.icon||'🍽️',pi:x.i})):getMealTimes();
   const wc=getWaterCfg();
   const hhmm=(h,m)=> String(h).padStart(2,'0')+':'+String(m||0).padStart(2,'0');
   const mealRows=meals.map((mt,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
     <input type="hidden" id="rt_icon_${i}" value="${(mt.icon||'🍽️')}"/>
     <span style="font-size:18px">${mt.icon||'🍽️'}</span>
-    <input id="rt_name_${i}" value="${(mt.meal||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0"/>
+    ${_usePlan?`<input type="hidden" id="rt_name_${i}" value="${(mt.meal||'').replace(/"/g,'&quot;')}"/><input type="hidden" id="rt_pi_${i}" value="${mt.pi}"/><span style="flex:1;min-width:0;font-size:13px;font-weight:700">${(mt.meal||'').replace(/</g,'&lt;')}</span>`
+      :`<input id="rt_name_${i}" value="${(mt.meal||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0"/>`}
     <input id="rt_time_${i}" type="time" value="${hhmm(mt.hour,mt.min)}" style="width:115px"/>
-    <button onclick="_remRemoveMeal(${i})" title="Remover" style="width:34px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer;flex-shrink:0">🗑️</button>
+    ${_usePlan?'':`<button onclick="_remRemoveMeal(${i})" title="Remover" style="width:34px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer;flex-shrink:0">🗑️</button>`}
   </div>`).join('');
   return `<div class="page">
     <div class="sec-title" style="padding:0 0 14px">Lembretes</div>
@@ -4398,7 +4445,8 @@ function buildLembretes(subtabs){
     <div class="card" style="margin-bottom:12px">
       <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Refeições</div>
       ${mealRows}
-      <button onclick="_remAddMeal()" style="width:100%;margin-top:10px;padding:10px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar refeição</button>
+      ${_usePlan?`<div style="font-size:11px;color:var(--muted);margin-top:8px">As refeições vêm do seu plano (Nutrição → Plano). Mudar o horário aqui muda lá também.</div>`:''}
+      <button style="${_usePlan?'display:none':''}" onclick="_remAddMeal()" style="width:100%;margin-top:10px;padding:10px;background:var(--bg4);border:1px dashed var(--border2);border-radius:10px;color:var(--sub);font-family:var(--font2);font-weight:800;cursor:pointer">+ Adicionar refeição</button>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Água</div>
@@ -4429,6 +4477,11 @@ async function _remSave(){
   // Caixa de confirmação (igual à do treino), com um resumo do que vai ser salvo
   const _lista=meals.map(m=>`${m.icon||'🍽️'} ${m.meal} ${String(m.hour).padStart(2,'0')}:${String(m.min||0).padStart(2,'0')}`).join('\n');
   if(!confirm(`Salvar estes lembretes?\n\n${_lista}\n💧 Água a cada ${cfg.every}h (${cfg.start}h–${cfg.end}h)`)) return;
+  if(document.getElementById('rt_pi_0')){ // horários voltam para o plano (fonte única)
+    const pm=(getMeals()||[]).map(m=>({...m}));
+    meals.forEach((x,i)=>{ const pi=+((document.getElementById('rt_pi_'+i)||{}).value); if(pm[pi]) pm[pi].time=String(x.hour).padStart(2,'0')+':'+String(x.min||0).padStart(2,'0'); });
+    saveDiet(pm,getSupps());
+  }
   saveMealTimes(meals);
   saveWaterCfg(cfg);
   try{ scheduleMealReminders(); scheduleWaterReminders(); }catch(e){}
@@ -4484,11 +4537,20 @@ function _mealSchedule(){
   const meals=getMeals()||[]; const times=getMealTimes()||[];
   const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase();
   const used=new Set();
+  // Tipo da refeição pelo nome → casa com o lembrete mesmo com nome diferente e dá um horário típico.
+  const KEY=[[/\bpre\b|intra/,330],[/\bpos\b/,420],[/cafe|desjejum/,450],[/colacao|lanche da manha/,600],[/almoco/,720],[/lanche|tarde/,960],[/jantar|janta/,1170],[/ceia/,1290]];
+  const kind=s=>{ const n=norm(s); const k=KEY.findIndex(([re])=>re.test(n)); return k; };
   const out=meals.map((m,i)=>{
-    let ti=times.findIndex((x,k)=>!used.has(k)&&norm(x.meal)===norm(m.meal));
-    if(ti<0&&times.length===meals.length&&!used.has(i)) ti=i;
+    const own=_hmParse(m.time);
+    let ti=-1;
+    if(own==null){
+      ti=times.findIndex((x,k)=>!used.has(k)&&norm(x.meal)===norm(m.meal));
+      if(ti<0){ const km=kind(m.meal); if(km>=0) ti=times.findIndex((x,k)=>!used.has(k)&&kind(x.meal)===km); }
+      if(ti<0&&times.length===meals.length&&!used.has(i)) ti=i;
+    }
     const t=ti>=0?times[ti]:null; if(ti>=0) used.add(ti);
-    const clock=(t&&Number.isFinite(+t.hour))?(+t.hour)*60+(+t.min||0):null;
+    const km=kind(m.meal);
+    const clock=own!=null?own:((t&&Number.isFinite(+t.hour))?(+t.hour)*60+(+t.min||0):(km>=0?KEY[km][1]:null));
     return {i, meal:m.meal||('Refeição '+(i+1)), icon:m.icon||'', macros:m.macros||{}, options:Array.isArray(m.options)?m.options:[], clock};
   });
   const n=out.length;
@@ -4506,8 +4568,9 @@ function _nuDayState(dk){
     const e=log['meal_'+m.i]||null, sk=log['x_skip_'+m.i]||null;
     const f=e?(+e.scale||1):(adj&&adj.meals.includes(m.i)?(+adj.f||1):1);
     const add=adds.filter(a=>a.to===m.i);
-    const kcal=(+m.macros.kcal||0)*f+add.reduce((s,a)=>s+(+a.kcal||0),0);
-    const prot=(+m.macros.prot||0)*f+add.reduce((s,a)=>s+(+a.p||0),0);
+    const base=e&&e.macros?{kcal:+e.macros.kcal||0,prot:+e.macros.prot||0}:{kcal:(+m.macros.kcal||0)*f,prot:(+m.macros.prot||0)*f};
+    const kcal=base.kcal+add.reduce((s,a)=>s+(+a.kcal||0),0);
+    const prot=base.prot+add.reduce((s,a)=>s+(+a.p||0),0);
     let status='planejada';
     if(e) status='feita'; else if(sk) status=sk.replaced?'trocada':'pulada'; else if(nowMin>m.clock+60) status='atrasada';
     return {...m, entry:e, skip:sk, f, add, kcal, prot, status};
@@ -4572,7 +4635,8 @@ function nuMealTap(i){
     saveMealLog(dk,log); render(); _nuSnack('Voltou ao plano: '+it.meal,()=>_nuRestore(s));
     return;
   }
-  showMealOptionPicker(i);
+  if(it.status==='feita') showMealOptionPicker(i); // feita: trocar opção ou desmarcar
+  else nuEditMeal(i,'log');                          // a fazer: registrar com as quantidades reais
 }
 function nuRemoveExtra(ts){
   const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
@@ -4721,7 +4785,7 @@ function buildNuHoje(subtabs){
       <div class="nu-row-h"><span class="lbl">${near?'Agora':'Próxima'} · ${_hm(nx.clock)}</span><span class="nu-mini">${_num(nx.kcal)} kcal · ${_num(nx.prot)} g P${nx.f!==1?' · ajustada':''}</span></div>
       <div class="nu-h2">${_nuEsc(nx.meal)}</div>
       ${nxTxt?`<div class="nu-sub">${_nuEsc(nxTxt)}</div>`:''}
-      <div class="nu-2btn"><button class="nu-pri" onclick="nuRegisterPlanned(${nx.i})">Registrar como planejado</button>${nx.options.length>1?`<button class="nu-sec" onclick="showMealOptionPicker(${nx.i})">Trocar</button>`:''}</div>
+      <div class="nu-2btn"><button class="nu-pri" onclick="nuRegisterPlanned(${nx.i})">Registrar como planejado</button><button class="nu-sec" onclick="nuEditMeal(${nx.i},'log')">Ajustar</button></div>
     </section>`:(st.items.length?`<section class="card nu-card"><div class="nu-h3">Dia completo</div><div class="nu-sub">Todas as refeições de hoje já têm registro.</div></section>`
       :`<section class="card nu-card"><div class="nu-h3">Você ainda não tem um plano alimentar</div><div class="nu-2btn"><button class="nu-pri" onclick="nuSubTab='plano';render()">Montar meu plano</button></div></section>`);
   // 5) Água
@@ -4742,10 +4806,10 @@ function buildNuHoje(subtabs){
   const B={feita:['feita','var(--good)'],planejada:['planejada','var(--muted)'],atrasada:['sem registro','var(--warn)'],pulada:['pulada','var(--muted)'],trocada:['fora do plano','var(--info)']};
   const extras=Array.isArray(st.log.x_extra)?st.log.x_extra:[];
   const rows=st.items.map(x=>{ const b=x===nx?['próxima','var(--him)']:B[x.status];
-    return `<button class="nu-tl" onclick="nuMealTap(${x.i})" aria-label="${_nuEsc(x.meal)}: ${b[0]}">
-      <span class="nu-tl-t">${_hm(x.clock)}</span>
+    return `<div class="nu-tl"><input type="time" class="nu-tl-t" value="${_hm(x.clock)}" onchange="nuSetMealTime(${x.i},this.value)" aria-label="Horário de ${_nuEsc(x.meal)}"/>
+      <button class="nu-tl-btn" onclick="nuMealTap(${x.i})" aria-label="${_nuEsc(x.meal)}: ${b[0]}">
       <span class="nu-tl-m"><b>${_nuEsc(x.meal)}</b><small>${(x.status==='pulada'||x.status==='trocada')?_num(+x.macros.kcal||0)+' kcal planejadas':_num(x.kcal)+' kcal'}${x.status==='feita'&&x.entry?.time?' · às '+_nuEsc(x.entry.time):''}${x.f!==1&&(x.status==='planejada'||x.status==='atrasada')?' · ajustada':''}</small></span>
-      <span class="nu-tl-b" style="color:${b[1]}">${b[0]}</span></button>`; }).join('')
+      <span class="nu-tl-b" style="color:${b[1]}">${b[0]}</span></button></div>`; }).join('')
     +extras.map(x=>`<div class="nu-tl" style="cursor:default"><span class="nu-tl-t"></span><span class="nu-tl-m"><b>${_nuEsc(x.name)}</b><small>${x.qty_g?_num(x.qty_g)+' g · ':''}${_num(x.kcal)} kcal · ${x.for!=null?'no lugar de refeição':'fora do plano'}</small></span><button class="nu-link" onclick="nuRemoveExtra(${+x.ts||0})" aria-label="Remover ${_nuEsc(x.name)}">remover</button></div>`).join('');
   const timeline=`<section class="card nu-card" aria-label="Refeições de hoje"><div class="nu-row-h" style="margin-bottom:2px"><span class="lbl">Refeições de hoje</span><button class="nu-link" style="color:var(--him)" onclick="nuOpenFood(-1)">+ Registrar comida</button></div>${rows||'<div class="nu-sub">Nada registrado ainda.</div>'}</section>`;
   return `<div class="page nu-page">${subtabs}${askCard}${hero}${insight}${nextCard}${water}${timeline}</div>`;
@@ -5397,12 +5461,190 @@ function _woAdjBar(prog){
       ${b('Completo',!adj.mode,"woSetMode(null)")}${b('30 min',adj.mode==='curto'&&adj.min===30,"woSetMode('curto',30)")}${b('45 min',adj.mode==='curto'&&adj.min===45,"woSetMode('curto',45)")}${b('Leve',adj.mode==='leve',"woSetMode('leve')")}
     </div>${note?`<div class="wo-adj-n">${note}</div>`:''}`;
 }
+// ══════════════════════════════════════
+// PLANO INTELIGENTE
+// • Cada refeição do plano tem o PRÓPRIO horário (meal.time "HH:MM"); os lembretes seguem o plano.
+// • Quantidades editáveis com − / + e macros calculados pela TACO (sem digitar macro à mão).
+// • "Ajustar à meta": escala proteínas p/ bater a proteína e carboidratos p/ bater as calorias.
+// • Registrar o que comeu de verdade (quantidades ajustadas) — entry.macros vence o plano.
+// ══════════════════════════════════════
+let _nuMealEd=null, _nuFitPrev=null;
+function _hmParse(s){ const m=/^(\d{1,2}):(\d{2})$/.exec(String(s||'').trim()); return m&&+m[1]<24&&+m[2]<60?(+m[1])*60+(+m[2]):null; }
+// Lembretes (robô de push) espelham os horários do plano.
+function _syncRemindersFromPlan(meals){
+  try{
+    const list=(meals||[]).map(m=>{ const t=_hmParse(m.time); return t==null?null:{meal:m.meal, hour:Math.floor(t/60), min:t%60, icon:m.icon||'🍽️'}; }).filter(Boolean);
+    if(list.length) saveMealTimes(list);
+  }catch(e){ console.warn('Lembretes não sincronizados com o plano:',e); }
+}
+// Migração 1x: refeição sem horário próprio ganha o horário que já aparecia (lembrete casado ou estimado).
+function _ensureMealTimes(){
+  const meals=getMeals()||[]; if(!meals.length||meals.every(m=>_hmParse(m.time)!=null)) return;
+  const sch=_mealSchedule(); const out=meals.map(m=>({...m}));
+  sch.forEach(x=>{ if(out[x.i]&&_hmParse(out[x.i].time)==null) out[x.i].time=_hm(x.clock); });
+  saveDiet(out, getSupps()); _syncRemindersFromPlan(out);
+}
+function nuSetMealTime(i, v){
+  if(_hmParse(v)==null) return;
+  const prevDiet=JSON.parse(JSON.stringify(getMeals()));
+  const meals=getMeals().map(m=>({...m})); if(!meals[i]) return;
+  meals[i].time=v; saveDiet(meals, getSupps()); _syncRemindersFromPlan(meals); render();
+  _nuSnack(`${meals[i].meal} às ${v} · lembrete atualizado`,()=>{ saveDiet(prevDiet, getSupps()); _syncRemindersFromPlan(prevDiet); });
+}
+// Macros de um texto de refeição pela TACO (null se algo não foi reconhecido).
+function _nuTextMacros(txt){
+  const items=_nuParseText(txt||''); if(!items.length) return null;
+  if(items.some(it=>!it.food)) return {partial:true, items};
+  const t=items.reduce((s,it)=>{ const m=_nuItemMacros(it); return {kcal:s.kcal+m.kcal,prot:s.prot+m.p,carb:s.carb+m.c,gord:s.gord+m.g,fibra:s.fibra+it.food.fib*it.grams/100}; },{kcal:0,prot:0,carb:0,gord:0,fibra:0});
+  return {kcal:Math.round(t.kcal),prot:Math.round(t.prot),carb:Math.round(t.carb),gord:Math.round(t.gord),fibra:Math.round(t.fibra),items};
+}
+
+// ── Quantidade de um item: passo e texto ──
+function _nuItemStep(it){
+  if(['g','ml','kg','l','porcao'].includes(it.unit)) return {g:it.grams>=200?25:10};
+  return {q:(it.unit==='colher_cha'||it.unit==='colher_sopa'||it.unit==='scoop'||(it.qty||1)<1)?0.5:1};
+}
+function _fmtQ(q){ return (Math.round(q*2)/2).toLocaleString('pt-BR'); }
+function _nuItemText(it){
+  const s=it.seg.trim();
+  if(['g','ml','kg','l','porcao'].includes(it.unit)){
+    const body=s.replace(/^\s*\d+(?:[.,]\d+)?\s*(kg|gr|g|ml|l)\b\s*/i,'').replace(/\s+\d+(?:[.,]\d+)?\s*(kg|gr|g|ml|l)\b/i,'').replace(/^(de|do|da)\s+/i,'');
+    return `${Math.round(it.grams)}${it.unit==='ml'||it.unit==='l'?'ml':'g'} de ${body}`;
+  }
+  const num=/^\s*(\d+(?:[.,]\d+)?\s*[x×]?|um|uma|dois|duas|tr[eê]s|meio|meia|\d+\/\d+)(?=\s)/i;
+  return num.test(s)?s.replace(num,_fmtQ(it.qty)+(/[x×]\s*$/.test(s.match(num)[0])?'×':'')):`${_fmtQ(it.qty)} ${s}`;
+}
+function _nuSetQty(it, q){
+  const step=_nuItemStep(it).q||1; q=Math.max(0, Math.round(q/step)*step); const ug=(it.grams&&(it.qty||1))?it.grams/(it.qty||1):_nuUnitGrams(it.food,it.unit||'unidade').g;
+  it.qty=q; it.grams=Math.round(q*ug); it.seg=_nuItemText(it);
+}
+function _nuSetGrams(it, g){ it.grams=Math.max(0,Math.round(g)); if(['g','ml','kg','l'].includes(it.unit)) it.qty=it.grams; it.unit=['ml','l'].includes(it.unit)?'ml':'g'; it.approx=false; it.seg=_nuItemText(it); }
+function _nuStepItem(it, dir){ const st=_nuItemStep(it); if(st.g!=null) _nuSetGrams(it, it.grams+dir*st.g); else _nuSetQty(it,(it.qty||1)+dir*st.q); }
+
+// ── Editor de uma refeição (plano) ou do que foi comido (registro) ──
+function nuEditMeal(i, mode, opt){
+  const m=getMeals()[i]; if(!m) return;
+  const st=_nuDayState(); const row=st.items.find(x=>x.i===i);
+  opt=Math.max(0,Math.min((m.options||[]).length-1, opt||0));
+  const items=_nuParseText((m.options||[])[opt]||'');
+  const f=mode==='log'&&row?row.f:1;
+  if(f!==1) items.forEach(it=>{ if(it.food){ const st2=_nuItemStep(it); if(st2.g!=null) _nuSetGrams(it,it.grams*f); else _nuSetQty(it,(it.qty||1)*f); } });
+  _nuMealEd={i, mode, opt, items, time:m.time||(row?_hm(row.clock):'')};
+  _nuRenderMealEd();
+}
+function _nuMealEdTotals(){
+  const t=_nuMealEd.items.reduce((s,it)=>{ const m=_nuItemMacros(it); return {kcal:s.kcal+m.kcal,p:s.p+m.p,c:s.c+m.c,g:s.g+m.g,fib:s.fib+(it.food?it.food.fib*it.grams/100:0)}; },{kcal:0,p:0,c:0,g:0,fib:0});
+  return t;
+}
+function _nuRenderMealEd(){
+  const E=_nuMealEd; if(!E) return; const m=getMeals()[E.i]; const t=_nuMealEdTotals(); const unk=E.items.filter(it=>!it.food);
+  const opts=(m.options||[]);
+  const rows=E.items.map((it,k)=>{ const mm=_nuItemMacros(it);
+    return `<div class="nu-ei">
+      <div class="nu-ei-h"><b>${_nuEsc(it.seg)}</b><button class="nu-x2" onclick="_nuEdDel(${k})" aria-label="Tirar ${_nuEsc(it.seg)}">×</button></div>
+      ${it.food?`<div class="nu-ei-r">
+        <div class="nu-ei-s"><button onclick="_nuEdStep(${k},-1)" aria-label="Menos">−</button><span>${['g','ml','kg','l','porcao'].includes(it.unit)?_num(it.grams)+' g':_fmtQ(it.qty)+' · '+_num(it.grams)+' g'}</span><button onclick="_nuEdStep(${k},1)" aria-label="Mais">+</button></div>
+        <small>${_num(mm.kcal)} kcal · ${_num(mm.p)} g P<br>${_nuEsc(it.food.name.split(',').slice(0,2).join(','))}</small></div>`
+      :`<div class="nu-mini" style="color:var(--warn)">Não achei na TACO: escreva de outro jeito (ex.: "150g de patinho").</div>`}
+    </div>`; }).join('');
+  _nuSheet(`<div class="lbl">${E.mode==='log'?'Registrar o que você comeu':'Ajustar refeição do plano'}</div>
+    <div class="nu-row-h" style="align-items:flex-end"><div class="nu-h2">${_nuEsc(m.meal)}</div>
+      ${E.mode==='plan'?`<label class="nu-time">Horário <input type="time" value="${_nuEsc(E.time||'')}" onchange="_nuMealEd.time=this.value" aria-label="Horário da refeição"/></label>`:''}</div>
+    ${opts.length>1?`<div class="nu-more" style="margin-top:8px">${opts.map((_,k)=>`<button class="${k===E.opt?'on':''}" onclick="nuEditMeal(${E.i},'${E.mode}',${k})">Opção ${k+1}</button>`).join('')}</div>`:''}
+    ${rows||'<div class="nu-sub">Sem alimentos nesta opção.</div>'}
+    <div class="nu-qrow"><input id="nu-ed-add" class="nu-q" placeholder="+ adicionar (ex.: 1 banana)" aria-label="Adicionar alimento" onkeydown="if(event.key==='Enter'){_nuEdAdd();}"/><button class="nu-mic" onclick="_nuEdAdd()" aria-label="Adicionar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+    <div class="nu-ok">${_num(t.kcal)} kcal · ${_num(t.p)} g proteína · ${_num(t.c)} g carbo · ${_num(t.g)} g gordura${unk.length?` · ${unk.length} item(ns) fora da conta`:''}</div>
+    <div class="nu-2btn"><button class="nu-pri" onclick="${E.mode==='log'?'_nuEdLog()':'_nuEdSave()'}"${t.kcal>0?'':' disabled'}>${E.mode==='log'?'Registrar':'Salvar no plano'}</button></div>
+    <div class="nu-fine">Calorias e macros calculados pela TACO. ${E.mode==='plan'?'Salvar troca o texto e os macros desta opção; o horário vale para lembretes também.':'O plano não muda; só o registro de hoje.'}</div>`);
+}
+function _nuEdStep(k,dir){ const it=_nuMealEd&&_nuMealEd.items[k]; if(!it||!it.food) return; _nuStepItem(it,dir); if(!(it.grams>0)) _nuMealEd.items.splice(k,1); _nuRenderMealEd(); }
+function _nuEdDel(k){ if(!_nuMealEd) return; _nuMealEd.items.splice(k,1); _nuRenderMealEd(); }
+function _nuEdAdd(){ const inp=document.getElementById('nu-ed-add'); const v=(inp&&inp.value||'').trim(); if(!v||!_nuMealEd) return; _nuMealEd.items.push(..._nuParseText(v)); _nuRenderMealEd(); }
+function _nuEdSave(){
+  const E=_nuMealEd; if(!E) return; const t=_nuMealEdTotals();
+  if(E.items.some(it=>!it.food)&&!confirm('Alguns itens não foram reconhecidos e ficam fora dos macros. Salvar assim mesmo?')) return;
+  const prev=JSON.parse(JSON.stringify(getMeals()));
+  const meals=getMeals().map(m=>({...m, options:(m.options||[]).slice()}));
+  const m=meals[E.i]; m.options[E.opt]=E.items.map(_nuItemText).join(' + ');
+  if(E.opt===0) m.macros={kcal:Math.round(t.kcal),prot:Math.round(t.p),carb:Math.round(t.c),gord:Math.round(t.g),fibra:Math.round(t.fib)};
+  if(E.mode==='plan'&&_hmParse(E.time)!=null) m.time=E.time;
+  saveDiet(meals, getSupps()); _syncRemindersFromPlan(meals);
+  _nuMealEd=null; _nuCloseSheet(); render();
+  _nuSnack(`${m.meal} atualizada · ${_num(t.kcal)} kcal`,()=>{ saveDiet(prev,getSupps()); _syncRemindersFromPlan(prev); });
+}
+function _nuEdLog(){
+  const E=_nuMealEd; if(!E) return; const t=_nuMealEdTotals();
+  const s=_nuSnapshot(); const dk=getTodayKey(); const log=getMealLog(dk);
+  log['meal_'+E.i]={option:E.opt+1, time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), ts:Date.now(),
+    items:E.items.filter(it=>it.food).map(it=>({name:it.seg, food:it.food.name, qty_g:it.grams})),
+    macros:{kcal:Math.round(t.kcal),prot:Math.round(t.p),carb:Math.round(t.c),gord:Math.round(t.g),fibra:Math.round(t.fib)}};
+  delete log['x_skip_'+E.i];
+  saveMealLog(dk,log); const nm=getMeals()[E.i]?.meal||'Refeição'; _nuMealEd=null; _nuCloseSheet(); render();
+  _nuSnack(`${nm} registrada · ${_num(t.kcal)} kcal`,()=>_nuRestore(s));
+}
+
+// ── Ajustar o plano inteiro à meta (proteína primeiro, depois calorias pelo carboidrato) ──
+function _nuRoundItem(it){ const st=_nuItemStep(it); if(st.g!=null){ const r=it.grams>=100?10:5; _nuSetGrams(it, Math.max(r, Math.round(it.grams/r)*r)); } else _nuSetQty(it, Math.max(0.5,(it.qty||1))); }
+function _nuFitPlanCalc(){
+  const T=getNutriTargets(); if(!(T.kcal>0)) return null;
+  const meals=getMeals()||[];
+  const plan=meals.map((m,i)=>({i, m, items:_nuParseText((m.options||[])[0]||'')}));
+  const all=plan.flatMap(x=>x.items); if(!all.length) return null;
+  const known=all.filter(it=>it.food), unknown=all.filter(it=>!it.food);
+  const mac=it=>_nuItemMacros(it);
+  const sum=(arr,k)=>arr.reduce((s,it)=>s+mac(it)[k],0);
+  const before={kcal:sum(known,'kcal'), p:sum(known,'p')};
+  const isProt=it=>it.food.p*4>=0.35*it.food.kcal&&it.food.p>=8, isCarb=it=>!isProt(it)&&it.food.c*4>=0.5*it.food.kcal;
+  const protI=known.filter(isProt), carbI=known.filter(isCarb);
+  // Proteína e calorias juntas: Pp·fp + Pc·fc + Po = meta P ; Kp·fp + Kc·fc + Ko = meta kcal
+  const others=known.filter(it=>!isProt(it)&&!isCarb(it));
+  const Pp=sum(protI,'p'), Pc=sum(carbI,'p'), Po=sum(others,'p'), Kp=sum(protI,'kcal'), Kc=sum(carbI,'kcal'), Ko=sum(others,'kcal');
+  const cl=v=>Math.max(0.5,Math.min(2,v));
+  let fp=1, fc=1; const det=Pp*Kc-Kp*Pc;
+  if(Pp>0&&Kc>0&&Math.abs(det)>1e-6){ fp=((T.prot-Po)*Kc-Pc*(T.kcal-Ko))/det; fc=(Pp*(T.kcal-Ko)-Kp*(T.prot-Po))/det; }
+  else if(Pp>0){ fp=(T.prot-Po-Pc)/Pp; } else if(Kc>0){ fc=(T.kcal-Ko-Kp)/Kc; }
+  if(fp<0.5||fp>2){ fp=cl(fp); if(Kc>0) fc=(T.kcal-Ko-Kp*fp)/Kc; }
+  if(fc<0.5||fc>2){ fc=cl(fc); if(Pp>0) fp=cl((T.prot-Po-Pc*fc)/Pp); }
+  fp=cl(fp); fc=cl(fc);
+  const scale=(it,f)=>{ const st=_nuItemStep(it); if(st.g!=null) _nuSetGrams(it,it.grams*f); else _nuSetQty(it,(it.qty||1)*f); };
+  protI.forEach(it=>scale(it,fp)); carbI.forEach(it=>scale(it,fc));
+  known.forEach(_nuRoundItem);
+  const after={kcal:sum(known,'kcal'), p:sum(known,'p')};
+  const rows=plan.map(x=>{ const k=x.items.filter(it=>it.food); return {i:x.i, meal:x.m.meal, text:x.items.map(_nuItemText).join(' + '), kcal:k.reduce((s,it)=>s+mac(it).kcal,0), p:k.reduce((s,it)=>s+mac(it).p,0),
+    macros:k.reduce((s,it)=>{ const m=mac(it); return {kcal:s.kcal+m.kcal,prot:s.prot+m.p,carb:s.carb+m.c,gord:s.gord+m.g,fibra:s.fibra+it.food.fib*it.grams/100}; },{kcal:0,prot:0,carb:0,gord:0,fibra:0}), changed:x.items.some(it=>it.food)}; });
+  return {T, before, after, rows, unknown, fp, fc};
+}
+function _nuFitCard(){
+  const c=_nuFitPlanCalc(); if(!c) return '';
+  const offK=c.before.kcal/c.T.kcal-1, offP=c.before.p/c.T.prot-1;
+  if(Math.abs(offK)<0.05&&Math.abs(offP)<0.07) return `<div class="card nu-card"><div class="lbl" style="color:var(--good)">Plano na meta</div><div class="nu-sub">Pela TACO, seu plano soma ${_num(c.before.kcal)} kcal e ${_num(c.before.p)} g de proteína (meta ${_num(c.T.kcal)} / ${_num(c.T.prot)}).</div></div>`;
+  return `<div class="card nu-card nu-ins"><div class="lbl" style="color:var(--him)">Ajustar plano à meta</div>
+    <div class="nu-sub">Pela TACO, seu plano soma <b>${_num(c.before.kcal)} kcal</b> e <b>${_num(c.before.p)} g de proteína</b>; a meta é ${_num(c.T.kcal)} kcal e ${_num(c.T.prot)} g.${c.unknown.length?` ${c.unknown.length} item(ns) não reconhecidos ficam como estão.`:''}</div>
+    <div class="nu-2btn"><button class="nu-pri" onclick="nuFitPlan()">Ver ajuste das quantidades</button></div></div>`;
+}
+function nuFitPlan(){
+  const c=_nuFitPlanCalc(); if(!c) return; _nuFitPrev=c;
+  _nuSheet(`<div class="lbl" style="color:var(--him)">Ajuste das quantidades</div>
+    <div class="nu-h2">${_num(c.before.kcal)} → ${_num(c.after.kcal)} kcal · ${_num(c.before.p)} → ${_num(c.after.p)} g de proteína</div>
+    <div class="nu-sub">Meta: ${_num(c.T.kcal)} kcal e ${_num(c.T.prot)} g. Ajustei primeiro as proteínas (×${c.fp.toFixed(2).replace('.',',')}) e depois os carboidratos (×${c.fc.toFixed(2).replace('.',',')}), com medidas arredondadas.</div>
+    ${c.rows.filter(r=>r.changed).map(r=>`<div class="nu-diff"><div class="nu-diff-h"><b>${_nuEsc(r.meal)}</b><span><b>${_num(r.kcal)} kcal</b> · ${_num(r.p)} g P</span></div><div class="nu-diff-t">${_nuEsc(r.text)}</div></div>`).join('')}
+    <div class="nu-2btn"><button class="nu-pri" onclick="_nuFitApply()">Aplicar no plano</button><button class="nu-sec" onclick="_nuCloseSheet()">Agora não</button></div>
+    <div class="nu-fine">Só a opção 1 de cada refeição é ajustada. Dá para desfazer.</div>`);
+}
+function _nuFitApply(){
+  const c=_nuFitPrev; if(!c) return; const prev=JSON.parse(JSON.stringify(getMeals()));
+  const meals=getMeals().map(m=>({...m, options:(m.options||[]).slice()}));
+  c.rows.forEach(r=>{ if(!r.changed||!meals[r.i]) return; meals[r.i].options[0]=r.text; const mm=r.macros; meals[r.i].macros={kcal:Math.round(mm.kcal),prot:Math.round(mm.prot),carb:Math.round(mm.carb),gord:Math.round(mm.gord),fibra:Math.round(mm.fibra)}; });
+  saveDiet(meals, getSupps()); _nuFitPrev=null; _nuCloseSheet(); render();
+  _nuSnack(`Plano ajustado: ${_num(c.after.kcal)} kcal · ${_num(c.after.p)} g P`,()=>{ saveDiet(prev,getSupps()); });
+}
 
 function buildNutricao(){
   // Abas principais Hoje · Plano · Semana (+ ferramentas em "Mais"). O antigo
   // 'dieta' (Acompanhamento) virou o Hoje; atalhos antigos caem nele.
   const _valid=_isSimple()?['hoje','plano','semana','custo','lembretes']:['hoje','plano','semana','custo','mercado','macros','suplementos','lembretes','simulador','dicas'];
   if(nuSubTab==='dieta'||!_valid.includes(nuSubTab)) nuSubTab='hoje';
+  try{ _ensureMealTimes(); }catch(e){ console.warn('Horários do plano:',e); }
   const subtabs=_nuTabsHtml();
   const d=getD();
   const ac=d.p.accentHex;
@@ -5719,7 +5961,9 @@ function buildNutricao(){
   const mealCards=getMeals().map((meal,mi)=>{
     // Get macros for selected option
     const selOpt = nuMealOpt[mi]||0;
-    const mm = meal.macros || {kcal:0,prot:0,carb:0,gord:0,fibra:0};
+    // Macros da opção escolhida calculados pela TACO (cada opção com os seus); senão, os salvos
+    const _tm=_nuTextMacros((meal.options||[])[selOpt]);
+    const mm = (_tm&&!_tm.partial)?_tm:(meal.macros || {kcal:0,prot:0,carb:0,gord:0,fibra:0});
     const mealDone=!!todayMealLog['meal_'+mi];
     const macroBar=(v,tot,color)=>{
       const pct=tot>0?Math.round(v/tot*100):0;
@@ -5743,7 +5987,7 @@ function buildNutricao(){
           <div><span style="font-size:20px">${meal.icon}</span><span style="font-size:13px;font-weight:700;margin-left:8px">${meal.meal}</span></div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:9px;color:${ac};letter-spacing:1px">${meal.time||''}</div>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span style="font-size:11px;color:${ac};font-weight:800">${_hmParse(meal.time)!=null?meal.time:''}</span><button onclick="nuEditMeal(${mi},'plan',${selOpt})" class="nu-sec" style="min-height:34px;padding:0 10px;font-size:11px">Ajustar</button></div>
           ${mealDone?`<div style="font-size:8px;color:var(--good)">✓ Op.${todayMealLog['meal_'+mi]?.option||''} às ${todayMealLog['meal_'+mi]?.time||''}</div>`:''}
         </div>
       </div>
@@ -5776,6 +6020,7 @@ function buildNutricao(){
   return`<div class="page">
     <div class="sec-title" style="padding:0 0 14px">Plano Alimentar</div>
     ${subtabs}
+    ${_nuFitCard()}
     ${_nuCostCard()}
     <div class="card-accent" style="margin-bottom:14px;border-color:${ac}30">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -6686,8 +6931,8 @@ function getConsumedMacros(dk){
   for(let i=0;i<meals.length;i++){
     const entry=log['meal_'+i];
     if(!entry) continue;
-    const macros=(meals[i]&&meals[i].macros)||{};
-    const f=+entry.scale||1;
+    const macros=entry.macros||(meals[i]&&meals[i].macros)||{};
+    const f=entry.macros?1:(+entry.scale||1);
     kcal+=(+macros.kcal||0)*f; prot+=(+macros.prot||0)*f; carb+=(+macros.carb||0)*f;
     gord+=(+macros.gord||0)*f; fibra+=(+macros.fibra||0)*f;
   }
@@ -7152,7 +7397,7 @@ function parseVoiceCommand(txt){
   const num=s=>{ const m=s.match(/(\d+(?:[.,]\d+)?)/); return m?parseFloat(m[1].replace(',','.')):null; };
   // Comida: "comi 2 pães franceses com queijo", "almocei arroz e feijão", "tomei 1 copo de leite"
   const fm=t.match(/^(?:eu\s+)?(?:comi|almocei|jantei|lanchei|tomei(?:\s+caf[eé](?:\s+da\s+manh[aã])?)?)\s+(?:com\s+|de\s+|um\s+|uma\s+)?(.+)$/);
-  if(fm&&!/^[aá]gua/.test(fm[1])) return {action:'food', text:fm[1], msg:''};
+  if(fm&&!/^[aá]gua\b/.test(fm[1])) return {action:'food', text:fm[1], msg:''};
   // Água: "água 500", "bebi 2 litros", "500 ml de agua"
   if(/[aá]gua|litro|\bml\b|bebi/.test(t)){
     let ml=null; const litros=t.match(/(\d+(?:[.,]\d+)?)\s*(l|litro|litros)\b/); const mls=t.match(/(\d+)\s*ml/);
@@ -7918,12 +8163,12 @@ function importData(input){
 function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 let _dietEdit=null;
 function closeDietEditor(){ const el=document.getElementById('diet-editor'); if(el) el.remove(); }
-function openDietEditor(){ _dietEdit=getMeals().map(m=>({meal:m.meal||'',icon:m.icon||'🍽️',options:(m.options||[]).slice(),macros:{...(m.macros||{kcal:0,prot:0,carb:0,gord:0,fibra:0})}})); _renderDietEditor(); }
+function openDietEditor(){ _dietEdit=getMeals().map(m=>({meal:m.meal||'',time:_hmParse(m.time)!=null?m.time:'',icon:m.icon||'🍽️',options:(m.options||[]).slice(),macros:{...(m.macros||{kcal:0,prot:0,carb:0,gord:0,fibra:0})}})); _renderDietEditor(); }
 function _readDietEditor(){
   const out=[];
   for(let i=0; document.getElementById('dm_name_'+i); i++){
     const g=(id)=>document.getElementById(id+'_'+i);
-    out.push({ meal:(g('dm_name').value||'').trim()||('Refeição '+(i+1)), icon:(g('dm_icon').value||'🍽️').trim()||'🍽️',
+    out.push({ meal:(g('dm_name').value||'').trim()||('Refeição '+(i+1)), time:(g('dm_time')&&g('dm_time').value)||'', icon:(g('dm_icon').value||'🍽️').trim()||'🍽️',
       options:(g('dm_opts').value||'').split('\n').map(s=>s.trim()).filter(Boolean),
       macros:{ kcal:+g('dm_kcal').value||0, prot:+g('dm_prot').value||0, carb:+g('dm_carb').value||0, gord:+g('dm_gord').value||0, fibra:+g('dm_fibra').value||0 } });
   }
@@ -7936,7 +8181,8 @@ function _renderDietEditor(){
   const card=(m,i)=>`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px;margin-bottom:10px">
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <input id="dm_icon_${i}" value="${_esc(m.icon)}" style="width:48px;text-align:center"/>
-      <input id="dm_name_${i}" value="${_esc(m.meal)}" placeholder="Nome da refeição" style="flex:1"/>
+      <input id="dm_name_${i}" value="${_esc(m.meal)}" placeholder="Nome da refeição" style="flex:1;min-width:0"/>
+      <input id="dm_time_${i}" type="time" value="${_esc(m.time||'')}" aria-label="Horário" style="width:96px"/>
       <button onclick="_dietRemove(${i})" style="width:40px;border:1px solid var(--bad);background:transparent;color:var(--bad);border-radius:8px;cursor:pointer">🗑️</button>
     </div>
     <label class="flabel">Alimentos (uma opção por linha)</label>
@@ -8000,7 +8246,10 @@ function _quickDiet(key){
   saveDiet(meals, getSupps()); render();
   showSyncStatus&&showSyncStatus('✓ Dieta "'+p.label+'" carregada','var(--good)');
 }
-function saveDietEditor(){ const meals=_readDietEditor(); if(!meals.length){ alert('Adicione ao menos uma refeição.'); return; } saveDiet(meals,getSupps()); closeDietEditor(); render(); showSyncStatus('✓ Plano salvo','var(--good)'); }
+function saveDietEditor(){ const meals=_readDietEditor(); if(!meals.length){ alert('Adicione ao menos uma refeição.'); return; }
+  // Macros pela TACO quando todos os alimentos da opção 1 forem reconhecidos (senão ficam os digitados)
+  meals.forEach(m=>{ const tm=_nuTextMacros((m.options||[])[0]); if(tm&&!tm.partial) m.macros={kcal:tm.kcal,prot:tm.prot,carb:tm.carb,gord:tm.gord,fibra:tm.fibra}; if(_hmParse(m.time)==null) delete m.time; });
+  saveDiet(meals,getSupps()); _syncRemindersFromPlan(meals); closeDietEditor(); render(); showSyncStatus('✓ Plano salvo','var(--good)'); }
 
 let _suppEdit=null;
 function closeSuppEditor(){ const el=document.getElementById('supp-editor'); if(el) el.remove(); }
