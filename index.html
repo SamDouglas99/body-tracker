@@ -390,6 +390,49 @@ html[data-theme="light"] .nu-pri{color:#fff}
 .nu-ei-s span{min-width:74px;text-align:center;font-family:var(--font2);font-size:13px;font-weight:700}
 .nu-time{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--sub)}
 .nu-time input{min-height:40px;width:104px}
+.ci-dots{display:flex;gap:6px;justify-content:center;margin:-4px 0 8px}
+.ci-dots i{width:22px;height:4px;border-radius:2px;background:var(--border2)}
+.ci-dots i.on{background:var(--him)}
+.ci-f{margin-top:12px}
+.ci-f label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--sub)}
+.ci-f input{min-height:48px;font-size:18px;font-family:var(--font2);font-weight:700}
+.ci-f small{font-size:11px;color:var(--muted)}
+.ci-ph{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.ci-slot{position:relative;aspect-ratio:3/4;border-radius:14px;border:1.5px dashed var(--border2);background:var(--bg4);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding:8px;cursor:pointer;overflow:hidden;font-size:12px;font-weight:800;color:var(--text)}
+.ci-slot.ok{border-style:solid;border-color:var(--him)}
+.ci-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ci-slot img.guide{opacity:.35}
+.ci-slot span,.ci-slot small{position:relative;background:color-mix(in srgb,var(--bg) 70%,transparent);border-radius:8px;padding:2px 6px}
+.ci-slot small{font-size:10px;color:var(--sub);font-weight:700}
+.ci-q{margin-top:12px}
+.ci-q>span{display:block;font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.ci-q>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px}
+.ci-q button{min-height:44px;border-radius:10px;border:1px solid var(--border2);background:var(--bg4);color:var(--text);font-family:var(--font2);font-size:12px;font-weight:800;cursor:pointer}
+.ci-q button.on{border-color:var(--him);background:var(--himb);color:var(--him)}
+.ci-card{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px;background:var(--bg4)}
+.ci-cmp{margin-top:8px;font-size:12px}
+.ci-cmp>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;margin-top:4px}
+.ci-cmp figure{margin:0}
+.ci-cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;display:block}
+.ci-cmp figcaption{font-size:10px;color:var(--muted);margin-top:2px}
+.ci-chk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;font-weight:700;min-height:44px}
+.ci-chk input{width:20px;height:20px}
+.ci-due{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;text-align:left;cursor:pointer;border-color:var(--himl);background:var(--himb);color:var(--text);font-family:var(--font)}
+#ci-report{position:fixed;inset:0;z-index:800;background:#fff;color:#111;overflow-y:auto;font-family:var(--font)}
+#ci-report .cr-bar{position:sticky;top:0;display:flex;gap:8px;padding:10px 14px;background:#f1f3f8;border-bottom:1px solid #ddd}
+#ci-report .cr-bar button{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #bbb;background:#fff;font-weight:800;cursor:pointer}
+#ci-report .cr-doc{max-width:760px;margin:0 auto;padding:18px 16px 40px;font-size:13px;line-height:1.5}
+#ci-report h1{font-size:20px;margin:0}
+#ci-report h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ddd;padding-bottom:4px}
+#ci-report .cr-sub,#ci-report .cr-fine{color:#555;font-size:12px}
+#ci-report table{width:100%;border-collapse:collapse}
+#ci-report th,#ci-report td{text-align:left;padding:5px 6px;border-bottom:1px solid #eee;vertical-align:top}
+#ci-report th{width:34%;color:#444}
+#ci-report .cr-h th{width:auto}
+#ci-report .cr-ph>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#ci-report figure{margin:0}
+#ci-report img{width:100%;max-height:420px;object-fit:contain;background:#f4f4f4;border-radius:8px}
+@media print{ body>*:not(#ci-report){display:none !important} #ci-report{position:static;overflow:visible} #ci-report .cr-bar{display:none} }
 .nu-why{font-size:12px;color:var(--sub);line-height:1.55;background:var(--bg4);border-radius:10px;padding:10px 12px}
 .set-delta{font-size:8px;font-weight:800;text-align:center;margin-top:4px;line-height:1.15;letter-spacing:.2px;min-height:10px}
 /* ── Editar Treinos ── */
@@ -1524,7 +1567,7 @@ let activeWorkoutType=null, activeWorkoutData=null;
 let timerInterval=null, timerSeconds=0, timerTotal=0;
 let woPrgExercise=null;
 // Mostrada em Ajustes p/ conferir se o aparelho pegou a atualização. Subir a cada publicação.
-const APP_VERSION='03/11 · 1';
+const APP_VERSION='03/11 · 2';
 let woStartTime=null, woElapsedInterval=null;
 
 // ── Storage helpers — Firebase + cache memória ──
@@ -1732,6 +1775,7 @@ function _openQuickAdd(){
       ${it('💪','Treino',g('treinos'))}
       ${_isSimple()?'':it('💰','Gasto',g('gastos'))}
       ${it('🎤','Por voz','_closeSheet();try{startVoice()}catch(e){}')}
+      ${it('📋','Check-in','_closeSheet();ciOpen()')}
     </div>
     <div style="height:1px;background:var(--border);margin:16px 0 13px"></div>
     <div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Ir para</div>
@@ -1818,7 +1862,7 @@ function buildDashboard(){
   const lastCheckinWeek=lastCheckin?getWeekKey(new Date(lastCheckin)):'';
   const thisWeekKey=getWeekKey();
   const needsCheckin=isMonday&&lastCheckinWeek!==thisWeekKey&&getTotalSessions()>0;
-  if(needsCheckin) setTimeout(showWeeklyCheckin,800);
+  // (o check-in agora aparece como card no Início quando vence — sem pop-up automático)
 
   // ── Semana: treinos realizados vs planejados ──
   const weekPlan=getWeekPlan();
@@ -2031,6 +2075,7 @@ function buildDashboard(){
   <div class="page" style="padding-top:0;padding-bottom:8px">
     <!-- Week days bar -->
     <div style="display:flex;gap:5px;margin-bottom:14px">${weekDays}</div>
+    ${_ciDueCard()}
     ${checkinCard}
 
   </div>
@@ -4911,16 +4956,11 @@ function buildNuSemana(subtabs){
   // Ajuste da meta pelo GASTO REAL (o que você comeu × como o peso mudou)
   let suggest='';
   if(T.kcal>0&&_nuSemHide!==today){
-    const comp=Array.from({length:28},(_,k)=>{ const dd=new Date(); dd.setDate(dd.getDate()-1-k); return _nuDaySummary(localDayKey(dd)); }).filter(s=>s.complete);
-    if(!tr.ok||comp.length<5){
+    const G=_nuGastoReal(); const comp=G.comp;
+    if(!G.ok){
       suggest=`<section class="card nu-card" aria-label="Ajuste da meta"><div class="lbl">Ajuste automático da meta</div><div class="nu-sub" style="margin-top:6px">Para calcular seu gasto real eu preciso de 5 dias com as refeições registradas (você tem ${comp.length}) e da tendência do peso (${tr.ok?'ok':'faltam pesagens'}).</div></section>`;
     } else {
-      const avgIn=comp.reduce((s,x)=>s+x.kcal,0)/comp.length;
-      const tdee=avgIn-tr.slopeWk*1100;              // 1 kg ≈ 7.700 kcal → por dia: kg/sem × 1.100
-      const need=tdee+pace*1100;
-      const adh=Math.max(0.8,Math.min(1.05,avgIn/T.kcal));
-      let change=(need-avgIn)/adh; const cap=T.kcal*0.10; change=Math.max(-cap,Math.min(cap,change));
-      change=Math.round(change/10)*10; const newK=T.kcal+change;
+      const {avgIn,tdee,need,adh,change,newK}=G;
       const why=`Pelo que você comeu (${comp.length} dias completos, média ${_num(avgIn)} kcal) e pelo seu peso (${_nuSlopeTxt(tr)} kg/semana), seu gasto real é de cerca de ${_num(tdee)} kcal/dia. Para o ritmo de ${paceTxt} você precisa comer uns ${_num(need)} kcal. Como você cumpre ${Math.round(adh*100)}% da meta em média, a meta vira ${_num(newK)}. Nunca mudo mais de 10% de uma vez; reavalie em 14 dias.`;
       if(Math.abs(change)<50){
         suggest=`<section class="card nu-card" aria-label="Ajuste da meta"><div class="lbl" style="color:var(--good)">Meta no ponto</div><div class="nu-sub" style="margin-top:6px">Seu gasto real (≈ ${_num(tdee)} kcal/dia) confirma a meta de ${_num(T.kcal)} kcal. Continue assim.</div></section>`;
@@ -4936,7 +4976,8 @@ function buildNuSemana(subtabs){
       }
     }
   }
-  return `<div class="page nu-page">${subtabs}${head}${pattern}${weight}${suggest}</div>`;
+  const ciCard=`<button class="card nu-card ci-due" onclick="ciOpen()"><span class="lbl" style="color:var(--him)">Check-in da semana</span><span class="nu-sub" style="color:var(--text)">Peso, cintura, fotos e os ajustes da semana em 2 minutos.${_ciDaysSinceLast()!=null?` Último há ${_ciDaysSinceLast()} dia(s).`:''}</span></button>`;
+  return `<div class="page nu-page">${subtabs}${head}${pattern}${weight}${suggest}${ciCard}</div>`;
 }
 function _nuSlopeTxt(tr){ const sw=tr.slopeWk; return (sw>=0?'+':'−')+Math.abs(sw).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
@@ -5637,6 +5678,267 @@ function _nuFitApply(){
   c.rows.forEach(r=>{ if(!r.changed||!meals[r.i]) return; meals[r.i].options[0]=r.text; const mm=r.macros; meals[r.i].macros={kcal:Math.round(mm.kcal),prot:Math.round(mm.prot),carb:Math.round(mm.carb),gord:Math.round(mm.gord),fibra:Math.round(mm.fibra)}; });
   saveDiet(meals, getSupps()); _nuFitPrev=null; _nuCloseSheet(); render();
   _nuSnack(`Plano ajustado: ${_num(c.after.kcal)} kcal · ${_num(c.after.p)} g P`,()=>{ saveDiet(prev,getSupps()); });
+}
+// ══════════════════════════════════════
+// CHECK-IN SEMANAL — o acompanhamento de consultoria, dentro do app.
+// Peso e medidas (entram no histórico), fotos frente/lado/costas com a pose da semana
+// anterior, sensações, e um resultado com avaliação do shape por medidas (peso × cintura),
+// fotos lado a lado, nutrição, treino, ajuste de calorias e relatório para profissional.
+// Histórico em settings.checkinHist (banco); compatível com o check-in antigo.
+// ══════════════════════════════════════
+let _ci=null;
+const _CI_CATS=[['frontal','Frente'],['lateral','Lado'],['costas','Costas']];
+// Gasto real (comido × variação do peso) → sugestão de meta. Fonte única (Semana e check-in).
+function _nuGastoReal(){
+  const T=getNutriTargets(), d=getD(), tr=_nuWeightTrend();
+  const pace=d.goalW>0&&d.curW>0?(d.goalW>d.curW+0.5?0.25:(d.goalW<d.curW-0.5?-0.5:0)):0;
+  const comp=Array.from({length:28},(_,k)=>{ const dd=new Date(); dd.setDate(dd.getDate()-1-k); return _nuDaySummary(localDayKey(dd)); }).filter(s=>s.complete);
+  const base={T, tr, pace, comp, ok:false};
+  if(!(T.kcal>0)) return {...base, reason:'Defina seu peso no perfil para ter uma meta.'};
+  if(!tr.ok||comp.length<5) return {...base, reason:`Para calcular o gasto real faltam ${comp.length<5?`${5-comp.length} dia(s) com refeições registradas`:''}${comp.length<5&&!tr.ok?' e ':''}${!tr.ok?'pesagens (3 em 10 dias)':''}.`};
+  const avgIn=comp.reduce((s,x)=>s+x.kcal,0)/comp.length;
+  const tdee=avgIn-tr.slopeWk*1100;              // 1 kg ≈ 7.700 kcal → por dia: kg/sem × 1.100
+  const need=tdee+pace*1100;
+  const adh=Math.max(0.8,Math.min(1.05,avgIn/T.kcal));
+  let change=(need-avgIn)/adh; const cap=T.kcal*0.10; change=Math.max(-cap,Math.min(cap,change));
+  change=Math.round(change/10)*10;
+  return {...base, ok:true, avgIn, tdee, need, adh, change, newK:T.kcal+change};
+}
+function _ciHist(){ return (_settingGet('checkinHist','bt_checkin_hist',[])||[]).filter(c=>c&&c.date); }
+function _ciLast(){ const h=_ciHist(); return h.length?h[h.length-1]:null; }
+function _ciDaysSinceLast(){ const l=_ciLast(); return l?Math.floor((Date.now()-new Date(l.date).getTime())/864e5):null; }
+function _ciDue(){ const n=_ciDaysSinceLast(); return n==null?(getEntries().length>0||getWorkouts().length>0):n>=6; }
+function _ciPhoto(id){ return id?(_photoMeta.photos||[]).find(p=>p.id===id)||null:null; }
+// Foto de referência da categoria: a do último check-in; senão a mais recente antes de hoje.
+function _ciPrevPhoto(cat, beforeDay){
+  const h=_ciHist().slice().reverse();
+  for(const c of h){ const p=_ciPhoto(c.photos&&c.photos[cat]); if(p&&(!beforeDay||p.date<beforeDay)) return p; }
+  return (_photoMeta.photos||[]).filter(p=>p.category===cat&&(!beforeDay||p.date<beforeDay)).sort((a,b)=>a.date<b.date?1:-1)[0]||null;
+}
+function _ciFirstPhoto(cat){ return (_photoMeta.photos||[]).filter(p=>p.category===cat).sort((a,b)=>a.date<b.date?-1:1)[0]||null; }
+function _ciLastEntryVal(k){ const es=getEntries(); for(let i=es.length-1;i>=0;i--){ const v=parseFloat(es[i][k]); if(v>0) return {v, date:es[i].date}; } return null; }
+
+function ciOpen(){
+  if(!_ci||_ci.day!==getTodayKey()){
+    const w=_ciLastEntryVal('weight'), wa=_ciLastEntryVal('waist'), ar=_ciLastEntryVal('bicep_con_r');
+    _ci={day:getTodayKey(), step:0, weight:w?w.v:(getD().curW||''), waist:wa?wa.v:'', arm:ar?ar.v:'', photos:{}, feel:{sono:0,energia:0,fome:0}, dor:false, dorTxt:'', applyKcal:true, busy:null};
+  }
+  _ciRender();
+}
+function _ciGo(step){ _ciReadInputs(); _ci.step=step; _ciRender(); }
+function _ciReadInputs(){
+  if(!_ci) return; const g=id=>document.getElementById(id);
+  if(g('ci-w')) _ci.weight=parseFloat(String(g('ci-w').value).replace(',','.'))||'';
+  if(g('ci-wa')) _ci.waist=parseFloat(String(g('ci-wa').value).replace(',','.'))||'';
+  if(g('ci-ar')) _ci.arm=parseFloat(String(g('ci-ar').value).replace(',','.'))||'';
+  if(g('ci-dortxt')) _ci.dorTxt=g('ci-dortxt').value.trim();
+}
+function _ciFeel(k,v){ _ci.feel[k]=v; _ciRender(); }
+function _ciDor(v){ _ciReadInputs(); _ci.dor=v; _ciRender(); }
+async function _ciUpload(cat, inp){
+  const f=inp&&inp.files&&inp.files[0]; if(!f||!_ci) return;
+  if(!(window._fb&&window._fb.uploadPhoto&&window._fb.savePhotoMeta)){ alert('Entre na sua conta para salvar as fotos.'); return; }
+  _ci.busy=cat; _ciRender();
+  try{
+    const blob=await compressImage(f,900);
+    const id='photo_'+Date.now();
+    const up=await window._fb.uploadPhoto(CP,id,blob);
+    const url=(up&&up.url!==undefined)?up.url:up, path=(up&&up.path)||null;
+    const entry={id,url,path,date:localDayKey(),label:'Check-in',category:cat,weight:+_ci.weight||getD().curW||0,checkin:getWeekKey()};
+    _photoMeta.photos.push(entry);
+    await window._fb.savePhotoMeta(CP,_photoMeta);
+    try{ if(getSettings()) getSettings().photoMeta=_photoMeta; }catch(e){}
+    _ci.photos[cat]=id;
+  }catch(e){ alert('Não consegui enviar a foto ('+((e&&e.message)||e)+'). Tente de novo ou siga sem ela.'); }
+  _ci.busy=null; _ciRender();
+}
+
+// ── Números da semana ──
+function _ciWeek(){
+  const T=getNutriTargets(), now=Date.now(), from=now-7*864e5;
+  const days=Array.from({length:7},(_,k)=>{ const d=new Date(); d.setDate(d.getDate()-1-k); return _nuDaySummary(localDayKey(d)); });
+  const logged=days.filter(x=>x.any);
+  const inT=logged.filter(x=>T.kcal>0&&x.kcal>=T.kcal*0.9&&x.kcal<=T.kcal*1.15).length;
+  const avgP=logged.length?logged.reduce((s,x)=>s+x.prot,0)/logged.length:0;
+  const avgK=logged.length?logged.reduce((s,x)=>s+x.kcal,0)/logged.length:0;
+  const water=Array.from({length:7},(_,k)=>{ const d=new Date(); d.setDate(d.getDate()-1-k); return getWaterMl(localDayKey(d)); });
+  const wAvg=water.reduce((a,b)=>a+b,0)/7;
+  const ws=getWorkouts(); const weekWo=ws.filter(s=>new Date(s.date).getTime()>=from);
+  const planned=(getActiveSchedule()||[]).filter(s=>s.type!=='rest').length;
+  // Recordes da semana: carga máxima feita na semana acima do máximo antes dela
+  const prs=[]; const names=new Set(); weekWo.forEach(s=>(s.exercises||[]).forEach(e=>names.add(e.name)));
+  names.forEach(n=>{
+    let before=0, week=0;
+    ws.forEach(s=>{ const m=_doneWork(s.exercises?.find(e=>e.name===n),s).reduce((a,st)=>Math.max(a,st.weight||0),0); if(new Date(s.date).getTime()>=from) week=Math.max(week,m); else before=Math.max(before,m); });
+    if(before>0&&week>before) prs.push({n, from:before, to:week});
+  });
+  // Travados: 3 últimas vezes com a mesma carga máxima e sem ganhar reps
+  const stalled=[]; const progNames=new Set(); Object.values(getWorkoutProgram()).forEach(d=>(d.exercises||[]).forEach(e=>progNames.add(e.name)));
+  progNames.forEach(n=>{
+    const h=ws.map(s=>_doneWork(s.exercises?.find(e=>e.name===n),s)).filter(a=>a.length).slice(-3).map(a=>{ const w=Math.max(...a.map(z=>z.weight||0)); return {w, r:Math.max(...a.filter(z=>(z.weight||0)===w).map(z=>z.reps))}; });
+    if(h.length===3&&h[0].w>0&&h.every(x=>x.w===h[0].w)&&h[2].r<=h[0].r) stalled.push({n, w:h[0].w});
+  });
+  return {T, logged:logged.length, inT, avgP, avgK, wAvg, wGoal:getWaterGoalMl(), done:weekWo.length, planned, prs, stalled};
+}
+// Avaliação do shape por medidas: o peso diz quanto, a cintura diz o que (músculo × gordura).
+function _ciShape(cur){
+  const prev=_ciLast(); const tr=_nuWeightTrend(); const d=getD();
+  const pace=d.goalW>0&&d.curW>0?(d.goalW>d.curW+0.5?0.25:(d.goalW<d.curW-0.5?-0.5:0)):0;
+  const wk=prev?Math.max(1,(Date.now()-new Date(prev.date).getTime())/(7*864e5)):null;
+  const dW=prev&&prev.weight&&cur.weight?(cur.weight-prev.weight)/wk:(tr.ok?tr.slopeWk:null);
+  const dWa=prev&&prev.waist&&cur.waist?(cur.waist-prev.waist)/wk:null;
+  const f=v=>(v>=0?'+':'−')+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
+  let txt, tone='var(--good)';
+  if(dW==null) return {txt:'Este é o seu primeiro check-in: ele vira a base. Na próxima semana eu comparo peso, cintura e fotos.', tone:'var(--sub)', dW, dWa};
+  if(pace>0){
+    if(dW<0.1){ txt=`Peso parado (${f(dW)} kg/sem): o ganho travou. Veja o ajuste de calorias abaixo.`; tone='var(--warn)'; }
+    else if(dWa==null){ txt=`Peso subindo ${f(dW)} kg/sem. Meça a cintura toda semana para separar músculo de gordura.`; tone='var(--sub)'; }
+    else if(dWa<=0.25) txt=`Ganho de qualidade: ${f(dW)} kg/sem com a cintura estável (${f(dWa)} cm). É o cenário ideal.`;
+    else if(dWa<=0.5){ txt=`Ganho bom, mas a cintura subiu ${f(dWa)} cm/sem. Mantenha as calorias, sem aumentar.`; tone='var(--warn)'; }
+    else { txt=`Cintura subindo rápido (${f(dWa)} cm/sem): parte do ganho é gordura. Segure as calorias ou reduza um pouco.`; tone='var(--bad)'; }
+  } else if(pace<0){
+    if(dW>-0.1){ txt=`Peso parado (${f(dW)} kg/sem): a definição travou. Veja o ajuste de calorias abaixo.`; tone='var(--warn)'; }
+    else if(dWa!=null&&dWa<-0.2) txt=`Definição no caminho: ${f(dW)} kg/sem e cintura ${f(dWa)} cm.`;
+    else { txt=`Perdendo peso (${f(dW)} kg/sem), mas a cintura quase não mudou: mantenha a proteína alta e o treino pesado para não perder músculo.`; tone='var(--warn)'; }
+  } else {
+    txt=Math.abs(dW)<=0.15?`Peso estável (${f(dW)} kg/sem)${dWa!=null?` e cintura ${f(dWa)} cm`:''}: manutenção no ponto.`:`Peso mudando ${f(dW)} kg/sem numa fase de manutenção. Confira a meta.`;
+    if(Math.abs(dW)>0.15) tone='var(--warn)';
+  }
+  return {txt, tone, dW, dWa};
+}
+
+// ── Telas ──
+function _ciRender(){
+  const C=_ci; if(!C) return;
+  const dots=[0,1,2,3].map(k=>`<i class="${k<=C.step?'on':''}"></i>`).join('');
+  const nav=(back,next,lbl)=>`<div class="nu-2btn">${back!=null?`<button class="nu-sec" onclick="_ciGo(${back})">Voltar</button>`:''}<button class="nu-pri" onclick="${next}">${lbl}</button></div>`;
+  let body='';
+  if(C.step===0){
+    const lw=_ciLastEntryVal('weight'), lwa=_ciLastEntryVal('waist');
+    const avg7=(()=>{ const es=getEntries().filter(e=>e.weight&&Date.now()-new Date(e.date).getTime()<7*864e5); return es.length?es.reduce((s,e)=>s+parseFloat(e.weight),0)/es.length:null; })();
+    body=`<div class="nu-h2">Peso e medidas</div>
+      <div class="nu-sub">Em jejum, depois do banheiro, com a mesma roupa de sempre. A cintura na altura do umbigo, sem apertar.</div>
+      <div class="ci-f"><label>Peso (kg)<input id="ci-w" type="number" inputmode="decimal" step="0.1" value="${C.weight||''}"/></label><small>${lw?`último ${String(lw.v).replace('.',',')} kg`:''}${avg7?` · média 7 dias ${avg7.toFixed(1).replace('.',',')}`:''}</small></div>
+      <div class="ci-f"><label>Cintura (cm)<input id="ci-wa" type="number" inputmode="decimal" step="0.1" value="${C.waist||''}"/></label><small>${lwa?`último ${String(lwa.v).replace('.',',')} cm`:'recomendado: separa músculo de gordura'}</small></div>
+      <div class="ci-f"><label>Braço contraído (cm) · opcional<input id="ci-ar" type="number" inputmode="decimal" step="0.1" value="${C.arm||''}"/></label></div>
+      ${nav(null,"_ciReadInputs();if(!(_ci.weight>0)){alert('Informe o peso.');return;}_ciGo(1)",'Continuar')}`;
+  } else if(C.step===1){
+    body=`<div class="nu-h2">Fotos</div>
+      <div class="nu-sub">Mesma luz, mesmo lugar e a mesma pose da foto anterior (ela aparece de guia). As fotos ficam privadas na sua conta.</div>
+      <div class="ci-ph">${_CI_CATS.map(([cat,lb])=>{ const cur=_ciPhoto(C.photos[cat]); const prev=_ciPrevPhoto(cat,getTodayKey());
+        return `<label class="ci-slot${cur?' ok':''}">
+          ${cur?`<img src="${_nuEsc(cur.url||'')}" alt="${lb} de hoje"/>`:(prev?`<img class="guide" src="${_nuEsc(prev.url||'')}" alt="${lb} anterior"/>`:'')}
+          <span>${C.busy===cat?'Enviando…':(cur?lb+' ✓':lb)}</span>${!cur&&prev?`<small>guia: ${prev.date.split('-').reverse().slice(0,2).join('/')}</small>`:''}
+          <input type="file" accept="image/*" capture="environment" onchange="_ciUpload('${cat}',this)" hidden/>
+        </label>`; }).join('')}</div>
+      ${nav(0,'_ciGo(2)',Object.keys(C.photos).length?'Continuar':'Seguir sem fotos')}`;
+  } else if(C.step===2){
+    const row=(k,lb,opts)=>`<div class="ci-q"><span>${lb}</span><div>${opts.map((o,i)=>`<button class="${C.feel[k]===i+1?'on':''}" onclick="_ciFeel('${k}',${i+1})">${o}</button>`).join('')}</div></div>`;
+    body=`<div class="nu-h2">Como foi a semana</div>
+      <div class="nu-sub">Treinos e dieta eu conto sozinho pelo que você registrou.</div>
+      ${row('sono','Sono',['Ruim','Regular','Bom','Ótimo'])}
+      ${row('energia','Energia no treino',['Baixa','Ok','Boa','Alta'])}
+      ${row('fome','Fome',['Muita','Alguma','Pouca','Nenhuma'])}
+      <div class="ci-q"><span>Dor ou desconforto?</span><div><button class="${C.dor===false?'on':''}" onclick="_ciDor(false)">Não</button><button class="${C.dor===true?'on':''}" onclick="_ciDor(true)">Sim</button></div></div>
+      ${C.dor?`<input id="ci-dortxt" class="nu-q" placeholder="Onde? (ex.: lombar no terra)" value="${_nuEsc(C.dorTxt)}"/>`:''}
+      ${nav(1,'_ciGo(3)','Ver resultado')}`;
+  } else {
+    body=_ciResultHtml();
+  }
+  _nuSheet(`<div class="ci-dots" aria-hidden="true">${dots}</div><div class="lbl">Check-in da semana</div>${body}`);
+}
+function _ciResultHtml(){
+  const C=_ci, W=_ciWeek(), S=_ciShape(C), G=_nuGastoReal(), prev=_ciLast();
+  const pct=v=>Math.round(v*100);
+  const photos=_CI_CATS.map(([cat,lb])=>{ const cur=_ciPhoto(C.photos[cat]); if(!cur) return ''; const pv=_ciPrevPhoto(cat,getTodayKey()), first=_ciFirstPhoto(cat);
+    const cell=(p,t)=>p?`<figure><img src="${_nuEsc(p.url||'')}" alt="${lb} ${t}"/><figcaption>${t} · ${p.date.split('-').reverse().slice(0,2).join('/')}${p.weight?' · '+String(p.weight).replace('.',',')+' kg':''}</figcaption></figure>`:'';
+    return `<div class="ci-cmp"><b>${lb}</b><div>${cell(first&&first.id!==cur.id&&(!pv||first.id!==pv.id)?first:null,'início')}${cell(pv,'antes')}${cell(cur,'hoje')}</div></div>`; }).join('');
+  const kcalLine=G.ok?(Math.abs(G.change)<50?`Meta de ${_num(G.T.kcal)} kcal confirmada pelo seu gasto real (≈ ${_num(G.tdee)} kcal/dia).`
+      :`Gasto real ≈ ${_num(G.tdee)} kcal/dia → meta ${G.change>0?'+':'−'}${_num(Math.abs(G.change))} kcal (${_num(G.newK)} kcal/dia).`):G.reason;
+  return `<div class="nu-h2">Resultado da semana</div>
+    <div class="ci-card" style="border-color:${S.tone}"><div class="lbl" style="color:${S.tone}">Avaliação do shape</div><div class="nu-sub" style="color:var(--text)">${S.txt}</div>
+      <div class="nu-mini">${C.weight?`Peso ${String(C.weight).replace('.',',')} kg`:''}${prev&&prev.weight&&C.weight?` (${C.weight-prev.weight>=0?'+':''}${(C.weight-prev.weight).toFixed(1).replace('.',',')})`:''}${C.waist?` · cintura ${String(C.waist).replace('.',',')} cm`:''}${prev&&prev.waist&&C.waist?` (${C.waist-prev.waist>=0?'+':''}${(C.waist-prev.waist).toFixed(1).replace('.',',')})`:''}</div></div>
+    ${photos?`<div class="ci-card"><div class="lbl">Fotos</div>${photos}</div>`:''}
+    <div class="ci-card"><div class="lbl">Nutrição · 7 dias</div>
+      <div class="nu-sub">${W.logged?`${W.inT} de ${W.logged} dias na meta · proteína média ${_num(W.avgP)} g (meta ${_num(W.T.prot)}) · ${_num(W.avgK)} kcal/dia`:'Sem refeições registradas nesta semana.'}</div>
+      <div class="nu-mini">Água: ${(W.wAvg/1000).toFixed(1).replace('.',',')} L/dia de ${(W.wGoal/1000).toFixed(1).replace('.',',')} L</div>
+      <div class="nu-sub" style="margin-top:6px">${kcalLine}</div>
+      ${G.ok&&Math.abs(G.change)>=50?`<label class="ci-chk"><input type="checkbox" ${C.applyKcal?'checked':''} onchange="_ci.applyKcal=this.checked"/> Aplicar a nova meta ao salvar</label>`:''}</div>
+    <div class="ci-card"><div class="lbl">Treino · 7 dias</div>
+      <div class="nu-sub">${W.done} de ${W.planned||W.done} treinos${W.prs.length?` · ${W.prs.length} recorde(s): ${W.prs.slice(0,3).map(p=>`${_nuEsc(p.n)} ${String(p.from).replace('.',',')}→${String(p.to).replace('.',',')} kg`).join(', ')}`:''}</div>
+      ${W.stalled.length?`<div class="nu-sub" style="color:var(--warn)">Travados: ${W.stalled.slice(0,4).map(s=>_nuEsc(s.n)).join(', ')}. No próximo treino eles já vêm com deload de 10%.</div>`:'<div class="nu-mini">Nenhum exercício travado.</div>'}
+      ${C.feel.energia&&C.feel.energia<=1?'<div class="nu-mini">Energia baixa: use o modo "Leve" no treino se o sono não melhorar.</div>':''}
+      ${C.dor?`<div class="nu-sub" style="color:var(--bad)">Dor: ${_nuEsc(C.dorTxt||'informada')}. Se persistir ou piorar, procure um profissional antes de seguir com a carga.</div>`:''}</div>
+    <div class="nu-2btn"><button class="nu-sec" onclick="_ciGo(2)">Voltar</button><button class="nu-pri" onclick="ciSave()">Salvar check-in</button></div>
+    <div class="nu-fine">A avaliação usa peso e cintura (medidas objetivas); as fotos ficam para comparação visual. Não substitui avaliação profissional.</div>`;
+}
+function ciSave(){
+  const C=_ci; if(!C) return; _ciReadInputs();
+  if(!(C.weight>0)){ alert('Informe o peso.'); _ci.step=0; _ciRender(); return; }
+  const W=_ciWeek(), S=_ciShape(C), G=_nuGastoReal();
+  // 1) medida no histórico (mesma regra do Registrar: herda o resto da última medição)
+  const es=getEntries(); const last=es.length?{...es[es.length-1]}:{}; delete last.id; delete last.date;
+  const entry={...last, date:new Date().toISOString(), id:Date.now(), weight:+C.weight};
+  if(C.waist>0) entry.waist=+C.waist; if(C.arm>0) entry.bicep_con_r=+C.arm;
+  _cache.entries[CP]=(_cache.entries[CP]||[]).concat([entry]);
+  try{ const bk=getEntryBackup(CP); bk.push(entry); saveEntryBackup(CP,bk); }catch(e){}
+  if(window._fb&&window._fb.saveEntry) window._fb.saveEntry(CP,entry).catch(e=>{ console.error('Medida do check-in mantida no backup local:',e); showSyncStatus&&showSyncStatus('Medida salva no aparelho; sincroniza depois','var(--warn)'); });
+  // 2) histórico do check-in (campos antigos mantidos: weight, workouts, diet, sleep)
+  const applied=G.ok&&Math.abs(G.change)>=50&&C.applyKcal?G.newK:null;
+  const rec={date:new Date().toISOString(), week:getWeekKey(), weight:+C.weight, waist:+C.waist||null, arm:+C.arm||null,
+    workouts:W.done, diet:W.logged?Math.max(1,Math.min(4,Math.round(W.inT/W.logged*4))):0, sleep:C.feel.sono||0,
+    energia:C.feel.energia||0, fome:C.feel.fome||0, dor:C.dor?(C.dorTxt||'sim'):null, photos:{...C.photos},
+    shape:S.txt, prot:Math.round(W.avgP), inTarget:W.inT, logged:W.logged, prs:W.prs.length, stalled:W.stalled.map(s=>s.n), kcalApplied:applied};
+  _settingSet('checkinHist', _ciHist().concat([rec]), 'bt_checkin_hist');
+  try{ localStorage.setItem('bt_last_checkin', rec.date); }catch(e){}
+  // 3) ajuste de calorias escolhido
+  if(applied){ const T=getNutriTargets(); saveDietAdj({kcal:applied, prot:T.prot, carb:Math.max(0,Math.round(T.carb+(applied-T.kcal)/4)), fat:T.fat, source:'check-in', prevKcal:T.kcal, date:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}); }
+  const idx=_ciHist().length-1; _ci=null; _nuCloseSheet(); render();
+  _nuSheet(`<div class="lbl" style="color:var(--good)">Check-in salvo</div><div class="nu-h2">Semana registrada</div>
+    <div class="nu-sub">${_nuEsc(S.txt)}${applied?` Meta nova: ${_num(applied)} kcal/dia.`:''}</div>
+    <div class="nu-2btn"><button class="nu-pri" onclick="ciReport(${idx})">Relatório para profissional</button><button class="nu-sec" onclick="_nuCloseSheet()">Fechar</button></div>`);
+}
+// Card no Início quando o check-in está pendente
+function _ciDueCard(){
+  if(!_ciDue()) return '';
+  const n=_ciDaysSinceLast();
+  return `<button class="card nu-card ci-due" onclick="ciOpen()" aria-label="Fazer o check-in da semana">
+    <span class="lbl" style="color:var(--him)">Check-in da semana · 2 min</span>
+    <span class="nu-sub" style="color:var(--text)">${n==null?'Faça o primeiro: peso, cintura e fotos viram a base para medir sua evolução.':`Faz ${n} dias desde o último. Peso, cintura, fotos e os ajustes da semana.`}</span>
+  </button>`;
+}
+
+// ── Relatório para profissional (imprimir / salvar PDF) ──
+function ciReport(idx){
+  const h=_ciHist(); const c=h[idx!=null?idx:h.length-1]; if(!c){ alert('Nenhum check-in ainda.'); return; }
+  _nuCloseSheet(); const prev=h[(idx!=null?idx:h.length-1)-1]||null; const d=getD(); const T=getNutriTargets();
+  const W=_ciWeek(); const ph=_CI_CATS.map(([cat,lb])=>{ const p=_ciPhoto(c.photos&&c.photos[cat]); const pv=prev?_ciPhoto(prev.photos&&prev.photos[cat]):null;
+    return p?`<div class="cr-ph"><b>${lb}</b><div>${pv?`<figure><img src="${_nuEsc(pv.url||'')}"/><figcaption>${pv.date}</figcaption></figure>`:''}<figure><img src="${_nuEsc(p.url||'')}"/><figcaption>${p.date}</figcaption></figure></div></div>`:''; }).join('');
+  const rows=h.slice(-8).map(x=>`<tr><td>${new Date(x.date).toLocaleDateString('pt-BR')}</td><td>${x.weight?String(x.weight).replace('.',','):'—'}</td><td>${x.waist?String(x.waist).replace('.',','):'—'}</td><td>${x.inTarget!=null?x.inTarget+'/'+x.logged:'—'}</td><td>${x.prot||'—'}</td><td>${x.workouts!=null?x.workouts:'—'}</td></tr>`).join('');
+  const feel=['','Ruim/baixa','Regular','Bom','Ótimo'];
+  document.getElementById('ci-report')?.remove();
+  const ov=document.createElement('div'); ov.id='ci-report';
+  ov.innerHTML=`<div class="cr-bar"><button onclick="window.print()">Imprimir / salvar PDF</button><button onclick="document.getElementById('ci-report').remove()">Fechar</button></div>
+  <div class="cr-doc">
+    <h1>Relatório de acompanhamento</h1>
+    <p class="cr-sub">${_nuEsc(d.name||'')} · check-in de ${new Date(c.date).toLocaleDateString('pt-BR')} · gerado pelo Body Tracker</p>
+    <h2>Resumo</h2>
+    <p>${_nuEsc(c.shape||'')}</p>
+    <table><tr><th>Peso</th><td>${String(c.weight).replace('.',',')} kg${prev&&prev.weight?` (anterior ${String(prev.weight).replace('.',',')})`:''}</td></tr>
+      <tr><th>Cintura</th><td>${c.waist?String(c.waist).replace('.',',')+' cm':'—'}${prev&&prev.waist?` (anterior ${String(prev.waist).replace('.',',')})`:''}</td></tr>
+      <tr><th>Meta atual</th><td>${_num(T.kcal)} kcal · ${_num(T.prot)} g proteína · ${_num(T.carb)} g carbo · ${_num(T.fat)} g gordura${c.kcalApplied?` (ajustada neste check-in)`:''}</td></tr>
+      <tr><th>Objetivo</th><td>${d.goalW>0?`${String(d.goalW).replace('.',',')} kg`:'—'}</td></tr>
+      <tr><th>Nutrição (7 dias)</th><td>${c.logged?`${c.inTarget}/${c.logged} dias na meta · proteína média ${c.prot} g`:'sem registros'}</td></tr>
+      <tr><th>Treino (7 dias)</th><td>${c.workouts} treino(s) · ${c.prs||0} recorde(s)${c.stalled&&c.stalled.length?` · travados: ${_nuEsc(c.stalled.join(', '))}`:''}</td></tr>
+      <tr><th>Sensações</th><td>sono ${feel[c.sleep]||'—'} · energia ${feel[c.energia]||'—'} · fome ${['','muita','alguma','pouca','nenhuma'][c.fome]||'—'}${c.dor?` · dor: ${_nuEsc(c.dor)}`:''}</td></tr></table>
+    <h2>Histórico</h2>
+    <table class="cr-h"><tr><th>Data</th><th>Peso</th><th>Cintura</th><th>Dias na meta</th><th>Proteína</th><th>Treinos</th></tr>${rows}</table>
+    ${ph?`<h2>Fotos</h2>${ph}`:''}
+    <h2>Plano alimentar atual</h2>
+    <ul>${(getMeals()||[]).map(m=>`<li><b>${_nuEsc(m.time||'')} ${_nuEsc(m.meal)}</b>: ${_nuEsc((m.options||[])[0]||'')} (${_num((m.macros||{}).kcal||0)} kcal)</li>`).join('')}</ul>
+    <p class="cr-fine">Dados registrados pelo próprio usuário. Composição de alimentos: TACO 4ª ed. (NEPA/UNICAMP).</p>
+  </div>`;
+  document.body.appendChild(ov);
 }
 
 function buildNutricao(){
@@ -6464,94 +6766,7 @@ function buildEstoque(){
 // ══════════════════════════════════════
 // CHECK-IN SEMANAL (toda segunda-feira)
 // ══════════════════════════════════════
-function showWeeklyCheckin(){
-  if(document.getElementById('weekly-checkin')) return;
-  const ac=PROFILES[CP].accentHex;
-  const lastWo=getWorkouts().slice(-7);
-  const lastWeekCount=lastWo.filter(s=>{
-    const d=new Date(s.date);
-    const mon=new Date(); mon.setDate(mon.getDate()-7); mon.setHours(0,0,0,0);
-    const sun=new Date(); sun.setDate(sun.getDate()-1); sun.setHours(23,59,59,999);
-    return d>=mon&&d<=sun;
-  }).length;
-  const overlay=document.createElement('div');
-  overlay.id='weekly-checkin';
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(8,8,14,.92);z-index:600;display:flex;align-items:flex-end;justify-content:center;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))';
-  overlay.innerHTML=`
-    <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:24px 20px;width:100%;max-width:460px;max-height:85vh;overflow-y:auto">
-      <div style="text-align:center;width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px"></div>
-      <div style="font-size:18px;font-weight:800;margin-bottom:4px">Check-in Semanal</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:22px">Leva 30 segundos. Ajuda o app a te dar melhores alertas.</div>
-
-      <!-- Pergunta 1: peso -->
-      <div style="margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Qual seu peso esta manhã?</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="number" id="ci-weight" step="0.1" min="40" max="150" placeholder="${getD().curW}" style="flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font2);font-size:18px;font-weight:800;padding:12px 14px;outline:none"/>
-          <span style="font-size:13px;color:var(--muted);font-weight:700">kg</span>
-        </div>
-      </div>
-
-      <!-- Pergunta 2: treinos -->
-      <div style="margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Quantos treinos fez na semana passada?</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${[0,1,2,3,4,5,6].map(n=>`<button onclick="document.querySelectorAll('.ci-wo').forEach(b=>b.style.background='var(--bg4)');this.style.background='${ac}18';this.dataset.sel='1';window._ciWo=${n}" class="ci-wo" style="flex:1;min-width:36px;padding:10px 4px;background:${n===lastWeekCount?`${ac}18`:'var(--bg4)'};border:1px solid ${n===lastWeekCount?ac:'var(--border2)'};border-radius:8px;color:var(--text);font-family:var(--font2);font-size:14px;font-weight:800;cursor:pointer">${n}</button>`).join('')}
-        </div>
-        <div style="font-size:9px;color:var(--muted);margin-top:4px">Registrado pelo app: ${lastWeekCount}x na semana passada</div>
-      </div>
-
-      <!-- Pergunta 3: dieta -->
-      <div style="margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Aderência à dieta na semana passada?</div>
-        <div style="display:flex;gap:6px">
-          ${[['Ruim',1],['OK',2],['Boa',3],['Ótima',4]].map(([lb,v])=>`<button onclick="document.querySelectorAll('.ci-diet').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';b.style.color='var(--text)';});this.style.background='rgba(74,222,128,.14)';this.style.borderColor='var(--good)';this.style.color='var(--good)';window._ciDiet=${v}" class="ci-diet" style="flex:1;padding:13px 4px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:12px;font-weight:800;color:var(--text);text-align:center">${lb}</button>`).join('')}
-        </div>
-      </div>
-
-      <!-- Pergunta 4: sono -->
-      <div style="margin-bottom:22px">
-        <div style="font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Qualidade do sono?</div>
-        <div style="display:flex;gap:6px">
-          ${[['Péssimo',1],['Regular',2],['Bom',3],['Excelente',4]].map(([lb,v])=>`<button onclick="document.querySelectorAll('.ci-sleep').forEach(b=>{b.style.background='var(--bg4)';b.style.borderColor='var(--border2)';b.style.color='var(--text)';});this.style.background='rgba(96,165,250,.14)';this.style.borderColor='var(--info)';this.style.color='var(--info)';window._ciSleep=${v}" class="ci-sleep" style="flex:1;padding:13px 3px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font2);font-size:11px;font-weight:800;color:var(--text);text-align:center">${lb}</button>`).join('')}
-        </div>
-      </div>
-
-      <button onclick="saveWeeklyCheckin()" style="width:100%;padding:14px;background:${ac};color:#08080e;border:none;border-radius:10px;font-family:var(--font2);font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:10px">Salvar check-in ✓</button>
-      <button onclick="document.getElementById('weekly-checkin').remove();localStorage.setItem('bt_last_checkin',new Date().toISOString())" style="width:100%;padding:11px;background:transparent;border:1px solid var(--border2);border-radius:10px;font-family:var(--font2);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer">Pular esta semana</button>
-    </div>`;
-  window._ciWo=lastWeekCount;
-  window._ciDiet=0;
-  window._ciSleep=0;
-  document.body.appendChild(overlay);
-}
-
-function saveWeeklyCheckin(){
-  const weightEl=document.getElementById('ci-weight');
-  const weight=parseFloat(weightEl?.value)||getD().curW;
-  const checkin={
-    date:new Date().toISOString(),
-    week:getWeekKey(),
-    weight,
-    workouts:window._ciWo||0,
-    diet:window._ciDiet||0,
-    sleep:window._ciSleep||0,
-  };
-  // Save checkin history (vai pro banco via settings)
-  const history=[..._settingGet('checkinHist','bt_checkin_hist',[])];
-  history.push(checkin);
-  _settingSet('checkinHist', history, 'bt_checkin_hist');
-  localStorage.setItem('bt_last_checkin',new Date().toISOString());
-  // Update weight if provided
-  if(weight&&weight!==getD().curW){
-    const s=getSettings()||{};
-    s.weight=weight;
-    saveSettings(s);
-  }
-  document.getElementById('weekly-checkin')?.remove();
-  showSyncStatus('✅ Check-in salvo!','var(--good)');
-  render();
-}
+function showWeeklyCheckin(){ ciOpen(); } // compat: o check-in completo substituiu o antigo
 
 // ══════════════════════════════════════
 // TEMPLATES DE LISTA (Estoque)

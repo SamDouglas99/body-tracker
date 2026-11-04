@@ -1,5 +1,5 @@
 // Body Tracker Pro — Service Worker v2
-const CACHE_NAME = 'bodytracker-v16';
+const CACHE_NAME = 'bodytracker-v17';
 
 const STATIC_ASSETS = [
   './',
